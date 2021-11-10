@@ -1,20 +1,17 @@
 import openmdao.api as om
 import dymos as dm
-#from dymos.examples.plotting import plot_results
-from dymos.examples.brachistochrone import BrachistochroneODE
 import matplotlib.pyplot as plt
-import copy
 from PlanarQuadrotorODE import PlanarQuadrotorODE, PlanarQuadrotorSizeComp
 
 
 def main():
-    case_recorder_filename = 'cases.sql'
-    p, phase, traj = init(case_recorder_filename)
+    p, phase, traj = init()
 
     #
     # Setup the problem
     #
     p, phase = setup(p,phase)
+    attach_recorder(p, 'without_plant_vars.sql')
     initial_des_vars = [p.get_val('rho'), p.get_val('r')]
 
     #
@@ -22,8 +19,9 @@ def main():
     #
     print("Optimizing without Plant Design Variables")
     run_problem(p)
-    p.record("no_plant_vars")
+    p.record('final')
     initial_tf = p.get_val('traj.phase0.timeseries.time')[-1]
+    p_initial = get_data(p)
     exp_out = traj.simulate()  # Forward Simulate the trajectory with the optimized results
     p.cleanup()
     initial_des_vars_1 = [p.get_val('rho'), p.get_val('r')]
@@ -34,14 +32,16 @@ def main():
     p.model.add_design_var('rho', lower=0.5, upper=1, units='kg/m')
     p.model.add_design_var('r', lower=0.1, upper=1, units='m')
     p, phase = setup(p,phase)
-    
+    attach_recorder(p, 'with_plant_vars.sql')
 
     #
     # Run the Optimization Problem - Plant Optimization
     #
     print("Optimizing With Plant Design Variables")
     run_problem(p)
+    p.record("final")
     final_tf = p.get_val('traj.phase0.timeseries.time')[-1]
+    p_final = get_data(p)
     # Forward Simulate the trajectory with the optimized results
     exp_out_plant = traj.simulate()
     p.cleanup()
@@ -58,8 +58,9 @@ def main():
                 ('traj.phase0.timeseries.time', 'traj.phase0.timeseries.controls:u_2',
                 'time (s)', 'u_2 (N)'),
                 ],
-                'Minimum Time Solution\nHigh-Order Gauss-Lobatto Method',
+                'Minimum Time Solution\nRadau Psuedospectral Method',
                 [exp_out, exp_out_plant],
+                [p_initial, p_final],
                 legenddesc=["Initial Plant", "Optimal Plant"])
 
     plt.show()
@@ -77,7 +78,7 @@ def main():
     print("Final Time")
     print(final_tf)
 
-def init(case_recorder_filename):
+def init():
     #
     # Initialize Problem and Optimization Driver
     #
@@ -88,8 +89,8 @@ def init(case_recorder_filename):
     p.driver.options['maxiter'] = 1000
 
     p.driver.declare_coloring()
-    p.driver.options['debug_print'] = ['desvars','ln_cons','nl_cons','objs']
-    p.set_solver_print(level=0)
+    # p.driver.options['debug_print'] = ['desvars','ln_cons','nl_cons','objs']
+    # p.set_solver_print(level=0)
 
     # Add Sizing Subsystem
     p.model.add_subsystem('size_comp', PlanarQuadrotorSizeComp(),
@@ -101,9 +102,11 @@ def init(case_recorder_filename):
     # Create a trajectory and add a phase to it
     #
     transcription_segments = 10
+    #trans = dm.GaussLobatto(num_segments=transcription_segments, compressed=True)
+    trans = dm.Radau(num_segments=transcription_segments, compressed=True)
     traj = p.model.add_subsystem('traj', dm.Trajectory())
     phase = traj.add_phase('phase0', dm.Phase(ode_class=PlanarQuadrotorODE,
-                        transcription=dm.GaussLobatto(num_segments=transcription_segments)))
+                        transcription=trans))
 
     #
     # Set the Variables
@@ -138,9 +141,13 @@ def init(case_recorder_filename):
     phase.add_parameter('r', units='m', static_target=True)
     phase.add_parameter('I', units='kg*m**2')
 
+    # Add Final Derivative Constraints to enforce that the inputs at the final time are at their steady-state values
+    phase.add_boundary_constraint('v_y_dot', loc='final', shape=(1,), equals=0, units='m/s**2')
+    phase.add_boundary_constraint('omega_dot', loc='final', shape=(1,), equals=0, units='rad/s**2')
+
     # Make Parameter Connections
+    p.model.promotes('traj', inputs=[('phase0.parameters:r','r')])
     p.model.connect('size_comp.m', 'traj.phase0.parameters:m')
-    p.model.connect('size_comp.r_out', 'traj.phase0.parameters:r')
     p.model.connect('size_comp.I', 'traj.phase0.parameters:I')
 
     #
@@ -149,22 +156,10 @@ def init(case_recorder_filename):
     phase.add_objective('time', loc='final')
     p.model.linear_solver = om.DirectSolver()
 
-    # Create a recorder variable and Case Reader Variable
-
-    recorder = om.SqliteRecorder(case_recorder_filename)
-    # Attach a recorder to the problem
-    p.add_recorder(recorder)
-    p.recording_options['record_desvars'] = True
-    p.recording_options['record_responses'] = True
-    p.recording_options['record_objectives'] = True
-    p.recording_options['record_constraints'] = True
-    p.recording_options['record_inputs'] = True
-    p.recording_options['includes'] = ['*timeseries*']
-
     return p, phase, traj
 
 def setup(p,phase):
-    p.setup()
+    p.setup(check=True)
 
     #
     # Set the Initial Values
@@ -190,10 +185,38 @@ def setup(p,phase):
 def run_problem(problem):
     problem.final_setup()
     failed = problem.run_driver()
-
     return failed
 
-def sim_plots(axes, title, sim_array, figsize=(10, 8), legenddesc=None):
+def attach_recorder(p, case_recorder_filename):
+    recorder = om.SqliteRecorder(case_recorder_filename)
+    # Attach a recorder to the problem
+    p.add_recorder(recorder)
+    p.recording_options['record_desvars'] = True
+    p.recording_options['record_responses'] = True
+    p.recording_options['record_objectives'] = True
+    p.recording_options['record_constraints'] = True
+    p.recording_options['record_inputs'] = True
+    p.recording_options['includes'] = ['*timeseries*']
+    
+    p.driver.add_recorder(recorder)
+    
+    
+
+def get_data(problem):
+    names = ['traj.phase0.timeseries.time',
+                'traj.phase0.timeseries.states:x',
+                'traj.phase0.timeseries.states:y',
+                'traj.phase0.timeseries.states:theta',
+                'traj.phase0.timeseries.controls:u_1',
+                'traj.phase0.timeseries.controls:u_2',
+                ]
+    prob_dat = {}
+    for name in names:
+        prob_dat[name]=problem.get_val(name)
+    
+    return prob_dat
+    
+def sim_plots(axes, title, sim_array, sol_array, figsize=(10, 8), legenddesc=None):
     nrows = len(axes)
 
     fig, axs = plt.subplots(nrows=nrows, ncols=1, figsize=figsize)
@@ -204,11 +227,17 @@ def sim_plots(axes, title, sim_array, figsize=(10, 8), legenddesc=None):
 
     for i, (x, y, xlabel, ylabel) in enumerate(axes):
         for j, p_sim in enumerate(sim_array):
-            axs[i].plot(p_sim.get_val(x),
-                        p_sim.get_val(y),
+            p_sol = sol_array[j]
+            axs[i].plot(p_sim[x],
+                        p_sim[y],
                         marker=None,
                         linestyle='-',
                         label=legenddesc[j] if i == 0 else None)
+            axs[i].plot(p_sol[x],
+                        p_sol[y],
+                        marker='o',
+                        ms=4,
+                        linestyle='None')
 
             axs[i].set_xlabel(xlabel)
             axs[i].set_ylabel(ylabel)

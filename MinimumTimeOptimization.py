@@ -1,7 +1,6 @@
 import openmdao.api as om
 import dymos as dm
 from dymos.examples.plotting import plot_results
-from dymos.examples.brachistochrone import BrachistochroneODE
 import matplotlib.pyplot as plt
 
 from PlanarQuadrotorODE import PlanarQuadrotorODE
@@ -18,8 +17,9 @@ p.driver.declare_coloring()
 #
 transcription_segments = 10
 traj = p.model.add_subsystem('traj', dm.Trajectory())
+trans = dm.GaussLobatto(num_segments=transcription_segments) # Number of nodes required for downstream calculations
 phase = traj.add_phase('phase0', dm.Phase(ode_class=PlanarQuadrotorODE,
-                       transcription=dm.GaussLobatto(num_segments=transcription_segments)))
+                       transcription=trans))
 
 #
 # Set the Variables
@@ -53,6 +53,11 @@ phase.add_parameter('g', units='m/s**2', val=9.80665)
 phase.add_parameter('m', units='kg', val=1)
 phase.add_parameter('r', units='m', val=.1)
 phase.add_parameter('I', units='kg*m**2', val=1)
+
+# Add Final Derivative Constraints to enforce that the inputs at the final time are at their steady-state values
+
+phase.add_boundary_constraint('v_y_dot', loc='final', shape=(1,), equals=0, units='m/s**2')
+phase.add_boundary_constraint('omega_dot', loc='final', shape=(1,), equals=0, units='rad/s**2')
 
 #
 # Minimize time at the end of the phase
