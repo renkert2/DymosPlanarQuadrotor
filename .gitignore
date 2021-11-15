@@ -2,3 +2,7 @@
 *.sql
 *.out
 *.pyc
+*.ini
+*.bak
+*.pkl
+*.html

@@ -8,7 +8,6 @@ import sys
 import os
 import openmdao.api as om
 os.chdir('..')
-sys.path.append(r'C:\Users\renkert2\Documents\ARG_Research\GraphTools\Dymos')
 from DymosModel import DymosModel
 from DymosModel import _CalcF
 from DymosModel import _CalcG
