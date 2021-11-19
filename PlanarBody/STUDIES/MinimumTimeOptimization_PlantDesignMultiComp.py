@@ -153,7 +153,7 @@ def init():
     #
     # Minimize time at the end of the phase
     #
-    phase.add_objective('time', loc='final')
+    phase.add_objective('time', loc='final', ref0=0.1, ref=0.5)
     p.model.linear_solver = om.DirectSolver()
 
     return p, phase, traj

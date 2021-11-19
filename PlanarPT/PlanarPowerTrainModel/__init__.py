@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov 10 16:41:43 2021
+Created on Wed Nov 17 17:06:57 2021
 
 @author: renkert2
 """
 
-def test()

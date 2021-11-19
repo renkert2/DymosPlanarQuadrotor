@@ -27,6 +27,7 @@ d = np.tile(range(nn), (8,1))
 theta = np.tile(range(nn), (21,1))
 #%%
 # Call the function
-x_dot = Calc_f(x,u,d,theta, nn)
-y = Calc_g(x,u,d,theta, nn)
+x_dot = Calc_f(x,u,d,theta)
+y = Calc_g(x,u,d,theta)
+j_g_theta = CalcJ_g_theta(x,u,d,theta)
 # Parse the outputs

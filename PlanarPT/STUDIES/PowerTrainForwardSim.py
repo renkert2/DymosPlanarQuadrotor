@@ -29,10 +29,10 @@ prob.model.add_subsystem('traj', traj)
 
 prob.setup()
 prob.set_val('traj.phase0.t_initial', 0.0)
-prob.set_val('traj.phase0.t_duration', 2.0)
+prob.set_val('traj.phase0.t_duration', 0.3)
 
-prob.set_val('traj.phase0.controls:u1', 0.9)
-prob.set_val('traj.phase0.controls:u2', 0.2)
+prob.set_val('traj.phase0.controls:u1', 1)
+prob.set_val('traj.phase0.controls:u2', 1)
 
 prob.run_model()
 sim_out = traj.simulate(times_per_seg=50)

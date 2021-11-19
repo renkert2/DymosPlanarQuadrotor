@@ -8,17 +8,16 @@ import sys
 import os
 import openmdao.api as om
 os.chdir('..')
-sys.path.append(r'C:\Users\renkert2\Documents\ARG_Research\GraphTools\Dymos')
-from DymosModel import DymosModel
+from PlanarPTModel import PlanarPTModel
 
 
 
 nn = 10
 
 p = om.Problem(model = om.Group())
-mdl = "PlanarPowerTrainModel"
-dm = DymosModel(num_nodes = nn, Model = mdl)
-dm.ImportModel(mdl)
+
+dm = PlanarPTModel(num_nodes=nn)
+dm.ImportModel(dm.options["Model"], dm.options["Path"])
 
 ivc = om.IndepVarComp()
  ### INPUTS ###
@@ -46,7 +45,8 @@ for param in param_table:
 p.model.add_subsystem('vars', ivc, promotes = ["*"])
 p.model.add_subsystem('dm', dm, promotes = ["*"])
 
-p.setup()
+p.setup(force_alloc_complex=True)
 p.run_model()
+cpd = p.check_partials(method='cs', compact_print=True)
 
 #%%

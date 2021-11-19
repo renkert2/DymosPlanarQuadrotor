@@ -127,3 +127,42 @@ class PlanarQuadrotorODE(om.ExplicitComponent):
         partials['omega_dot', 'u_2'] = -r/I
         partials['omega_dot', 'r'] = (u_1 - u_2)/I
         partials['omega_dot', 'I'] = -(r/(I**2))*(u_1 - u_2)
+        
+def ModifyPhase(phase, openmdao_path="", declare_controls=True):
+    def V2T(var):
+        # If path to OpenMDAO Variable is specified, Convert it to target openmdao path
+        if openmdao_path:
+            target = openmdao_path + "." + var
+        else:
+            target = var
+        return target
+    
+    def V2N(var):
+        # If path to OpenMDAO Variable is specified, prepend it to the variable name
+        if openmdao_path:
+            name = openmdao_path + "_" + var
+        else:
+            name = var
+        return name
+
+    phase.add_state(V2N('v_x'), rate_source=V2T('v_x_dot'), units='m/s')
+    phase.add_state(V2N('v_y'), rate_source=V2T('v_y_dot'), units='m/s')
+    
+    phase.add_state(V2N('x'), rate_source=V2N('v_x'), units='m')
+    phase.add_state(V2N('y'), rate_source=V2N('v_y'), units='m')
+    
+    phase.add_state(V2N('omega'), rate_source=V2T('omega_dot'), units='rad/s')
+    phase.add_state(V2N('theta'), rate_source=V2N('omega'), targets=[V2T('theta')], units='rad')
+    
+    # Add Inputs
+    if declare_controls:
+        phase.add_control(V2N('u_1'), targets=[V2T('u_1')], units='N')
+        phase.add_control(V2N('u_2'), targets=[V2T('u_2')], units='N')
+    
+    # Define constant parameters
+    phase.add_parameter(V2N('g'), units='m/s**2', val=9.80665)
+    phase.add_parameter(V2N('m'), units='kg', val=1)
+    phase.add_parameter(V2N('r'), units='m', val=.1)
+    phase.add_parameter(V2N('I'), units='kg*m**2', val=1)
+    
+    return phase
