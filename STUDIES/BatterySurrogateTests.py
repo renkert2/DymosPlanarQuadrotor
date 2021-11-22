@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Sat Nov 20 17:23:20 2021
+
+@author: renkert2
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Nov 18 08:36:58 2021
 
 @author: renkert2
@@ -41,13 +48,12 @@ phase.add_boundary_constraint('BM.omega_dot', loc='final', shape=(1,), equals=0,
 # Minimize time at the end of the phase
 phase.add_objective('time', loc='final')
 
-prob = om.Problem(model=om.Group())
-prob.driver = om.ScipyOptimizeDriver()
-traj = dm.Trajectory()
-traj.add_phase('phase0', phase)
+planar_model, traj = ps.makePlanarSystemModel(phase)
+#planar_model.add_design_var('N_s__Battery', lower=1, upper=6, ref0=1, ref=6)
+planar_model.add_design_var('Q__Battery', lower=500, upper=6000, ref0=500, ref=6000)
 
-prob.model.add_subsystem('traj', traj)
-prob.model.add_subsystem
+prob = om.Problem(model=planar_model)
+prob.driver = om.ScipyOptimizeDriver()
 prob.model.linear_solver = om.DirectSolver() # I'm not sure why we need this
 
 prob.setup()
@@ -70,65 +76,28 @@ prob.set_val('traj.phase0.states:BM_y', phase.interp('BM_y', ys=[0, 10]))
 prob.set_val('traj.phase0.states:BM_omega', phase.interp('BM_omega', ys=[0, 0]))
 prob.set_val('traj.phase0.states:BM_theta', phase.interp('BM_theta', ys=[0, 0]))
 
+# Initial Parameter Values
+prob.set_val('N_s__Battery', val=4)
+prob.set_val('Q__Battery', val=4000)
 
-#
-# Run the Optimization Problem
-#
-tic = time.perf_counter()
-dm.run_problem(prob)
-toc = time.perf_counter()
-run_time = toc-tic
-print(f"Problem solved in {run_time:0.4f} seconds")
+#%%
+prob.set_val('Q__Battery', val=500)
+prob.run_model()
+print(prob.get_val("Mass"))
 
-sim_out = traj.simulate(times_per_seg=50)
+prob.set_val('Q__Battery', val=6000)
+prob.run_model()
+print(prob.get_val("Mass"))
 
-t_sol = prob.get_val('traj.phase0.timeseries.time')
-t_sim = sim_out.get_val('traj.phase0.timeseries.time')
+prob.set_val('Q__Battery', val=4000)
 
-#%% Plots
+#%%
+prob.set_val('N_s__Battery', val=1)
+prob.run_model()
+print(prob.get_val("Mass"))
 
-# Powertrain States
-states = ["PT_x1", "PT_x2", "PT_x3"]
-labels = ["q", "omega_1", "omega_2"]
-fig, axes = plt.subplots(len(states), 1)
-for i, state in enumerate(states):
-    sol = axes[i].plot(t_sol, prob.get_val(f'traj.phase0.timeseries.states:{state}'), 'o')
-    sim = axes[i].plot(t_sim, sim_out.get_val(f'traj.phase0.timeseries.states:{state}'), '-')
-    axes[i].set_ylabel(labels[i])
-axes[-1].set_xlabel('time (s)')
-plt.tight_layout()
-plt.show()
+prob.set_val('N_s__Battery', val=6)
+prob.run_model()
+print(prob.get_val("Mass"))
 
-# Body States
-states = ['BM_x', 'BM_y', 'BM_theta']
-labels = ['x', 'y', 'theta']
-fig, axes = plt.subplots(len(states), 1)
-for i, state in enumerate(states):
-    sol = axes[i].plot(t_sol, prob.get_val(f'traj.phase0.timeseries.states:{state}'), 'o')
-    sim = axes[i].plot(t_sim, sim_out.get_val(f'traj.phase0.timeseries.states:{state}'), '-')
-    axes[i].set_ylabel(labels[i])
-axes[-1].set_xlabel('time (s)')
-plt.tight_layout()
-plt.show()
-
-inputs = ['PT_u1', 'PT_u2']
-labels = ["u1", "u2"]
-fig, axes = plt.subplots(len(inputs), 1)
-for i, input in enumerate(inputs):
-    sol = axes[i].plot(t_sol, prob.get_val(f'traj.phase0.timeseries.controls:{input}'), 'o')
-    sim = axes[i].plot(t_sim, sim_out.get_val(f'traj.phase0.timeseries.controls:{input}'), '-')
-    axes[i].set_ylabel(labels[i])
-axes[-1].set_xlabel('time (s)')
-plt.tight_layout()
-plt.show()
-
-# outputs = ["y12", "y13", "y14", "y15"]
-# labels = ["Thrust 1", "Torque 1", "Thrust 2", "Torque 2"]
-# fig, axes = plt.subplots(len(outputs), 1)
-# for i, output in enumerate(outputs):
-#     sol = axes[i].plot(t_sol, prob.get_val(f'traj.phase0.timeseries.outputs:{output}'), 'o')
-#     sim = axes[i].plot(t_sim, sim_out.get_val(f'traj.phase0.timeseries.outputs:{output}'), '-')
-#     axes[i].set_ylabel(labels[i])
-# axes[-1].set_xlabel('time (s)')
-# plt.tight_layout()
-# plt.show()
+prob.set_val('N_s__Battery', val=4)

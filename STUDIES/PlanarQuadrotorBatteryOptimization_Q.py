@@ -41,13 +41,12 @@ phase.add_boundary_constraint('BM.omega_dot', loc='final', shape=(1,), equals=0,
 # Minimize time at the end of the phase
 phase.add_objective('time', loc='final')
 
-prob = om.Problem(model=om.Group())
-prob.driver = om.ScipyOptimizeDriver()
-traj = dm.Trajectory()
-traj.add_phase('phase0', phase)
+planar_model, traj = ps.makePlanarSystemModel(phase)
+#planar_model.add_design_var('N_s__Battery', lower=1, upper=6, ref0=1, ref=6)
+planar_model.add_design_var('Q__Battery', lower=500, upper=6000, ref0=500, ref=6000)
 
-prob.model.add_subsystem('traj', traj)
-prob.model.add_subsystem
+prob = om.Problem(model=planar_model)
+prob.driver = om.ScipyOptimizeDriver()
 prob.model.linear_solver = om.DirectSolver() # I'm not sure why we need this
 
 prob.setup()
@@ -70,10 +69,12 @@ prob.set_val('traj.phase0.states:BM_y', phase.interp('BM_y', ys=[0, 10]))
 prob.set_val('traj.phase0.states:BM_omega', phase.interp('BM_omega', ys=[0, 0]))
 prob.set_val('traj.phase0.states:BM_theta', phase.interp('BM_theta', ys=[0, 0]))
 
+# Initial Parameter Values
+prob.set_val('N_s__Battery', val=4)
+prob.set_val('Q__Battery', val=4000)
 
-#
+
 # Run the Optimization Problem
-#
 tic = time.perf_counter()
 dm.run_problem(prob)
 toc = time.perf_counter()

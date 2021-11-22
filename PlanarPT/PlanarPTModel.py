@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from DymosModel import DymosModel
+import DymosModel as dmm
 
-class PlanarPTModel(DymosModel):
+class PlanarPTModel(dmm.DymosModel):
     def initialize(self):
         super().initialize()
         
