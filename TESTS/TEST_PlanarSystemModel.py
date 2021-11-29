@@ -6,7 +6,7 @@ Created on Thu Nov 18 07:30:25 2021
 """
 import os
 import openmdao.api as om
-os.chdir("..")
+os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 from PlanarSystem import PlanarSystemModel
 from PlanarBody.PlanarQuadrotorODE import PlanarQuadrotorODE 
 from PlanarPT.PlanarPTModel import PlanarPTModel 

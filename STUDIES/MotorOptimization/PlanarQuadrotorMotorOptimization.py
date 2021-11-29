@@ -6,13 +6,14 @@ Created on Thu Nov 18 08:36:58 2021
 """
 
 import os
-os.chdir(os.path.join(os.path.dirname(__file__), '..'))
+os.chdir(os.path.join(os.path.dirname(__file__), '..', '..')) # Go to top level
 import PlanarSystem as ps
 import dymos as dm
 import openmdao.api as om
 import matplotlib.pyplot as plt
 import time
 
+os.chdir(os.path.dirname(__file__)) # Go back to Motor Optimization folder To save recorder here
 nn = 20
 tx = dm.Radau(num_segments=nn, compressed=False)
 phase = ps.PlanarSystemDynamicPhase(tx)
@@ -43,8 +44,8 @@ phase.add_objective('time', loc='final', ref0=0, ref=2)
 
 planar_model, traj = ps.makePlanarSystemModel(phase)
 
-planar_model.add_design_var('N_s__Battery', lower=2, upper=6, ref0=2, ref=6)
-planar_model.add_design_var('Q__Battery', lower=500, upper=6000, ref0=500, ref=6000)
+planar_model.add_design_var('kV__Motor', lower=700, upper=2550, ref0=105, ref=2550)
+planar_model.add_design_var('Rm__Motor', lower=0.04, upper=0.14, ref0=0.013, ref=0.171)
 
 prob = om.Problem(model=planar_model)
 prob.driver = om.ScipyOptimizeDriver()
@@ -72,13 +73,13 @@ prob.set_val('traj.phase0.states:BM_omega', phase.interp('BM_omega', ys=[0, 0]))
 prob.set_val('traj.phase0.states:BM_theta', phase.interp('BM_theta', ys=[0, 0]))
 
 # Initial Parameter Values
-prob.set_val('N_s__Battery', val=4)
-prob.set_val('Q__Battery', val=4000)
+prob.set_val('kV__Motor', val=965)
+prob.set_val('Rm__Motor', val=0.102)
 
 
 # Run the Optimization Problem
 tic = time.perf_counter()
-dm.run_problem(prob)
+dm.run_problem(prob, solution_record_file='MotorOptimization_solution.sql', simulation_record_file='MotorOptimization_simulation.sql')
 toc = time.perf_counter()
 run_time = toc-tic
 print(f"Problem solved in {run_time:0.4f} seconds")
@@ -89,6 +90,13 @@ t_sol = prob.get_val('traj.phase0.timeseries.time')
 t_sim = sim_out.get_val('traj.phase0.timeseries.time')
 
 #%% Plots
+
+# Design Variables
+kV = prob.get_val('kV__Motor')
+Rm = prob.get_val('Rm__Motor')
+
+print(f'Final Speed Constant: %s' % kV)
+print(f'Final Phase Resistance: %s' % Rm)
 
 # Powertrain States
 states = ["PT_x1", "PT_x2", "PT_x3"]

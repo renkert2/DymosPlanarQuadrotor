@@ -9,7 +9,7 @@ import numpy as np
 import openmdao.api as om
 import PlanarBody.PlanarQuadrotorODE as bm
 import PlanarPT.PlanarPTModel as pt 
-import PlanarPT.Surrogates.BatterySurrogate as battSurrogate
+import PlanarPT.Surrogates.Surrogates as surrogates
 import DymosModel as dmm
 import dymos as dm
 import os
@@ -32,13 +32,15 @@ def makePlanarSystemModel(phase):
     model = om.Group();
     
     # Add Battery surrogate, promote all parameter inputs and outputs to top level.  Everything has unique names at this point so we should be good. 
-    bs = battSurrogate.BatterySurrogate()
+    bs = surrogates.BatterySurrogate()
     model.add_subsystem('surr_batt', bs, promotes=["*"])
     
-    # Add Mass 
-    mass_comp = om.ExecComp("Mass = Mass__Battery + 1")
-    model.add_subsystem("mass", mass_comp, promotes=['*'])
+    ms = surrogates.MotorSurrogate()
+    model.add_subsystem('surr_motor', ms, promotes=["*"])
     
+    # Add Mass 
+    mass_comp = om.ExecComp("Mass = Mass__Battery + Mass__Motor + 1")
+    model.add_subsystem("mass", mass_comp, promotes=['*'])
     
     # Setup trajectory and add phase
     traj = model.add_subsystem('traj', dm.Trajectory())
