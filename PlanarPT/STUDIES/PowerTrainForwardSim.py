@@ -9,7 +9,7 @@ import os
 import openmdao.api as om
 import dymos as dm
 import matplotlib.pyplot as plt
-os.chdir('..')
+os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 from DymosModel import DymosPhase
 
 
@@ -17,9 +17,10 @@ from DymosModel import DymosPhase
 nn = 10
 p = om.Problem(model = om.Group())
 mdl = "PlanarPowerTrainModel"
+mdl_path = 'C:/Users/renkert2/Documents/ARG_Research/DymosPlanarQuadrotor/PlanarPT' # Point Model to folder containing the Model folder.  This is required for !openmdao check functions
 
 tx = dm.Radau(num_segments=nn, compressed=True)
-phase = DymosPhase(mdl, tx, include_disturbances=False)
+phase = DymosPhase(mdl, tx, include_disturbances=False, path=mdl_path)
 
 traj = dm.Trajectory()
 traj.add_phase('phase0', phase)
@@ -29,7 +30,7 @@ prob.model.add_subsystem('traj', traj)
 
 prob.setup()
 prob.set_val('traj.phase0.t_initial', 0.0)
-prob.set_val('traj.phase0.t_duration', 0.3)
+prob.set_val('traj.phase0.t_duration', 50)
 
 prob.set_val('traj.phase0.controls:u1', 1)
 prob.set_val('traj.phase0.controls:u2', 1)
@@ -51,6 +52,9 @@ for i, state in enumerate(states):
 axes[-1].set_xlabel('time (s)')
 plt.tight_layout()
 plt.show()
+
+print(sim_out.get_val('traj.phase0.timeseries.states:x2')[-1])
+print(sim_out.get_val('traj.phase0.timeseries.outputs:y12')[-1])
 
 inputs = ['u1', 'u2']
 fig, axes = plt.subplots(len(inputs), 1)

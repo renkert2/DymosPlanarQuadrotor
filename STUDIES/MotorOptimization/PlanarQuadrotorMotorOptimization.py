@@ -44,8 +44,8 @@ phase.add_objective('time', loc='final', ref0=0, ref=2)
 
 planar_model, traj = ps.makePlanarSystemModel(phase)
 
-planar_model.add_design_var('kV__Motor', lower=700, upper=2550, ref0=105, ref=2550)
-planar_model.add_design_var('Rm__Motor', lower=0.04, upper=0.14, ref0=0.013, ref=0.171)
+planar_model.add_design_var('kV__Motor', lower=1500, upper=2000, ref0=105, ref=2550) # Initially 105-2550
+planar_model.add_design_var('Rm__Motor', lower=0.1, upper=0.14, ref0=0.013, ref=0.171) # Initially 0.013-0.171
 
 prob = om.Problem(model=planar_model)
 prob.driver = om.ScipyOptimizeDriver()
