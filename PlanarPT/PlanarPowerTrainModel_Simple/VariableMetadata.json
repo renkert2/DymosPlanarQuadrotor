@@ -1,0 +1,154 @@
+{
+  "x": {
+    "N": 1,
+    "Variables": {
+      "Variable": "x1",
+      "Description": "Rotor Speed",
+      "Unit": ""
+    }
+  },
+  "a": {
+    "N": 5,
+    "Variables": [
+      {
+        "Variable": "a1",
+        "Description": "Bus Voltage",
+        "Unit": ""
+      },
+      {
+        "Variable": "a2",
+        "Description": "Bus Current",
+        "Unit": ""
+      },
+      {
+        "Variable": "a3",
+        "Description": "Inverter Current",
+        "Unit": ""
+      },
+      {
+        "Variable": "a4",
+        "Description": "Inverter Voltage",
+        "Unit": ""
+      },
+      {
+        "Variable": "a5",
+        "Description": "Motor Inductance",
+        "Unit": ""
+      }
+    ]
+  },
+  "u": {
+    "N": 1,
+    "Variables": {
+      "Variable": "u1",
+      "Description": "",
+      "Unit": ""
+    }
+  },
+  "d": {
+    "N": 0
+  },
+  "y": {
+    "N": 1,
+    "Variables": {
+      "Variable": "y1",
+      "Description": "Total Thrust",
+      "Unit": ""
+    }
+  },
+  "theta": {
+    "N": 18,
+    "Variables": [
+      {
+        "Variable": "theta1",
+        "Description": "D__Motor",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta2",
+        "Description": "D__Propeller",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta3",
+        "Description": "J__Motor",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta4",
+        "Description": "J__Propeller",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta5",
+        "Description": "N_p__Battery",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta6",
+        "Description": "N_s__Battery",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta7",
+        "Description": "P__Propeller",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta8",
+        "Description": "Q__Battery",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta9",
+        "Description": "R_s__Battery",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta10",
+        "Description": "Rm__Motor",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta11",
+        "Description": "kV__Motor",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta12",
+        "Description": "k_P__Propeller",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta13",
+        "Description": "k_P_mod__Propeller",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta14",
+        "Description": "k_T__Propeller",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta15",
+        "Description": "k_T_mod__Propeller",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta16",
+        "Description": "Mass__Battery",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta17",
+        "Description": "Mass__Motor",
+        "Unit": ""
+      },
+      {
+        "Variable": "theta18",
+        "Description": "Mass__Propeller",
+        "Unit": ""
+      }
+    ]
+  }
+}

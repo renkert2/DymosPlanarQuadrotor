@@ -50,7 +50,7 @@ sim_out = traj.simulate(times_per_seg=50)
 print(sim_out.get_val('traj.phase0.timeseries.states:PT_x2')[-1])
 print(sim_out.get_val('traj.phase0.timeseries.outputs:y12')[-1])
 
-total_thrust = sim_out.get_val('traj.phase0.timeseries.outputs:y12')[-1]
-thrust_ratio = total_thrust/mass
+total_thrust = 2*sim_out.get_val('traj.phase0.timeseries.outputs:y12')[-1]
+thrust_ratio = total_thrust/(9.81*mass)
 print(thrust_ratio)
 

@@ -1,0 +1,33 @@
+[
+  {
+    "Name": "f",
+    "Args": [
+      "x",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Description": []
+  },
+  {
+    "Name": "Rh",
+    "Args": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Description": []
+  },
+  {
+    "Name": "g",
+    "Args": [
+      "x",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Description": []
+  }
+]

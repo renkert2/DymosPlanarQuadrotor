@@ -20,9 +20,13 @@ bm = PlanarQuadrotorODE(num_nodes=nn)
 
 #%%
 psm = PlanarSystemModel(num_nodes=20)
-
-
 prob = om.Problem()
 prob.model = psm;
+
 prob.setup()
+
+
+p.set_val('kV__Motor', val=105)
+prob.set_val('Rm__Motor', val=0.013)
+
 prob.run_model()
