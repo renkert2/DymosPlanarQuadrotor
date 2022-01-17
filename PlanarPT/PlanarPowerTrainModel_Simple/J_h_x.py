@@ -1,5 +1,4 @@
-import math
-import numpy as np
+from numpy import *
 
 def J_h_x(x,a,u,d,theta):
 # auto-generated function from matlab

@@ -34,12 +34,12 @@
       },
       {
         "Variable": "a3",
-        "Description": "Inverter Current",
+        "Description": "Inverter 1 Current",
         "Unit": ""
       },
       {
         "Variable": "a4",
-        "Description": "Inverter Voltage",
+        "Description": "Inverter 2 Voltage",
         "Unit": ""
       },
       {

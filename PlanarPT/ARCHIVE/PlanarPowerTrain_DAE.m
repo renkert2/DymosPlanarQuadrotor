@@ -1,8 +1,3 @@
-%% Init
-% Load Parameter Metadata
-load ParamMetadata.mat
-pm = ParamMetadata;
-
 %% Make Full DAE Model
 
 %Nx,Na,Nu,Nd,Ny,Ntheta
@@ -22,8 +17,8 @@ x.Descriptions = ["Battery SOC", "Rotor 1 Speed", "Rotor 2 Speed"];
 % ALGEBRAIC STATES
 % a1: Bus Voltage
 % a2: Bus Current
-% a3: Inverter 1 Current
-% a4: Inverter 2 Voltage
+% a3: Inverter Current
+% a4: Inverter Voltage
 % a5: Inverter 2 Current
 % a6: Inverter 2 Voltage
 % a7: Motor 1 Inductance
@@ -31,8 +26,8 @@ x.Descriptions = ["Battery SOC", "Rotor 1 Speed", "Rotor 2 Speed"];
 a.Descriptions = ... 
     ["Bus Voltage";
     "Bus Current";
-    "Inverter 1 Current";
-    "Inverter 2 Voltage";
+    "Inverter Current";
+    "Inverter Voltage";
     "Inverter 2 Current";
     "Inverter 2 Voltage";
     "Motor 1 Inductance";
@@ -85,22 +80,12 @@ theta.Descriptions = ...
     "Mass__Motor";
     "Mass__Propeller"];
 
-theta_vals = zeros(size(theta.Descriptions));
-theta_units = strings(size(theta.Descriptions));
-for i = 1:numel(theta.Descriptions)
-    id = theta.Descriptions(i);
-    theta_vals(i) = pm.(id).Value;
-    theta_units(i) = pm.(id).Unit;
-end
-theta.Values = theta_vals;
-theta.Units = theta_units;
-
 x = x.Syms;
 a = a.Syms;
 u = u.Syms;
 theta = theta.Syms;
 
-h = [a(2) - u(1)*a(3) - u(2)*a(5);
+Rh = [a(2) - u(1)*a(3) - u(2)*a(5);
     -(0.0010*(1000*theta(5)*a(1) + 3*theta(5)*a(2) - 3700*theta(5)*theta(6) + 1000*theta(6)*theta(9)*a(2)))/theta(5);
     u(1)*a(1) - 0.8165*a(4) - 0.1000*a(3);
     0.8165*a(3) - a(7);
@@ -119,21 +104,11 @@ g = [0.0305*theta(2)^4*theta(14)*theta(15)*x(2)^2;
     0.0049*theta(2)^5*theta(7)*theta(13)*x(3)^2];
 
 full_model = DAEDesignModel(sv);
-full_model.h.Sym = h;
-full_model.f.Sym = f;
-full_model.g.Sym = g;
-
-%% Export Full Model
-opts = exportoptions(full_model, 'Method', 'PythonFunction', 'FlattenJacobian', true, 'ExportMetadata', true);
-opts.Directory = "PlanarPowerTrainModel";
-full_model.export(opts)
-
+full_model.Rh = Rh;
+full_model.f = f;
+full_model.g = g;
 
 %% Make Simple DAE Model for Steady State
-clear all
-load ParamMetadata.mat
-pm = ParamMetadata;
-
 sv = DAEDesignSymVars(1,5,1,0,1,18);
 x = sv.x;
 a = sv.a;
@@ -202,16 +177,6 @@ theta.Descriptions = ...
     "Mass__Motor";
     "Mass__Propeller"];
 
-theta_vals = zeros(size(theta.Descriptions));
-theta_units = strings(size(theta.Descriptions));
-for i = 1:numel(theta.Descriptions)
-    id = theta.Descriptions(i);
-    theta_vals(i) = pm.(id).Value;
-    theta_units(i) = pm.(id).Unit;
-end
-theta.Values = theta_vals;
-theta.Units = theta_units;
-
 % OUTPUTS
 y.Descriptions = ...
     ["Total Thrust"];
@@ -221,7 +186,7 @@ a = a.Syms;
 u = u.Syms;
 theta = theta.Syms;
 
-h = [a(2) - 2*u(1)*a(3);
+Rh = [a(2) - 2*u(1)*a(3);
     -(0.0010*(1000*theta(5)*a(1) + 3*theta(5)*a(2) - 3700*theta(5)*theta(6) + 1000*theta(6)*theta(9)*a(2)))/theta(5);
     u(1)*a(1) - 0.8165*a(4) - 0.1000*a(3);
     0.8165*a(3) - a(5);
@@ -231,12 +196,14 @@ f = (4.5832e-18*(- 1.0599e+15*theta(11)*theta(7)*theta(13)*theta(2)^5*x(1)^2 + 2
 g = 2*0.0305*theta(2)^4*theta(14)*theta(15)*x(1)^2;
 
 simple_model = DAEDesignModel(sv);
-simple_model.h.Sym = h;
-simple_model.f.Sym = f;
-simple_model.g.Sym = g;
+simple_model.Rh = Rh;
+simple_model.f = f;
+simple_model.g = g;
 
 
-%% Export Simple Model
-opts = exportoptions(simple_model, 'Method', 'PythonFunction', 'FlattenJacobian', true, 'ExportMetadata', true);
+%% Export Models
+opts = exportoptions(full_model, 'Method', 'PythonFunction', 'FlattenJacobian', true, 'ExportMetadata', true);
+opts.Directory = "PlanarPowerTrainModel";
+full_model.export(opts)
 opts.Directory = "PlanarPowerTrainModel_Simple";
 simple_model.export(opts)
