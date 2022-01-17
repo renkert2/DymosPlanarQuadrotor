@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-def J_Rh_a(x,a,u,d,theta):
+def J_h_a(x,a,u,d,theta):
 # auto-generated function from matlab
 
 	u1 = u[0]

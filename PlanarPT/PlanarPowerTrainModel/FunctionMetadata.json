@@ -1,16 +1,7 @@
-[
-  {
-    "Name": "f",
-    "Args": [
-      "x",
-      "u",
-      "d",
-      "theta"
-    ],
-    "Description": []
-  },
-  {
-    "Name": "Rh",
+{
+  "g": {
+    "Type": "Explicit",
+    "Description": [],
     "Args": [
       "x",
       "a",
@@ -18,16 +9,50 @@
       "d",
       "theta"
     ],
-    "Description": []
+    "Inputs": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Outputs": "y"
   },
-  {
-    "Name": "g",
+  "h": {
+    "Type": "Implicit",
+    "Description": [],
     "Args": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Inputs": [
       "x",
       "u",
       "d",
       "theta"
     ],
-    "Description": []
+    "Outputs": "a"
+  },
+  "f": {
+    "Type": "Explicit",
+    "Description": [],
+    "Args": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Inputs": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Outputs": "x_dot"
   }
-]
+}

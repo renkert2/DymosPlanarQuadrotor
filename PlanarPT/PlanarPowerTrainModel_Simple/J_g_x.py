@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-def J_g_x(x,u,d,theta):
+def J_g_x(x,a,u,d,theta):
 # auto-generated function from matlab
 
 	x1 = x[0]
@@ -10,4 +10,4 @@ def J_g_x(x,u,d,theta):
 	theta15 = theta[14]
 	out1 = (61*theta2**4*theta14*theta15*x1)/500 
 
-	return , out1
+	return out1

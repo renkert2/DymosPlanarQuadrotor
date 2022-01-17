@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-def Rh(x,a,u,d,theta):
+def h(x,a,u,d,theta):
 # auto-generated function from matlab
 
 	x1 = x[0]

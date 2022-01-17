@@ -62,92 +62,110 @@
       {
         "Variable": "theta1",
         "Description": "D__Motor",
-        "Unit": ""
+        "Unit": "m",
+        "Value": 0.028300000000000002
       },
       {
         "Variable": "theta2",
         "Description": "D__Propeller",
-        "Unit": ""
+        "Unit": "m",
+        "Value": 0.2286
       },
       {
         "Variable": "theta3",
         "Description": "J__Motor",
-        "Unit": ""
+        "Unit": "kg*m^2",
+        "Value": 6.4071200000000014E-6
       },
       {
         "Variable": "theta4",
         "Description": "J__Propeller",
-        "Unit": ""
+        "Unit": "kg*m^2",
+        "Value": 7.777806944355E-5
       },
       {
         "Variable": "theta5",
         "Description": "N_p__Battery",
-        "Unit": ""
+        "Unit": "unit",
+        "Value": 1
       },
       {
         "Variable": "theta6",
         "Description": "N_s__Battery",
-        "Unit": ""
+        "Unit": "unit",
+        "Value": 4
       },
       {
         "Variable": "theta7",
         "Description": "P__Propeller",
-        "Unit": ""
+        "Unit": "m",
+        "Value": 0.1143
       },
       {
         "Variable": "theta8",
         "Description": "Q__Battery",
-        "Unit": ""
+        "Unit": "mAh",
+        "Value": 4000
       },
       {
         "Variable": "theta9",
         "Description": "R_s__Battery",
-        "Unit": ""
+        "Unit": "Ohm",
+        "Value": 0.003
       },
       {
         "Variable": "theta10",
         "Description": "Rm__Motor",
-        "Unit": ""
+        "Unit": "Ohm",
+        "Value": 0.102
       },
       {
         "Variable": "theta11",
         "Description": "kV__Motor",
-        "Unit": ""
+        "Unit": "RPM/V",
+        "Value": 965
       },
       {
         "Variable": "theta12",
         "Description": "k_P__Propeller",
-        "Unit": ""
+        "Unit": "",
+        "Value": 0.05
       },
       {
         "Variable": "theta13",
         "Description": "k_P_mod__Propeller",
-        "Unit": ""
+        "Unit": "",
+        "Value": 1.25
       },
       {
         "Variable": "theta14",
         "Description": "k_T__Propeller",
-        "Unit": ""
+        "Unit": "",
+        "Value": 0.12
       },
       {
         "Variable": "theta15",
         "Description": "k_T_mod__Propeller",
-        "Unit": ""
+        "Unit": "",
+        "Value": 0.85
       },
       {
         "Variable": "theta16",
         "Description": "Mass__Battery",
-        "Unit": ""
+        "Unit": "kg",
+        "Value": 0.529
       },
       {
         "Variable": "theta17",
         "Description": "Mass__Motor",
-        "Unit": ""
+        "Unit": "kg",
+        "Value": 0.064
       },
       {
         "Variable": "theta18",
         "Description": "Mass__Propeller",
-        "Unit": ""
+        "Unit": "kg",
+        "Value": 0.017860185
       }
     ]
   }
