@@ -6,3 +6,7 @@
 *.bak
 *.pkl
 *.html
+
+**/__pychache__/
+__pycache__/
+**/coloring_files/
