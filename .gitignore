@@ -6,6 +6,8 @@
 *.bak
 *.pkl
 *.html
+*.db
+*.png
 
 **/__pychache__/
 __pycache__/

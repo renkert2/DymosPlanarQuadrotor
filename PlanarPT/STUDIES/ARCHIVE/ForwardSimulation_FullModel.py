@@ -19,7 +19,7 @@ mdl = "PlanarPowerTrainModel"
 path = "."
 
 #Functions: h, f, g
-tx = dymos.GaussLobatto(num_segments=10, solve_segments='forward')
+tx = dymos.GaussLobatto(num_segments=50, solve_segments='forward')
 phase = dm.DynamicPhase(ode_class=dm.DynamicModel, model=mdl, path=path, model_kwargs={"Functions":["h", "f", "g"]}, transcription=tx)
 
 phase.init_vars(openmdao_path='', 
@@ -50,10 +50,11 @@ prob.set_val('traj.phase0.controls:u1', 1)
 prob.set_val('traj.phase0.controls:u2', 1)
 prob.run_model()
 
+#%%
 inputs = ['states:x1', 'states:x2', 'states:x3', 'outputs:y1', 'outputs:y3']
 labels = ["Battery SOC", "Rotor 1 Speed", "Rotor 2 Speed", "Rotor 1 Thrust", "Rotor 2 Thrust"]
 t = prob.get_val('traj.phase0.timeseries.time')
-fig, axes = plt.subplots(len(inputs), 1)
+fig, axes = plt.subplots(len(inputs), 1, figsize=(4,6))
 for i, input in enumerate(inputs):
     sol = axes[i].plot(t, prob.get_val(f'traj.phase0.timeseries.{input}'), '-')
     axes[i].set_ylabel(labels[i])

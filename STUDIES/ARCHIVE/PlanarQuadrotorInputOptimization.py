@@ -6,7 +6,7 @@ Created on Thu Nov 18 08:36:58 2021
 """
 
 import os
-os.chdir(os.path.join(os.path.dirname(__file__), '..'))
+os.chdir('..')
 import PlanarSystem as ps
 import dymos as dm
 import openmdao.api as om

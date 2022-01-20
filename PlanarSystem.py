@@ -8,10 +8,10 @@ Created on Wed Nov 17 16:07:54 2021
 import numpy as np
 import openmdao.api as om
 import PlanarBody.PlanarQuadrotorODE as bm
-import PlanarPT.PlanarPTModel as pt 
+import PlanarPT.PlanarPTModels as pt 
 import PlanarPT.Surrogates.Surrogates as surrogates
-import DymosModel as dmm
 import dymos as dm
+import DynamicModel as dmm
 import os
 
 
@@ -25,8 +25,33 @@ class PlanarSystemDynamicModel(om.Group):
         self.add_subsystem(name="PT", subsys=pt.PlanarPTModel(num_nodes=nn))
         self.add_subsystem(name="BM", subsys=bm.PlanarQuadrotorODE(num_nodes=nn))
         
-        self.connect("PT.y12", "BM.u_1")
-        self.connect("PT.y14", "BM.u_2")
+        self.connect("PT.y1", "BM.u_1")
+        self.connect("PT.y3", "BM.u_2")
+        
+class PlanarSystemDynamicPhase(dmm.DynamicPhase):
+    def __init__(self, *args, **kwargs):
+        # Instantiate a Phase and add it to the Trajectory.
+        # Here the transcription is necessary but not particularly relevant.
+        super().__init__(ode_class=PlanarSystemDynamicModel, *args, **kwargs)
+    
+        ## Add PowerTrain Information.  In the PlanarSystemDynamicModel, the PlanarPowerTrainModel dynamic model 
+        # is added as a subsystem named PT.  When we specify the open_mdao path as PT, init_vars will find the 
+        # relevant metadata and use it to add the states, controls, etc to the phase.  The phase variables name will
+        # prepend the variable name with the path.  For example, the "x1" state for model.PT.Z would be 
+        # referred to as state "PT_Z_x1"
+    
+    def init_vars(self):
+        super().init_vars(openmdao_path="PT", 
+                        state_names=["x"],
+                        control_names = ["u","d"],
+                        parameter_names = ["theta"],
+                        output_names = ["y", "a"],
+                        var_opts = {"d":{"val":0}})
+        ## Add Body Model Information
+        # The PlanarQuadrotorODE Module has a method which takes an existing phase
+        # and manually adds its states and controls to it.  
+        self = bm.ModifyPhase(self, openmdao_path="BM", declare_controls=False)
+    
 
 def makePlanarSystemModel(phase):
     model = om.Group();
@@ -61,21 +86,42 @@ def makePlanarSystemModel(phase):
         
     return model, traj
 
-def PlanarSystemDynamicPhase(tx):
+
+
+if __name__ == "__main__":
+    # Run N2 and Model Checks
+    import openmdao.api as om
+    import os
+    import logging
     
-    # Instantiate a Dymos Trajectory
-    model_path = os.path.join(os.path.dirname(__file__), 'PlanarPT/PlanarPowerTrainModel')
-    pt_meta = dmm.ImportMetadata(model_path)
+    logging.basicConfig(level=logging.INFO)
     
-    # Instantiate a Phase and add it to the Trajectory.
-    # Here the transcription is necessary but not particularly relevant.
-    phase = dm.Phase(ode_class=PlanarSystemDynamicModel, transcription=tx)
+    os.chdir(os.path.dirname(__file__))
+    try:
+        os.mkdir('./ModelChecks/')
+    except:
+        pass
+    os.chdir('./ModelChecks/')
     
-    ## Add PowerTrain Information
-    phase = dmm.ModifyPhase(phase, pt_meta, openmdao_path="PT", include_disturbances=False, state_opts = {}, control_opts = {}, disturbance_opts={"val":0}, parameter_opts = {})
+    def checkProblem(p):
+            p.setup()
+            p.final_setup()
+        
+            # Visualize:
+            om.n2(p)
+            om.view_connections(p)
+            
+            # Checks:
+            p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
+            p.check_partials(compact_print=True)
     
-    ## Add Body Model Information
-    phase = bm.ModifyPhase(phase, openmdao_path="BM", declare_controls=False)
-    
-    return phase
+    ## Dynamic Model
+    print("Checking PlanarPTModel")
+    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10))
+    try:
+        os.mkdir('./PlanarSystemDynamicModel/')
+    except:
+        pass
+    os.chdir('./PlanarSystemDynamicModel/')
+    checkProblem(p)
 
