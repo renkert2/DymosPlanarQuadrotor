@@ -18,21 +18,29 @@ import os
 class PlanarSystemDynamicModel(om.Group):
     def initialize(self):
         self.options.declare('num_nodes', types=int)
+        self.options.declare('ModelType', types=str, default="DAE")
         
     def setup(self):
         nn = self.options["num_nodes"]
         
-        self.add_subsystem(name="PT", subsys=pt.PlanarPTModel(num_nodes=nn))
+        if self.options["ModelType"] == "DAE":
+            ptmodel = pt.PlanarPTModelDAE
+        elif self.options["ModelType"] == "ODE":
+            ptmodel = pt.PlanarPTModelODE
+        else:
+            raise Exception("Invalid ModelType option")
+        
+        self.add_subsystem(name="PT", subsys=ptmodel(num_nodes=nn))
         self.add_subsystem(name="BM", subsys=bm.PlanarQuadrotorODE(num_nodes=nn))
         
         self.connect("PT.y1", "BM.u_1")
         self.connect("PT.y3", "BM.u_2")
         
 class PlanarSystemDynamicPhase(dmm.DynamicPhase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         # Instantiate a Phase and add it to the Trajectory.
         # Here the transcription is necessary but not particularly relevant.
-        super().__init__(ode_class=PlanarSystemDynamicModel, *args, **kwargs)
+        super().__init__(ode_class=PlanarSystemDynamicModel, **kwargs)
     
         ## Add PowerTrain Information.  In the PlanarSystemDynamicModel, the PlanarPowerTrainModel dynamic model 
         # is added as a subsystem named PT.  When we specify the open_mdao path as PT, init_vars will find the 
@@ -45,7 +53,8 @@ class PlanarSystemDynamicPhase(dmm.DynamicPhase):
                         state_names=["x"],
                         control_names = ["u","d"],
                         parameter_names = ["theta"],
-                        output_names = ["y", "a"],
+                        #output_names = ["y", "a"],
+                        output_names = ["y"],
                         var_opts = {"d":{"val":0}})
         ## Add Body Model Information
         # The PlanarQuadrotorODE Module has a method which takes an existing phase
@@ -77,7 +86,7 @@ def makePlanarSystemModel(phase):
     theta_names = [x["SymID"] for x in param_table]
     for theta in theta_names:
         theta_path = "PT_" + theta
-        model.promotes('traj', inputs=[((f'phase0.parameters:%s' % theta_path),theta)])
+        model.promotes('traj', inputs=[(('phase0.parameters:%s' % theta_path),theta)])
     
     # Promote BM Parameters
     model.promotes('traj', inputs=[('phase0.parameters:BM_m', 'Mass')])
@@ -91,7 +100,6 @@ def makePlanarSystemModel(phase):
 if __name__ == "__main__":
     # Run N2 and Model Checks
     import openmdao.api as om
-    import os
     import logging
     
     logging.basicConfig(level=logging.INFO)
@@ -116,12 +124,19 @@ if __name__ == "__main__":
             p.check_partials(compact_print=True)
     
     ## Dynamic Model
-    print("Checking PlanarPTModel")
-    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10))
-    try:
-        os.mkdir('./PlanarSystemDynamicModel/')
-    except:
-        pass
-    os.chdir('./PlanarSystemDynamicModel/')
+    print("Checking PlanarSystemDynamicModel")
+    
+    if not os.path.isdir('./PlanarSystemDynamicModel_DAE/'):
+        os.mkdir('./PlanarSystemDynamicModel_DAE/')
+    os.chdir('./PlanarSystemDynamicModel_DAE/')
+    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="DAE"))
+    checkProblem(p)
+    
+    os.chdir('..')
+    
+    if not os.path.isdir('./PlanarSystemDynamicModel_ODE/'):
+        os.mkdir('./PlanarSystemDynamicModel_ODE/')
+    os.chdir('./PlanarSystemDynamicModel_ODE/')
+    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="ODE"))
     checkProblem(p)
 

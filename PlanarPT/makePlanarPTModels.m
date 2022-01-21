@@ -123,16 +123,28 @@ full_model.h.Sym = h;
 full_model.f.Sym = f;
 full_model.g.Sym = g;
 
+% Create Version of Full Model with Symbolic Solution for Algebraic States
+% TODO: Add this functionality to AGILe at some point
+h_sol = solve(h == 0, a);
+f_subs = subs(f, h_sol);
+
+%Nx,Nu,Nd,Ny,Ntheta
+sv = ODEDesignSymVars(3,2,0,4,18);
+full_model_subs = ODEDesignModel(sv);
+full_model_subs.f.Sym = f_subs;
+full_model_subs.g.Sym = g;
+
 %% Export Full Model
 opts = exportoptions(full_model, 'Method', 'PythonFunction', 'FlattenJacobian', true, 'ExportMetadata', true);
-opts.Directory = "PlanarPowerTrainModel";
+
+opts.Directory = "PlanarPTModelDAE";
 full_model.export(opts)
+
+opts.Directory = "PlanarPTModelODE";
+full_model_subs.export(opts)
 
 
 %% Make Simple DAE Model for Steady State
-clear all
-load ParamMetadata.mat
-pm = ParamMetadata;
 
 sv = DAEDesignSymVars(1,5,1,0,1,18);
 x = sv.x;
@@ -238,5 +250,5 @@ simple_model.g.Sym = g;
 
 %% Export Simple Model
 opts = exportoptions(simple_model, 'Method', 'PythonFunction', 'FlattenJacobian', true, 'ExportMetadata', true);
-opts.Directory = "PlanarPowerTrainModel_Simple";
+opts.Directory = "PlanarPTModelDAE_Simple";
 simple_model.export(opts)

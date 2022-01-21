@@ -1,0 +1,36 @@
+{
+  "g": {
+    "Type": "Explicit",
+    "Description": [],
+    "Args": [
+      "x",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Inputs": [
+      "x",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Outputs": "y"
+  },
+  "f": {
+    "Type": "Explicit",
+    "Description": [],
+    "Args": [
+      "x",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Inputs": [
+      "x",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Outputs": "x_dot"
+  }
+}

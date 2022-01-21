@@ -6,16 +6,27 @@ Created on Thu Nov 18 08:36:58 2021
 """
 
 import os
-os.chdir(os.path.join(os.path.dirname(__file__), '..'))
+os.chdir(os.path.join(os.path.dirname(__file__), '..', '..'))
 import PlanarSystem as ps
 import dymos as dm
 import openmdao.api as om
-import matplotlib.pyplot as plt
 import time
+import SUPPORT_FUNCTIONS.plotting as plt
+import warnings
 
+os.chdir(os.path.dirname(__file__))
+if not os.path.isdir("Output"):
+    os.mkdir("Output")
+os.chdir("Output")
+
+warnings.filterwarnings('ignore', category=om.UnitsWarning)
+
+#%%
 nn = 20
-tx = dm.Radau(num_segments=nn, compressed=False)
-phase = ps.PlanarSystemDynamicPhase(tx)
+tx = dm.GaussLobatto(num_segments=nn)
+phase = ps.PlanarSystemDynamicPhase(transcription=tx)
+phase.init_vars()
+
 
 # Set up States and Inputs as Optimization Variables
 phase.set_time_options(fix_initial=True, initial_val=0, duration_bounds=(0.001, 50))
@@ -47,7 +58,6 @@ traj = dm.Trajectory()
 traj.add_phase('phase0', phase)
 
 prob.model.add_subsystem('traj', traj)
-prob.model.add_subsystem
 prob.model.linear_solver = om.DirectSolver() # I'm not sure why we need this
 
 prob.setup()
@@ -82,53 +92,9 @@ print(f"Problem solved in {run_time:0.4f} seconds")
 
 sim_out = traj.simulate(times_per_seg=50)
 
-t_sol = prob.get_val('traj.phase0.timeseries.time')
-t_sim = sim_out.get_val('traj.phase0.timeseries.time')
-
 #%% Plots
 
-# Powertrain States
-states = ["PT_x1", "PT_x2", "PT_x3"]
-labels = ["q", "omega_1", "omega_2"]
-fig, axes = plt.subplots(len(states), 1)
-for i, state in enumerate(states):
-    sol = axes[i].plot(t_sol, prob.get_val(f'traj.phase0.timeseries.states:{state}'), 'o')
-    sim = axes[i].plot(t_sim, sim_out.get_val(f'traj.phase0.timeseries.states:{state}'), '-')
-    axes[i].set_ylabel(labels[i])
-axes[-1].set_xlabel('time (s)')
-plt.tight_layout()
-plt.show()
-
-# Body States
-states = ['BM_x', 'BM_y', 'BM_theta']
-labels = ['x', 'y', 'theta']
-fig, axes = plt.subplots(len(states), 1)
-for i, state in enumerate(states):
-    sol = axes[i].plot(t_sol, prob.get_val(f'traj.phase0.timeseries.states:{state}'), 'o')
-    sim = axes[i].plot(t_sim, sim_out.get_val(f'traj.phase0.timeseries.states:{state}'), '-')
-    axes[i].set_ylabel(labels[i])
-axes[-1].set_xlabel('time (s)')
-plt.tight_layout()
-plt.show()
-
-inputs = ['PT_u1', 'PT_u2']
-labels = ["u1", "u2"]
-fig, axes = plt.subplots(len(inputs), 1)
-for i, input in enumerate(inputs):
-    sol = axes[i].plot(t_sol, prob.get_val(f'traj.phase0.timeseries.controls:{input}'), 'o')
-    sim = axes[i].plot(t_sim, sim_out.get_val(f'traj.phase0.timeseries.controls:{input}'), '-')
-    axes[i].set_ylabel(labels[i])
-axes[-1].set_xlabel('time (s)')
-plt.tight_layout()
-plt.show()
-
-# outputs = ["y12", "y13", "y14", "y15"]
-# labels = ["Thrust 1", "Torque 1", "Thrust 2", "Torque 2"]
-# fig, axes = plt.subplots(len(outputs), 1)
-# for i, output in enumerate(outputs):
-#     sol = axes[i].plot(t_sol, prob.get_val(f'traj.phase0.timeseries.outputs:{output}'), 'o')
-#     sim = axes[i].plot(t_sim, sim_out.get_val(f'traj.phase0.timeseries.outputs:{output}'), '-')
-#     axes[i].set_ylabel(labels[i])
-# axes[-1].set_xlabel('time (s)')
-# plt.tight_layout()
-# plt.show()
+plt.subplots(sim_out, prob, path='traj.phase0.timeseries',
+             vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']] + [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']],
+             labels=['$x$', '$y$', r'$\theta$', "$u_1$", "$u_2$"], 
+             title="Planar Quadrotor Input Optimization", save=True)

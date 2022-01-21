@@ -3,23 +3,34 @@
 import os
 import DynamicModel as dm
 import StaticModel as sm
-
-class PlanarPTModel(dm.DynamicModel):
+        
+class PlanarPTModelDAE(dm.DynamicModel):
     def initialize(self):
         super().initialize()
         
-        mdl = "PlanarPowerTrainModel"
+        mdl = "PlanarPTModelDAE"
         mdl_path = os.path.dirname(__file__)
         self.options["Model"] = mdl
         self.options["Path"] = mdl_path
         self.options["Functions"] = ["h", "f", "g"]
         self.options["StaticVars"] = ["theta"]
 
-class PlanarPTStaticModel(sm.StaticModel):
+class PlanarPTModelODE(dm.DynamicModel):
     def initialize(self):
         super().initialize()
         
-        mdl = "PlanarPowerTrainModel_Simple"
+        mdl = "PlanarPTModelODE"
+        mdl_path = os.path.dirname(__file__)
+        self.options["Model"] = mdl
+        self.options["Path"] = mdl_path
+        self.options["Functions"] = ["f", "g"]
+        self.options["StaticVars"] = ["theta"]
+
+class PlanarPTModelDAE_Simple(sm.StaticModel):
+    def initialize(self):
+        super().initialize()
+        
+        mdl = "PlanarPTModelDAE_Simple"
         mdl_path = os.path.dirname(__file__)
         self.options["Model"] = mdl
         self.options["Path"] = mdl_path
@@ -29,7 +40,6 @@ class PlanarPTStaticModel(sm.StaticModel):
 if __name__ == "__main__":
     # Run N2 and Model Checks
     import openmdao.api as om
-    import os
     import logging
     
     logging.basicConfig(level=logging.INFO)
@@ -41,34 +51,35 @@ if __name__ == "__main__":
         pass
     os.chdir('./ModelChecks/')
     
-    def checkProblem(p):
-            p.setup()
-            p.final_setup()
+    def checkModelClass(model_class):
+        class_name = model_class.__name__
         
-            # Visualize:
-            om.n2(p)
-            om.view_connections(p)
-            
-            # Checks:
-            p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
-            p.check_partials(compact_print=True)
+        if not os.path.isdir(class_name):
+            os.mkdir(class_name)
+        os.chdir(class_name)
+        
+        print(f"Checking Model Class: {class_name}")
+        
+        if issubclass(model_class, dm.DynamicModel):
+            mdl_args = {"num_nodes":10}
+        else:
+            mdl_args = {}
+        p = om.Problem(model=model_class(**mdl_args))
+        p.setup()
+        p.final_setup()
+        
+        # Visualize:
+        om.n2(p)
+        om.view_connections(p)
+        
+        # Checks:
+        p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
+        p.check_partials(compact_print=True)
+        
+        os.chdir('..')
     
-    ## Dynamic Model
-    print("Checking PlanarPTModel")
-    p = om.Problem(model=PlanarPTModel(num_nodes = 10))
-    try:
-        os.mkdir('./PlanarPTModel/')
-    except:
-        pass
-    os.chdir('./PlanarPTModel/')
-    checkProblem(p)
+    model_types = [PlanarPTModelDAE, PlanarPTModelODE, PlanarPTModelDAE_Simple]
     
-    ## Static Model
-    print("Checking PlanarPTStaticModel")
-    p = om.Problem(model=PlanarPTStaticModel())
-    try:
-        os.mkdir('./PlanarPTStaticModel/')
-    except:
-        pass
-    os.chdir('./PlanarPTStaticModel/')
-    checkProblem(p)
+    for mtype in model_types:
+        checkModelClass(mtype)
+    
