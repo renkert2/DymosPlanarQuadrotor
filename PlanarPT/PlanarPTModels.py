@@ -4,6 +4,7 @@ import os
 import DynamicModel as dm
 import StaticModel as sm
         
+
 class PlanarPTModelDAE(dm.DynamicModel):
     def initialize(self):
         super().initialize()
@@ -27,6 +28,8 @@ class PlanarPTModelODE(dm.DynamicModel):
         self.options["StaticVars"] = ["theta"]
 
 class PlanarPTModelDAE_Simple(sm.StaticModel):
+    # TODO: Add a version of this that calculates u_ss as a function of thrust
+
     def initialize(self):
         super().initialize()
         

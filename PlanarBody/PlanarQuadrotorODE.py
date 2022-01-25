@@ -1,6 +1,9 @@
 import numpy as np
 import openmdao.api as om
 
+# CONSTANTS
+g = 9.80665
+
 class PlanarQuadrotorSizeComp(om.ExplicitComponent):
     def setup(self):
         self.add_input(name='rho', val=0.1, desc='frame density', units='kg/m')
@@ -34,6 +37,60 @@ class PlanarQuadrotorSizeComp(om.ExplicitComponent):
         partials["I", "rho"] = (2*r**3)/3
         partials["I", "r"] = (2*r**2)*rho
 
+class PlanarQuadrotorHover(om.ExplicitComponent):
+    """
+    Used to Calculate the Steady-State Thrust requried for Hover
+    """
+    
+    def setup(self):
+
+        # Static Parameters
+        self.add_input('m', val=1, desc='mass', units='kg')
+        
+        # Outputs
+        self.add_output("u_hover", desc="Hover Thrust Input", units="N")
+        
+    def setup_partials(self):
+        self.declare_partials(of="u_hover", wrt="m", val=g)
+
+    def compute(self, inputs, outputs):
+        m = inputs['m']
+
+        outputs['u_hover'] = m*g
+        
+class PlanarQuadrotorVertAccel(om.ExplicitComponent):
+    """
+    Used to Calculate the Steady-State Thrust requried for Hover
+    """
+    
+    def setup(self):
+
+        # Static Parameters
+        self.add_input('m', val=1, desc='mass', units='kg')
+        
+        # Inputs
+        self.add_input("u", desc="Thrust Input", units="N")
+        
+        # Outputs
+        self.add_output("a", desc="Vertical Acceleration", units="m/s**2")
+    
+    def setup_partials(self):
+        self.declare_partials(of="a", wrt="m")
+        self.declare_partials(of="a", wrt="u")
+
+    def compute(self, inputs, outputs):
+        m = inputs['m']
+        u = inputs["u"]
+
+        outputs['a'] = u/m - g
+        
+    def compute_partials(self, inputs, partials):
+        m = inputs['m']
+        u = inputs["u"]
+        
+        partials["a", "m"] = -(1/(m**2)) * u
+        partials["a", "u"] = 1/m
+
 class PlanarQuadrotorODE(om.ExplicitComponent):
     """
     Dymos ODE for Planar Quadrotor
@@ -46,7 +103,6 @@ class PlanarQuadrotorODE(om.ExplicitComponent):
         nn = self.options['num_nodes']
 
         # Static Parameters
-        self.add_input('g', val=9.80665, desc='grav. acceleration', units='m/s**2', tags=['dymos.static_target'])
         self.add_input('m', val=1, desc='mass', units='kg', tags=['dymos.static_target'])
         self.add_input('r', val=0.1, desc='arm length', units='m', tags=['dymos.static_target'])
         self.add_input('I', val=0.01, desc='inertia', units='kg*m**2', tags=['dymos.static_target'])
@@ -79,7 +135,6 @@ class PlanarQuadrotorODE(om.ExplicitComponent):
         self.declare_partials(of='v_y_dot', wrt='u_2', rows=arange, cols=arange)
         self.declare_partials(of='v_y_dot', wrt='theta', rows=arange, cols=arange)
         self.declare_partials(of='v_y_dot', wrt='m', rows=arange, cols=c)
-        self.declare_partials(of='v_y_dot', wrt='g', val=-np.ones((self.options['num_nodes'], 1))) # Constant partial derivative -> value option is specified, no need to compute the partial
 
         self.declare_partials(of='omega_dot', wrt='u_1', rows=arange, cols=arange)
         self.declare_partials(of='omega_dot', wrt='u_2', rows=arange, cols=arange)
@@ -87,7 +142,6 @@ class PlanarQuadrotorODE(om.ExplicitComponent):
         self.declare_partials(of='omega_dot', wrt='I', rows=arange, cols=c)
 
     def compute(self, inputs, outputs):
-        g = inputs['g']
         m = inputs['m']
         r = inputs['r']
         I = inputs['I']

@@ -36,6 +36,30 @@ class PlanarSystemDynamicModel(om.Group):
         self.connect("PT.y1", "BM.u_1")
         self.connect("PT.y3", "BM.u_2")
         
+class PlanarSystemStaticModel(om.Group):
+    def initialize(self):
+        self.options.declare("IncludeBody", types=bool, default=False)
+        self.options.declare("SolveMode", types=str, default="Forward")
+        # SolveMode can be "Forward" to calculate thrust as a function of input, or "Backward" to calculate input as a function of thrust
+        
+    def setup(self):
+        if self.options["SolveMode"] == "Forward":
+            ptmodel = pt.PlanarPTModelDAE_Simple
+            self.add_subsystem(name="PT", subsys=ptmodel())
+        else:
+            # TODO: Reverse Evaluate the PT Model
+            pass
+            
+        if self.options["IncludeBody"]:
+            if self.options["SolveMode"] == "Forward":
+                 # Calculate Acceleration given Thrust
+                 self.add_subsystem(name="BM", subsys=bm.PlanarQuadrotorVertAccel())
+                 self.connect("PT.y1", "BM.u")
+            if self.options["SolveMode"] == "Backward":
+                 # Calculate Thrust given Acceleration
+                 self.add_subsystem(name="BM", subsys=bm.PlanarQuadrotorHover())
+                 self.connect("BM.u_hover","PT.y1")
+        
 class PlanarSystemDynamicPhase(dmm.DynamicPhase):
     def __init__(self, **kwargs):
         # Instantiate a Phase and add it to the Trajectory.
@@ -61,41 +85,90 @@ class PlanarSystemDynamicPhase(dmm.DynamicPhase):
         # and manually adds its states and controls to it.  
         self = bm.ModifyPhase(self, openmdao_path="BM", declare_controls=False)
     
-
-def makePlanarSystemModel(phase):
-    model = om.Group();
-    
-    # Add Battery surrogate, promote all parameter inputs and outputs to top level.  Everything has unique names at this point so we should be good. 
-    bs = surrogates.BatterySurrogate()
-    model.add_subsystem('surr_batt', bs, promotes=["*"])
-    
-    ms = surrogates.MotorSurrogate()
-    model.add_subsystem('surr_motor', ms, promotes=["*"])
-    
-    # Add Mass 
-    mass_comp = om.ExecComp("Mass = Mass__Battery + Mass__Motor + 1")
-    model.add_subsystem("mass", mass_comp, promotes=['*'])
-    
-    # Setup trajectory and add phase
-    traj = model.add_subsystem('traj', dm.Trajectory())
-    traj.add_phase('phase0', phase)
-
-    # Promote PT Parameters
-    meta = dmm.ImportMetadata('C:/Users/renkert2/Documents/ARG_Research/DymosPlanarQuadrotor/PlanarPT/PlanarPowerTrainModel')
-    param_table = meta["ParamTable"]
-    theta_names = [x["SymID"] for x in param_table]
-    for theta in theta_names:
-        theta_path = "PT_" + theta
-        model.promotes('traj', inputs=[(('phase0.parameters:%s' % theta_path),theta)])
-    
-    # Promote BM Parameters
-    model.promotes('traj', inputs=[('phase0.parameters:BM_m', 'Mass')])
-    
-    
+class PlanarSystemModel(om.Group):
+    def __init__(self, dynamic_trajectory, meta, *args, **kwargs):
+        self.Traj = dynamic_trajectory
+        self.Metadata = meta # Dictionary Metadata from DynamicPhase
+        super().__init__(*args, **kwargs)
         
-    return model, traj
+    def initialize(self):
+        self.options.declare("IncludeStaticModel", types=bool, default=True)
+        self.options.declare("IncludeSurrogates", types=list, default=[])
+    
+    def setup(self):        
+        mass_list = ["Mass__Frame"]
+        if "Battery" in self.options["IncludeSurrogates"]:
+            bs = surrogates.BatterySurrogate()
+            self.add_subsystem('surr_batt', bs)
+            # Make Connections
+            mass_list.append("Mass__Battery")
+            
+        if "Motor" in self.options["IncludeSurrogates"]:
+            ms = surrogates.MotorSurrogate()
+            self.add_subsystem('surr_motor', ms)
+            # Make Connections
+            mass_list.append("Mass__Motor")
+            
+        # Add Mass 
+        # TODO: Replace with add/subtract comp at some point
+        mass_str_sum = "+".join(mass_list)
+        mass_comp = om.ExecComp("Mass = " + mass_str_sum)
+        self.add_subsystem("mass", mass_comp, promotes=['*'])
+        
+        # Add Static Model as Subsystem
+        static_model = PlanarSystemStaticModel(IncludeBody=False, SolveMode="Forward")
+        self.add_subsystem('static', static_model)
+        self.set_input_defaults("static.PT.u1", val=1.0)
+        
+        # Add Thrust Ratio
+        tr_comp = om.ExecComp("TR = TMax / Mass")
+        self.add_subsystem("thrust_ratio", tr_comp, promotes=["*"])
 
-
+        # Add Trajectory as Subsystem
+        self.add_subsystem('traj', self.Traj)
+        
+    def configure(self):
+        # Configure allows us to issue connections to subsystems when you need information e.g. path names
+        # that have been set during the setup of those subsystems.  configure() runs after setup(), 
+        # so we can use list_inputs and list_outputs to make more informed connection/promotion choicse
+        # See: https://openmdao.org/newdocs/versions/latest/theory_manual/setup_stack.html
+        
+        # - apparently this doesn't work???  self.list_inputs() returns empty.  
+        
+        ### Promotions ###
+        # Promote PT Parameters
+        meta = self.Metadata["PT"]
+        param_elems = meta["Variable"]["theta"]["Variables"]
+        for elem in param_elems:
+            desc = elem["Description"]
+            theta = elem["Variable"]
+            
+            to_prom = f'phase0.parameters:PT_{theta}'
+            # Dynamic Model
+            # Unfortunately, I haven't figured out how to re-promote phase parameters back up to their original name.  
+            # For now, we'll have to promote/connect things to the names that Dymos enforces.
+            #self.promotes('traj', inputs=[(f'phase0.parameters:PT_{theta}', desc)])
+            
+            # Static Model
+            # Promote the parameters as their Dymos name
+            self.promotes('static', inputs=[(f"PT.{theta}", to_prom)])
+            #self.promotes('static', inputs=[(f"PT.{theta}", desc)])
+            
+            # Promote parameters from surrogate models
+            if "Battery" in self.options["IncludeSurrogates"]:
+                if desc in ["N_s__Battery", "Q__Battery", "R_s__Battery", "Mass__Battery"]:
+                    self.promotes("surr_batt", any=[(desc, to_prom)])
+            if "Motor" in self.options["IncludeSurrogates"]:
+                if desc in ["kV__Motor", "Rm__Motor", "Mass__Motor", "D__Motor", "J__Motor"]:
+                    self.promotes("surr_motor", any=[(desc, to_prom)])
+        
+        # Promote BM Parameters
+        self.connect("Mass", "traj.phase0.parameters:BM_m")
+        
+        ### Connections ###
+        # Connect output of StaticModel to Thrust Ratio
+        self.connect("static.PT.y1", "TMax")
+        pass
 
 if __name__ == "__main__":
     # Run N2 and Model Checks
@@ -113,30 +186,64 @@ if __name__ == "__main__":
     
     def checkProblem(p):
             p.setup()
-            p.final_setup()
+            #p.final_setup()
         
             # Visualize:
             om.n2(p)
             om.view_connections(p)
             
             # Checks:
-            p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
-            p.check_partials(compact_print=True)
+            #p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
+            #p.check_partials(compact_print=True)
     
     ## Dynamic Model
-    print("Checking PlanarSystemDynamicModel")
+    # print("Checking PlanarSystemDynamicModel")
     
-    if not os.path.isdir('./PlanarSystemDynamicModel_DAE/'):
-        os.mkdir('./PlanarSystemDynamicModel_DAE/')
-    os.chdir('./PlanarSystemDynamicModel_DAE/')
-    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="DAE"))
+    # if not os.path.isdir('./PlanarSystemDynamicModel_DAE/'):
+    #     os.mkdir('./PlanarSystemDynamicModel_DAE/')
+    # os.chdir('./PlanarSystemDynamicModel_DAE/')
+    # p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="DAE"))
+    # checkProblem(p)
+    
+    # os.chdir('..')
+    
+    # if not os.path.isdir('./PlanarSystemDynamicModel_ODE/'):
+    #     os.mkdir('./PlanarSystemDynamicModel_ODE/')
+    # os.chdir('./PlanarSystemDynamicModel_ODE/')
+    # p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="ODE"))
+    # checkProblem(p)
+    
+    # os.chdir('..')
+    
+    # if not os.path.isdir('./PlanarSystemStaticModel_Forward/'):
+    #     os.mkdir('./PlanarSystemStaticModel_Forward/')
+    # os.chdir('./PlanarSystemStaticModel_Forward/')
+    # p = om.Problem(model=PlanarSystemStaticModel(IncludeBody=True, SolveMode="Forward"))
+    # checkProblem(p)
+    
+    # os.chdir('..')
+    
+    ## System Model, Requires Trajectory and Phase
+    nn = 20
+    tx = dm.GaussLobatto(num_segments=nn)
+    phase = PlanarSystemDynamicPhase(transcription=tx)
+    phase.init_vars()
+    meta = phase.Metadata
+    traj = dm.Trajectory()
+    traj.add_phase('phase0', phase)
+    
+    
+    if not os.path.isdir('./PlanarSystemModel_Surrogates/'):
+        os.mkdir('./PlanarSystemModel_Surrogates/')
+    os.chdir('./PlanarSystemModel_Surrogates/')
+    p = om.Problem(model=PlanarSystemModel(traj, meta, IncludeSurrogates=["Battery", "Motor"], IncludeStaticModel=True))
     checkProblem(p)
     
     os.chdir('..')
     
-    if not os.path.isdir('./PlanarSystemDynamicModel_ODE/'):
-        os.mkdir('./PlanarSystemDynamicModel_ODE/')
-    os.chdir('./PlanarSystemDynamicModel_ODE/')
-    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="ODE"))
+    if not os.path.isdir('./PlanarSystemModel_NoSurrogates/'):
+        os.mkdir('./PlanarSystemModel_NoSurrogates/')
+    os.chdir('./PlanarSystemModel_NoSurrogates/')
+    p = om.Problem(model=PlanarSystemModel(traj, meta, IncludeSurrogates=[], IncludeStaticModel=True))
     checkProblem(p)
 
