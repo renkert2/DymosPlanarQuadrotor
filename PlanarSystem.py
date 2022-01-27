@@ -95,25 +95,24 @@ class PlanarSystemModel(om.Group):
         self.options.declare("IncludeStaticModel", types=bool, default=True)
         self.options.declare("IncludeSurrogates", types=list, default=[])
     
-    def setup(self):        
-        mass_list = ["Mass__Frame"]
+    def setup(self):    
         if "Battery" in self.options["IncludeSurrogates"]:
             bs = surrogates.BatterySurrogate()
             self.add_subsystem('surr_batt', bs)
-            # Make Connections
-            mass_list.append("Mass__Battery")
             
         if "Motor" in self.options["IncludeSurrogates"]:
             ms = surrogates.MotorSurrogate()
             self.add_subsystem('surr_motor', ms)
-            # Make Connections
-            mass_list.append("Mass__Motor")
+            
+        # Include PlanarQuadrotorSizingComponent
+        body_size = bm.PlanarQuadrotorSizeComp()
+        self.add_subsystem('size_comp', body_size)
             
         # Add Mass 
         # TODO: Replace with add/subtract comp at some point
-        mass_str_sum = "+".join(mass_list)
-        mass_comp = om.ExecComp("Mass = " + mass_str_sum)
-        self.add_subsystem("mass", mass_comp, promotes=['*'])
+        mass_list = ["Mass__Frame", "Mass__Motor", "Mass__Motor", "Mass__Propeller",  "Mass__Propeller"]
+        mass_comp = om.AddSubtractComp(output_name="Mass__PlanarQuadrotor", input_names=mass_list)
+        self.add_subsystem("mass", mass_comp)
         
         # Add Static Model as Subsystem
         static_model = PlanarSystemStaticModel(IncludeBody=False, SolveMode="Forward")
@@ -122,12 +121,14 @@ class PlanarSystemModel(om.Group):
         
         # Add Thrust Ratio
         tr_comp = om.ExecComp("TR = TMax / Mass")
-        self.add_subsystem("thrust_ratio", tr_comp, promotes=["*"])
+        self.add_subsystem("thrust_ratio", tr_comp)
 
         # Add Trajectory as Subsystem
         self.add_subsystem('traj', self.Traj)
         
-    def configure(self):
+        # Add solvers here as necessary
+        
+        #def configure(self):
         # Configure allows us to issue connections to subsystems when you need information e.g. path names
         # that have been set during the setup of those subsystems.  configure() runs after setup(), 
         # so we can use list_inputs and list_outputs to make more informed connection/promotion choicse
@@ -136,14 +137,14 @@ class PlanarSystemModel(om.Group):
         # - apparently this doesn't work???  self.list_inputs() returns empty.  
         
         ### Promotions ###
-        # Promote PT Parameters
+        # Promote PT Parameters to the Dymos trajectory values
         meta = self.Metadata["PT"]
         param_elems = meta["Variable"]["theta"]["Variables"]
         for elem in param_elems:
             desc = elem["Description"]
             theta = elem["Variable"]
             
-            to_prom = f'phase0.parameters:PT_{theta}'
+            to_prom = f'traj.phase0.parameters:PT_{theta}'
             # Dynamic Model
             # Unfortunately, I haven't figured out how to re-promote phase parameters back up to their original name.  
             # For now, we'll have to promote/connect things to the names that Dymos enforces.
@@ -154,6 +155,10 @@ class PlanarSystemModel(om.Group):
             self.promotes('static', inputs=[(f"PT.{theta}", to_prom)])
             #self.promotes('static', inputs=[(f"PT.{theta}", desc)])
             
+            # Promote parameters in Mass component
+            if desc in mass_list:
+                self.promotes('mass', any=[(desc, to_prom)])
+            
             # Promote parameters from surrogate models
             if "Battery" in self.options["IncludeSurrogates"]:
                 if desc in ["N_s__Battery", "Q__Battery", "R_s__Battery", "Mass__Battery"]:
@@ -161,13 +166,21 @@ class PlanarSystemModel(om.Group):
             if "Motor" in self.options["IncludeSurrogates"]:
                 if desc in ["kV__Motor", "Rm__Motor", "Mass__Motor", "D__Motor", "J__Motor"]:
                     self.promotes("surr_motor", any=[(desc, to_prom)])
+                    
+            # Promote parameters from sizing component
+            if desc in ["Mass__Motor", "Mass__Propeller"]:
+                self.promotes("size_comp", inputs=[(desc, to_prom)])
         
         # Promote BM Parameters
-        self.connect("Mass", "traj.phase0.parameters:BM_m")
+        self.connect("size_comp.Mass__Frame", "mass.Mass__Frame")
+        self.connect("size_comp.I", "traj.phase0.parameters:BM_I")
+        self.promotes("size_comp", inputs=[("r", "traj.phase0.parameters:BM_r")])
+        self.connect("mass.Mass__PlanarQuadrotor", "traj.phase0.parameters:BM_m")
+        self.connect("mass.Mass__PlanarQuadrotor", "thrust_ratio.Mass")
         
         ### Connections ###
         # Connect output of StaticModel to Thrust Ratio
-        self.connect("static.PT.y1", "TMax")
+        self.connect("static.PT.y1", "thrust_ratio.TMax")
         pass
 
 if __name__ == "__main__":

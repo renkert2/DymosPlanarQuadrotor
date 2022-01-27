@@ -6,36 +6,44 @@ g = 9.80665
 
 class PlanarQuadrotorSizeComp(om.ExplicitComponent):
     def setup(self):
-        self.add_input(name='rho', val=0.1, desc='frame density', units='kg/m')
-        self.add_input(name='r', val=1, desc='arm length', units='m')
+        self.add_input(name='rho', val=0.1, desc='frame density')
+        self.add_input(name='r', val=1, desc='arm length')
+        self.add_input(name="Mass__Motor", val=1, desc="Mass__Motor")
+        self.add_input(name="Mass__Propeller", val=1, desc="Mass__Propeller")
 
-        self.add_output(name='m', shape=(1,), desc='quadrotor mass', units='kg')
-        self.add_output(name='I', shape=(1,), desc='inertia', units='kg*m**2')
+        self.add_output(name='Mass__Frame', shape=(1,), desc='quadrotor mass')
+        self.add_output(name='I', shape=(1,), desc='inertia')
 
         #self.declare_partials(of='*', wrt='*', method='fd') # Would eventually want to include analytical derivatives
-        self.declare_partials(of='m', wrt='rho')
-        self.declare_partials(of='m', wrt='r')
+        self.declare_partials(of='Mass__Frame', wrt='rho')
+        self.declare_partials(of='Mass__Frame', wrt='r')
         
         self.declare_partials(of='I', wrt='rho')
         self.declare_partials(of='I', wrt='r')
+        self.declare_partials(of='I', wrt="Mass__Motor")
+        self.declare_partials(of='I', wrt="Mass__Propeller")
     
     def compute(self, inputs, outputs):
         r = inputs["r"]
         rho = inputs["rho"]
+        m_prop = inputs["Mass__Propeller"]
+        m_motor = inputs["Mass__Motor"]
 
-        m = rho*2*r
-        outputs["m"] = m
-        outputs["I"] = (1/12)*m*(2*r)**2
+        m_frame = rho*2*r
+        outputs["Mass__Frame"] = m_frame
+        outputs["I"] = (1/12)*m_frame*(2*r)**2 + (m_prop + m_motor)*r**2
 
     def compute_partials(self, inputs, partials):
         r = inputs["r"]
         rho = inputs["rho"]
 
-        partials["m", "rho"] = 2*r
-        partials["m", "r"] = 2*rho
+        partials["Mass__Frame", "rho"] = 2*r
+        partials["Mass__Frame", "r"] = 2*rho
 
         partials["I", "rho"] = (2*r**3)/3
         partials["I", "r"] = (2*r**2)*rho
+        partials["I", "Mass__Propeller"] = r**2
+        partials["I", "Mass__Motor"] = r**2
 
 class PlanarQuadrotorHover(om.ExplicitComponent):
     """
@@ -214,9 +222,8 @@ def ModifyPhase(phase, openmdao_path="", declare_controls=True):
         phase.add_control(V2N('u_2'), targets=[V2T('u_2')], units='N')
     
     # Define constant parameters
-    phase.add_parameter(V2N('g'), units='m/s**2', val=9.80665)
-    phase.add_parameter(V2N('m'), units='kg', val=1)
-    phase.add_parameter(V2N('r'), units='m', val=.1)
-    phase.add_parameter(V2N('I'), units='kg*m**2', val=1)
+    phase.add_parameter(V2N('m'), targets=[V2T('m')], units='kg', val=1)
+    phase.add_parameter(V2N('r'), targets=[V2T('r')], units='m', val=.1)
+    phase.add_parameter(V2N('I'), targets=[V2T('I')], units='kg*m**2', val=1)
     
     return phase
