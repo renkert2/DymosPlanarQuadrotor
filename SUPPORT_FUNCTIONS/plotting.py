@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 
 mtlb = os.getenv('MYPYTHON')
 plt.style.use(os.path.join(mtlb, 'research_default.mplstyle'))
-plt.rcParams['text.usetex'] = True
 
 def subplots(sim, prob, path='traj.phase0.timeseries', vars=[], labels=[], title="", save=False):
     if sim:

@@ -110,7 +110,7 @@ class PlanarSystemModel(om.Group):
             
         # Add Mass 
         # TODO: Replace with add/subtract comp at some point
-        mass_list = ["Mass__Frame", "Mass__Motor", "Mass__Motor", "Mass__Propeller",  "Mass__Propeller"]
+        mass_list = ["Mass__Frame", "Mass__Battery", "Mass__Motor", "Mass__Motor", "Mass__Propeller",  "Mass__Propeller"]
         mass_comp = om.AddSubtractComp(output_name="Mass__PlanarQuadrotor", input_names=mass_list)
         self.add_subsystem("mass", mass_comp)
         

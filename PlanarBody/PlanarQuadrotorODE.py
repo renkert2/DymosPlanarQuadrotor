@@ -31,7 +31,7 @@ class PlanarQuadrotorSizeComp(om.ExplicitComponent):
 
         m_frame = rho*2*r
         outputs["Mass__Frame"] = m_frame
-        outputs["I"] = (1/12)*m_frame*(2*r)**2 + (m_prop + m_motor)*r**2
+        outputs["I"] = (1/12)*m_frame*(2*r)**2 + 2*(m_prop + m_motor)*r**2
 
     def compute_partials(self, inputs, partials):
         r = inputs["r"]

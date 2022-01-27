@@ -11,7 +11,7 @@ import PlanarSystem as ps
 import dymos as dm
 import openmdao.api as om
 import time
-import SUPPORT_FUNCTIONS.plotting # Just to get the default formatting
+import SUPPORT_FUNCTIONS.plotting as my_plt
 import matplotlib.pyplot as plt
 import warnings
 import numpy as np
@@ -19,9 +19,9 @@ import pickle
 import copy
 
 os.chdir(os.path.dirname(__file__))
-if not os.path.isdir("Output_MassSweep"):
-    os.mkdir("Output_MassSweep")
-os.chdir("Output_MassSweep")
+if not os.path.isdir("Output_MassStudyOptiFail"):
+    os.mkdir("Output_MassStudyOptiFail")
+os.chdir("Output_MassStudyOptiFail")
 
 warnings.filterwarnings('ignore', category=om.UnitsWarning)
 
@@ -80,8 +80,10 @@ prob.setup()
 prob.set_val('traj.phase0.t_initial', 0.0)
 prob.set_val('traj.phase0.t_duration', 10.0)
 
-prob.set_val('traj.phase0.controls:PT_u1', 0.5)
-prob.set_val('traj.phase0.controls:PT_u2', 0.5)
+#prob.set_val('traj.phase0.controls:PT_u1', 0.5)
+#prob.set_val('traj.phase0.controls:PT_u2', 0.5)
+prob.set_val('traj.phase0.controls:PT_u1', 0.1)
+prob.set_val('traj.phase0.controls:PT_u2', 0.1)
 
 prob.set_val('traj.phase0.states:PT_x1', 1.0)
 prob.set_val('traj.phase0.states:PT_x2', phase.interp('PT_x2', ys=(0,1000)))
@@ -105,10 +107,11 @@ prob.run_model()
 #
 # Run the Optimization Problem for Various Masses
 #
-mass_vals = np.arange(0.0, 2.1, 0.1)
+# mass_vals = np.arange(0.0, 2.1, 0.1)
+mass_vals = [1.1]
 time_vals = []
 out_vals = []
-for val in mass_vals:
+for (i,val) in enumerate(mass_vals):
     prob.set_val('traj.phase0.parameters:PT_theta16', val)
     print(f"Solving optimization for mass {val}")
     prob.run_driver()
@@ -117,6 +120,7 @@ for val in mass_vals:
     print(f"Final time: {final_time}")
     time_vals.append(final_time)
     out_vals.append(out_val)
+    prob.record(f'final_{i}')
     prob.cleanup()
     
 # create a binary pickle file 
@@ -125,7 +129,7 @@ data_dict = {"mass_vals":mass_vals, "out_vals":out_vals}
 pickle.dump(data_dict,f)
 f.close()
 
-#sim_out = traj.simulate(times_per_seg=50)
+sim_out = traj.simulate(times_per_seg=50)
 # Get the final value of the design variable
 
 #%% Plots
@@ -139,25 +143,8 @@ def get_val_from_list(val_list, var):
         if tup[0] == var:
             return tup[1]['val']
 
-plt_vars = ['mass.Mass__PlanarQuadrotor', 'thrust_ratio.TR', "traj.phase0.t_duration"]
-labels = ["System Mass (kg)", "Thrust Ratio (N/kg)", "Minimum Time (s)"]
-fig, axes = plt.subplots(len(plt_vars), 1, figsize=(4,6))
-for (i, var) in enumerate(plt_vars):
-    if i < 2:
-        vals = [get_val_from_list(x, var) for x in out_vals]
-    else:
-        vals = time_vals   
-    axes[i].plot(mass_vals, vals)
-    axes[i].set_ylabel(labels[i])
-    axes[i].set_ylim(bottom=0)
-    if i == 1:
-        axes[i].axhline(y = 1, color = 'r', linestyle = 'dashed', label = "red line")
-axes[-1].set_xlabel("Mass (kg)")
-fig.suptitle(r"\textbf{Battery Mass Sweep}")
-plt.tight_layout()
-plt.savefig("batt_mass_vs_time.png")
-plt.show()
 
-
-
-    
+my_plt.subplots(sim_out, prob, path='traj.phase0.timeseries',
+             vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']] + [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']],
+             labels=['$x$', '$y$', r'$\theta$', "$u_1$", "$u_2$"], 
+             title="Planar Quadrotor Input Optimization", save=True)
