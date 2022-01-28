@@ -36,14 +36,16 @@ class PlanarQuadrotorSizeComp(om.ExplicitComponent):
     def compute_partials(self, inputs, partials):
         r = inputs["r"]
         rho = inputs["rho"]
+        m_prop = inputs["Mass__Propeller"]
+        m_motor = inputs["Mass__Motor"]
 
         partials["Mass__Frame", "rho"] = 2*r
         partials["Mass__Frame", "r"] = 2*rho
 
         partials["I", "rho"] = (2*r**3)/3
-        partials["I", "r"] = (2*r**2)*rho
-        partials["I", "Mass__Propeller"] = r**2
-        partials["I", "Mass__Motor"] = r**2
+        partials["I", "r"] = (2*r**2)*rho + 4*(m_motor + m_prop)*r
+        partials["I", "Mass__Propeller"] = 2*r**2
+        partials["I", "Mass__Motor"] = 2*r**2
 
 class PlanarQuadrotorHover(om.ExplicitComponent):
     """
@@ -98,6 +100,25 @@ class PlanarQuadrotorVertAccel(om.ExplicitComponent):
         
         partials["a", "m"] = -(1/(m**2)) * u
         partials["a", "u"] = 1/m
+        
+class PlanarQuadrotorThrustRatio(om.ExplicitComponent):
+    def setup(self):
+        self.add_input('m', val=1, desc='mass')
+        self.add_input('TMax', val=1, desc='Maximum thrust')
+        
+        self.add_output('TR', desc="Thrust Ratio")
+    
+        self.declare_partials('*', '*', method='exact')
+    def compute(self, inputs, outputs):
+        m = inputs['m']
+        TMax = inputs["TMax"]
+        outputs["TR"] = TMax / (m*g)
+    def compute_partials(self, inputs, partials):
+        m = inputs['m']
+        TMax = inputs["TMax"]
+        partials["TR", "m"] = -TMax/(g*m**2)
+        partials["TR", "TMax"] = 1/(m*g)
+        
 
 class PlanarQuadrotorODE(om.ExplicitComponent):
     """
