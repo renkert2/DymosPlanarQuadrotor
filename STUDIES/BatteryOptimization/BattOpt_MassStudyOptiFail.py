@@ -26,24 +26,41 @@ os.chdir("Output_MassStudyOptiFail")
 warnings.filterwarnings('ignore', category=om.UnitsWarning)
 
 #%%
+# Set up Desired Final Location:
+x_init=0
+y_init=0    
+
+x_des = 10
+y_des = 10
+
+def pos_margin(p, margin):
+    # Takes a list of positions and returns the min and the max with a padded boundary
+    p_max = max(p)
+    p_min = min(p)
+    d = margin*(p_max - p_min)
+    return (p_min - d, p_max + d)
+
+(x_lb, x_ub) = pos_margin([x_init, x_des], 0.1)
+(y_lb, y_ub) = pos_margin([y_init, y_des], 0.1)
+
+#%%
 nn = 20
 tx = dm.GaussLobatto(num_segments=nn)
 phase = ps.PlanarSystemDynamicPhase(transcription=tx)
 phase.init_vars()
 
-
 # Set up States and Inputs as Optimization Variables
-phase.set_time_options(fix_initial=True, initial_val=0, duration_bounds=(0.001, 50))
+phase.set_time_options(fix_initial=True, initial_val=0, duration_bounds=(1, 20), duration_ref0=1, duration_ref=20)
 
 phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=True, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
 phase.set_state_options("PT_x2", fix_initial=True, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
 phase.set_state_options("PT_x3", fix_initial=True, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
 phase.set_state_options('BM_v_x', fix_initial=True, fix_final=True)
 phase.set_state_options('BM_v_y', fix_initial=True, fix_final=True)
-phase.set_state_options('BM_x', fix_initial=True, fix_final=True)
-phase.set_state_options('BM_y', fix_initial=True, fix_final=True)
+phase.set_state_options('BM_x', fix_initial=True, fix_final=True, lower=ref0=x_lb, upper=ref=x_ub)
+phase.set_state_options('BM_y', fix_initial=True, fix_final=True, lower=ref0=y_lb, upper=ref=y_ub)
 phase.set_state_options('BM_omega', fix_initial=True, fix_final=True)
-phase.set_state_options('BM_theta', fix_initial=True, fix_final=True)
+phase.set_state_options('BM_theta', fix_initial=True, fix_final=True, lower=ref0=-np.pi/2, upper=ref=np.pi/2)
 
 phase.set_control_options("PT_u1", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
 phase.set_control_options("PT_u2", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
@@ -73,17 +90,18 @@ prob.recording_options['record_inputs'] = True
 prob.recording_options['includes'] = ["*"]
 prob.driver.add_recorder(recorder)
 prob.driver.recording_options['includes']= ["thrust_ratio.*", "traj.phases.phase0.timeseries.*"]
+prob.driver.recording_options['record_derivatives'] = False
 
 prob.setup()
 
 # Set Initial Values
 prob.set_val('traj.phase0.t_initial', 0.0)
-prob.set_val('traj.phase0.t_duration', 10.0)
+prob.set_val('traj.phase0.t_duration', 5.0)
 
-#prob.set_val('traj.phase0.controls:PT_u1', 0.5)
-#prob.set_val('traj.phase0.controls:PT_u2', 0.5)
-prob.set_val('traj.phase0.controls:PT_u1', 0.1)
-prob.set_val('traj.phase0.controls:PT_u2', 0.1)
+prob.set_val('traj.phase0.controls:PT_u1', 0.5)
+prob.set_val('traj.phase0.controls:PT_u2', 0.5)
+#prob.set_val('traj.phase0.controls:PT_u1', 0.1)
+#prob.set_val('traj.phase0.controls:PT_u2', 0.1)
 
 prob.set_val('traj.phase0.states:PT_x1', 1.0)
 prob.set_val('traj.phase0.states:PT_x2', phase.interp('PT_x2', ys=(0,1000)))
@@ -121,7 +139,7 @@ for (i,val) in enumerate(mass_vals):
     time_vals.append(final_time)
     out_vals.append(out_val)
     prob.record(f'final_{i}')
-    prob.cleanup()
+prob.cleanup()
     
 # create a binary pickle file 
 f = open("sweep_data.pkl","wb")
@@ -148,3 +166,9 @@ my_plt.subplots(sim_out, prob, path='traj.phase0.timeseries',
              vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']] + [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']],
              labels=['$x$', '$y$', r'$\theta$', "$u_1$", "$u_2$"], 
              title="Planar Quadrotor Input Optimization", save=True)
+
+#%% Convergence
+
+cr = om.CaseReader('cases.sql')
+
+my_plt.iterplots(cr, ['traj.phase0.t_duration'],labels=["Minimum Time (s)"], title="Minimum Time Iterations", save=False)
