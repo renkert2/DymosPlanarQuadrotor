@@ -120,7 +120,7 @@ class PlanarSystemModel(om.Group):
         self.set_input_defaults("static.PT.u1", val=1.0)
         
         # Add Thrust Ratio
-        tr_comp = om.ExecComp("TR = TMax / Mass")
+        tr_comp = bm.PlanarQuadrotorThrustRatio()
         self.add_subsystem("thrust_ratio", tr_comp)
 
         # Add Trajectory as Subsystem
@@ -176,7 +176,7 @@ class PlanarSystemModel(om.Group):
         self.connect("size_comp.I", "traj.phase0.parameters:BM_I")
         self.promotes("size_comp", inputs=[("r", "traj.phase0.parameters:BM_r")])
         self.connect("mass.Mass__PlanarQuadrotor", "traj.phase0.parameters:BM_m")
-        self.connect("mass.Mass__PlanarQuadrotor", "thrust_ratio.Mass")
+        self.connect("mass.Mass__PlanarQuadrotor", "thrust_ratio.m")
         
         ### Connections ###
         # Connect output of StaticModel to Thrust Ratio
@@ -199,42 +199,42 @@ if __name__ == "__main__":
     
     def checkProblem(p):
             p.setup()
-            #p.final_setup()
+            p.run_model()
         
             # Visualize:
             om.n2(p)
             om.view_connections(p)
             
             # Checks:
-            #p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
-            #p.check_partials(compact_print=True)
+            p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
+            p.check_partials(compact_print=True, show_only_incorrect=True)
     
     ## Dynamic Model
-    # print("Checking PlanarSystemDynamicModel")
+    print("Checking PlanarSystemDynamicModel")
     
-    # if not os.path.isdir('./PlanarSystemDynamicModel_DAE/'):
-    #     os.mkdir('./PlanarSystemDynamicModel_DAE/')
-    # os.chdir('./PlanarSystemDynamicModel_DAE/')
-    # p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="DAE"))
-    # checkProblem(p)
+    if not os.path.isdir('./PlanarSystemDynamicModel_DAE/'):
+        os.mkdir('./PlanarSystemDynamicModel_DAE/')
+    os.chdir('./PlanarSystemDynamicModel_DAE/')
+    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="DAE"))
+    checkProblem(p)
     
-    # os.chdir('..')
+    os.chdir('..')
     
-    # if not os.path.isdir('./PlanarSystemDynamicModel_ODE/'):
-    #     os.mkdir('./PlanarSystemDynamicModel_ODE/')
-    # os.chdir('./PlanarSystemDynamicModel_ODE/')
-    # p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="ODE"))
-    # checkProblem(p)
+    if not os.path.isdir('./PlanarSystemDynamicModel_ODE/'):
+        os.mkdir('./PlanarSystemDynamicModel_ODE/')
+    os.chdir('./PlanarSystemDynamicModel_ODE/')
+    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10, ModelType="ODE"))
+    checkProblem(p)
     
-    # os.chdir('..')
+    os.chdir('..')
     
-    # if not os.path.isdir('./PlanarSystemStaticModel_Forward/'):
-    #     os.mkdir('./PlanarSystemStaticModel_Forward/')
-    # os.chdir('./PlanarSystemStaticModel_Forward/')
-    # p = om.Problem(model=PlanarSystemStaticModel(IncludeBody=True, SolveMode="Forward"))
-    # checkProblem(p)
+    if not os.path.isdir('./PlanarSystemStaticModel_Forward/'):
+        os.mkdir('./PlanarSystemStaticModel_Forward/')
+    os.chdir('./PlanarSystemStaticModel_Forward/')
+    p = om.Problem(model=PlanarSystemStaticModel(IncludeBody=True, SolveMode="Forward"))
+    checkProblem(p)
     
-    # os.chdir('..')
+    os.chdir('..')
     
     ## System Model, Requires Trajectory and Phase
     nn = 20
