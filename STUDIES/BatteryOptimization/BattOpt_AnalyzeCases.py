@@ -27,3 +27,14 @@ os.chdir("Output_MassStudyOptiFail")
 
 cr = om.CaseReader('cases_1.sql')
 my_plt.iterplots(cr, ['traj.phase0.t_duration'],labels=["Minimum Time (s)"], title="Minimum Time Iterations", save=False)
+
+#%%
+driver_cases = cr.get_cases('driver')
+
+#%%
+cr = om.CaseReader('cases_2_posscaling.sql')
+driver_cases = cr.get_cases('driver')
+prob_cases = cr.get_cases('problem')
+
+#%%
+cons = prob_cases[-1].get_constraints()

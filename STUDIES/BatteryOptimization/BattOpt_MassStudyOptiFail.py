@@ -57,10 +57,10 @@ phase.set_state_options("PT_x2", fix_initial=True, lower=0, upper=5000, ref0=0.0
 phase.set_state_options("PT_x3", fix_initial=True, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
 phase.set_state_options('BM_v_x', fix_initial=True, fix_final=True)
 phase.set_state_options('BM_v_y', fix_initial=True, fix_final=True)
-phase.set_state_options('BM_x', fix_initial=True, fix_final=True, lower=ref0=x_lb, upper=ref=x_ub)
-phase.set_state_options('BM_y', fix_initial=True, fix_final=True, lower=ref0=y_lb, upper=ref=y_ub)
+phase.set_state_options('BM_x', fix_initial=True, fix_final=True, lower=x_lb, ref0=x_lb, upper=x_ub, ref=x_ub)
+phase.set_state_options('BM_y', fix_initial=True, fix_final=True, lower=y_lb, ref0=y_lb, upper=y_ub, ref=y_ub)
 phase.set_state_options('BM_omega', fix_initial=True, fix_final=True)
-phase.set_state_options('BM_theta', fix_initial=True, fix_final=True, lower=ref0=-np.pi/2, upper=ref=np.pi/2)
+phase.set_state_options('BM_theta', fix_initial=True, fix_final=True, lower=-np.pi/2, ref0=-np.pi/2, upper=np.pi/2, ref=np.pi/2)
 
 phase.set_control_options("PT_u1", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
 phase.set_control_options("PT_u2", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
@@ -126,26 +126,18 @@ prob.run_model()
 # Run the Optimization Problem for Various Masses
 #
 # mass_vals = np.arange(0.0, 2.1, 0.1)
-mass_vals = [1.1]
+mass_vals = [0.9, 1.0, 1.1]
 time_vals = []
 out_vals = []
 for (i,val) in enumerate(mass_vals):
     prob.set_val('traj.phase0.parameters:PT_theta16', val)
     print(f"Solving optimization for mass {val}")
-    prob.run_driver()
+    prob.run_driver(case_prefix=f'massval_{i}')
     final_time = prob.get_val('traj.phase0.t_duration').copy()
-    out_val = copy.deepcopy(prob.model.list_outputs(out_stream=None))
     print(f"Final time: {final_time}")
     time_vals.append(final_time)
-    out_vals.append(out_val)
-    prob.record(f'final_{i}')
+    prob.record(f'final_massval_{i}')
 prob.cleanup()
-    
-# create a binary pickle file 
-f = open("sweep_data.pkl","wb")
-data_dict = {"mass_vals":mass_vals, "out_vals":out_vals}
-pickle.dump(data_dict,f)
-f.close()
 
 sim_out = traj.simulate(times_per_seg=50)
 # Get the final value of the design variable
@@ -166,9 +158,3 @@ my_plt.subplots(sim_out, prob, path='traj.phase0.timeseries',
              vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']] + [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']],
              labels=['$x$', '$y$', r'$\theta$', "$u_1$", "$u_2$"], 
              title="Planar Quadrotor Input Optimization", save=True)
-
-#%% Convergence
-
-cr = om.CaseReader('cases.sql')
-
-my_plt.iterplots(cr, ['traj.phase0.t_duration'],labels=["Minimum Time (s)"], title="Minimum Time Iterations", save=False)
