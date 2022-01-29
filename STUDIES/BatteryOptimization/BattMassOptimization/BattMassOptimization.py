@@ -72,6 +72,9 @@ traj.add_phase('phase0', phase)
 meta = phase.Metadata
 
 planar_model=ps.PlanarSystemModel(traj, meta, IncludeSurrogates=[], IncludeStaticModel=True)
+planar_model.add_constraint('thrust_ratio.TR', lower=1.5)
+planar_model.add_design_var('traj.phase0.parameters:PT_theta16', lower=0.1, upper=2, ref0=0, ref=2)
+
 
 prob = om.Problem(model=planar_model)
 prob.driver = om.ScipyOptimizeDriver()
@@ -84,7 +87,7 @@ prob.recording_options['record_constraints'] = True
 prob.recording_options['record_inputs'] = True
 prob.recording_options['includes'] = ["*"]
 prob.driver.add_recorder(recorder)
-prob.driver.recording_options['includes']= ["traj.phases.phase0.timeseries.*"]
+prob.driver.recording_options['includes']= ["thrust_ratio.*","traj.phases.phase0.timeseries.*"]
 prob.driver.recording_options['record_derivatives'] = False
 
 prob.setup()
@@ -107,9 +110,13 @@ prob.set_val('traj.phase0.states:BM_y', phase.interp('BM_y', ys=[0, 10]))
 prob.set_val('traj.phase0.states:BM_omega', phase.interp('BM_omega', ys=[0, 0]))
 prob.set_val('traj.phase0.states:BM_theta', phase.interp('BM_theta', ys=[0, 0]))
 
+# Parameter Values
+# set the battery mass to 2 initially.  This is an infeasible starting point; hopefully the constraint does its magic
+prob.set_val('traj.phase0.parameters:PT_theta16', 2.00)
 #
 # Run the Optimization Problem
 #
+
 run_driver = timing.simple_timer(prob.run_driver)
 run_driver()
 prob.record('final')
@@ -117,8 +124,15 @@ prob.cleanup()
 
 sim_out = traj.simulate(times_per_seg=50)
 
+#%% Reader
+cr = om.CaseReader('cases.sql')
+case = cr.get_case('final')
+
 #%% Plots
-my_plt.subplots(sim_out, prob, path='traj.phase0.timeseries',
+my_plt.subplots(sim_out, case, path='traj.phase0.timeseries',
              vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']] + [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']],
              labels=['$x$', '$y$', r'$\theta$', "$u_1$", "$u_2$"], 
              title="Planar Quadrotor Input Optimization", save=True)
+
+
+print("The Optimal Mass is: ", case["traj.phase0.parameters:PT_theta16"])
