@@ -3,32 +3,22 @@ from numpy import *
 def J_f_theta(x,a,u,d,theta):
 # auto-generated function from matlab
 
-	x2 = x[1]
-	x3 = x[2]
-	a2 = a[1]
-	a7 = a[6]
-	a8 = a[7]
-	theta2 = theta[1]
-	theta3 = theta[2]
-	theta4 = theta[3]
-	theta5 = theta[4]
-	theta7 = theta[6]
-	theta8 = theta[7]
-	theta11 = theta[10]
-	theta13 = theta[12]
-	out1 = -(15394772538002212840576171875*theta2**4*theta7*theta13*x2**2)/(633825300114114700748351602688*(theta3 + theta4)) 
-	out2 = -(15394772538002212840576171875*theta2**4*theta7*theta13*x3**2)/(633825300114114700748351602688*(theta3 + theta4)) 
-	out3 = -((463302912568096597869873046875*a7)/39614081257132168796771975168 - (3078954507600442568115234375*theta2**5*theta7*theta11*theta13*x2**2)/633825300114114700748351602688)/(theta11*(theta3 + theta4)**2) 
-	out4 = -((463302912568096597869873046875*a8)/39614081257132168796771975168 - (3078954507600442568115234375*theta2**5*theta7*theta11*theta13*x3**2)/633825300114114700748351602688)/(theta11*(theta3 + theta4)**2) 
-	out5 = -((463302912568096597869873046875*a7)/39614081257132168796771975168 - (3078954507600442568115234375*theta2**5*theta7*theta11*theta13*x2**2)/633825300114114700748351602688)/(theta11*(theta3 + theta4)**2) 
-	out6 = -((463302912568096597869873046875*a8)/39614081257132168796771975168 - (3078954507600442568115234375*theta2**5*theta7*theta11*theta13*x3**2)/633825300114114700748351602688)/(theta11*(theta3 + theta4)**2) 
-	out7 = (1389*a2)/(5000*theta5**2*theta8) 
-	out8 = -(3078954507600442568115234375*theta2**5*theta13*x2**2)/(633825300114114700748351602688*(theta3 + theta4)) 
-	out9 = -(3078954507600442568115234375*theta2**5*theta13*x3**2)/(633825300114114700748351602688*(theta3 + theta4)) 
-	out10 = (1389*a2)/(5000*theta5*theta8**2) 
-	out11 = - ((463302912568096597869873046875*a7)/39614081257132168796771975168 - (3078954507600442568115234375*theta2**5*theta7*theta11*theta13*x2**2)/633825300114114700748351602688)/(theta11**2*(theta3 + theta4)) - (3078954507600442568115234375*theta2**5*theta7*theta13*x2**2)/(633825300114114700748351602688*theta11*(theta3 + theta4)) 
-	out12 = - ((463302912568096597869873046875*a8)/39614081257132168796771975168 - (3078954507600442568115234375*theta2**5*theta7*theta11*theta13*x3**2)/633825300114114700748351602688)/(theta11**2*(theta3 + theta4)) - (3078954507600442568115234375*theta2**5*theta7*theta13*x3**2)/(633825300114114700748351602688*theta11*(theta3 + theta4)) 
-	out13 = -(3078954507600442568115234375*theta2**5*theta7*x2**2)/(633825300114114700748351602688*(theta3 + theta4)) 
-	out14 = -(3078954507600442568115234375*theta2**5*theta7*x3**2)/(633825300114114700748351602688*(theta3 + theta4)) 
-
-	return out1, out2, out3, out4, out5, out6, out7, out8, out9, out10, out11, out12, out13, out14
+	x2=x[1]
+	x3=x[2]
+	a2=a[1]
+	a7=a[6]
+	a8=a[7]
+	Capacity__Battery=theta[0]
+	J_r__MotorProp=theta[6]
+	K_Q__Propeller=theta[7]
+	K_t__Motor=theta[9]
+	
+	out1 = a2/Capacity__Battery**2
+	out2 = (2*K_Q__Propeller*x2**2 - 2**(1/2)*3**(1/2)*K_t__Motor*a7)/(2*J_r__MotorProp**2)
+	out3 = (2*K_Q__Propeller*x3**2 - 2**(1/2)*3**(1/2)*K_t__Motor*a8)/(2*J_r__MotorProp**2)
+	out4 = -x2**2/J_r__MotorProp
+	out5 = -x3**2/J_r__MotorProp
+	out6 = (2**(1/2)*3**(1/2)*a7)/(2*J_r__MotorProp)
+	out7 = (2**(1/2)*3**(1/2)*a8)/(2*J_r__MotorProp)
+	
+	return out1, out2, out3, out4, out5, out6, out7

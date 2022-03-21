@@ -1,0 +1,58 @@
+{
+  "g": {
+    "Type": "Explicit",
+    "Description": [],
+    "Args": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Inputs": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Outputs": "y"
+  },
+  "h": {
+    "Type": "Implicit",
+    "Description": [],
+    "Args": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Inputs": [
+      "x",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Outputs": "a"
+  },
+  "f": {
+    "Type": "Explicit",
+    "Description": [],
+    "Args": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Inputs": [
+      "x",
+      "a",
+      "u",
+      "d",
+      "theta"
+    ],
+    "Outputs": "x_dot"
+  }
+}

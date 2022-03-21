@@ -3,18 +3,20 @@ from numpy import *
 def J_h_a(x,a,u,d,theta):
 # auto-generated function from matlab
 
-	u1 = u[0]
-	u2 = u[1]
-	theta5 = theta[4]
-	theta6 = theta[5]
-	theta9 = theta[8]
-	theta10 = theta[9]
-	out1 = u1 
-	out2 = u2 
-	out3 = -((3*theta5)/1000 + theta6*theta9)/theta5 
-	out4 = -u1 
-	out5 = -u2 
-	out6 = -(12499641*theta10)/12500000 
-	out7 = -(12499641*theta10)/12500000 
-
-	return out1, out2, out3, out4, out5, out6, out7
+	u1=u[0]
+	u2=u[1]
+	R__PMSMInverter_2=theta[23]
+	R_p__Battery=theta[24]
+	Rm__Motor=theta[26]
+	
+	out1 = u1
+	out2 = u2
+	out3 = - R_p__Battery - 3/1000
+	out4 = -u1
+	out5 = -R__PMSMInverter_2
+	out6 = -u2
+	out7 = -R__PMSMInverter_2
+	out8 = -Rm__Motor
+	out9 = -Rm__Motor
+	
+	return out1, out2, out3, out4, out5, out6, out7, out8, out9

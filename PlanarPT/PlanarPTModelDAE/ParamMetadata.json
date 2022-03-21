@@ -1,0 +1,602 @@
+[
+  {
+    "Name": "Capacity",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 14400,
+    "Description": "Pack Capacity",
+    "Unit": "As",
+    "StrID": "Capacity__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": true,
+    "DependentArgs": [
+      "N_p__Battery",
+      "Q__Battery"
+    ],
+    "DependentFunction": "(18*N_p__Battery*Q__Battery)/5"
+  },
+  {
+    "Name": "D",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.028962684489902895,
+    "Description": "",
+    "Unit": "m",
+    "StrID": "D__Motor",
+    "Parent": "Motor",
+    "Component": "PMSMMotor",
+    "Dependent": true,
+    "DependentArgs": [
+      "Rm__Motor",
+      "kV__Motor"
+    ],
+    "DependentFunction": "(45008183234071/(36028797018963968*(Rm__Motor + 3893325613367695/73786976294838206464)))**(5501981846348753/4503599627370496) + (1071792369643951/(8796093022208*(kV__Motor + 6543294407552567/17592186044416)))**(569316218489707/281474976710656) + 1187654263110635/72057594037927936"
+  },
+  {
+    "Name": "D",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.2286,
+    "Description": "",
+    "Unit": "m",
+    "StrID": "D__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "I_max",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 20,
+    "Description": "Rated Current",
+    "Unit": "A",
+    "StrID": "I_max__PMSMInverter_2",
+    "Parent": "PMSMInverter_2",
+    "Component": "PMSMInverter",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "J",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 6.2611344656328065E-6,
+    "Description": "",
+    "Unit": "kg*m^2",
+    "StrID": "J__Motor",
+    "Parent": "Motor",
+    "Component": "PMSMMotor",
+    "Dependent": true,
+    "DependentArgs": [
+      "D__Motor",
+      "Mass__Motor"
+    ],
+    "DependentFunction": "(D__Motor**2*Mass__Motor)/8"
+  },
+  {
+    "Name": "J",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 6.1046632367789316E-5,
+    "Description": "",
+    "Unit": "kg*m^2",
+    "StrID": "J__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": true,
+    "DependentArgs": [
+      "D__Propeller",
+      "Mass__Propeller"
+    ],
+    "DependentFunction": "(D__Propeller**2*Mass__Propeller)/12"
+  },
+  {
+    "Name": "J_r",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 6.7307766833422117E-5,
+    "Description": "Rotor Inertia",
+    "Unit": "kg*m^2",
+    "StrID": "J_r__MotorProp",
+    "Parent": "MotorProp",
+    "Component": "MotorProp",
+    "Dependent": true,
+    "DependentArgs": [
+      "J__Motor",
+      "J__Propeller"
+    ],
+    "DependentFunction": "J__Motor + J__Propeller"
+  },
+  {
+    "Name": "K_Q",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 1.6708906849251808E-7,
+    "Description": "Lumped Drag Coefficient",
+    "Unit": "N*m/(rad/s)^2",
+    "StrID": "K_Q__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": true,
+    "DependentArgs": [
+      "D__Propeller",
+      "k_Q__Propeller"
+    ],
+    "DependentFunction": "(2119858418352128*D__Propeller**5*k_Q__Propeller)/69451166723500375"
+  },
+  {
+    "Name": "K_T",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 6.9939611275603339E-6,
+    "Description": "Lumped Thrust Coefficient",
+    "Unit": "N/(rad/s)^2",
+    "StrID": "K_T__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": true,
+    "DependentArgs": [
+      "D__Propeller",
+      "k_T__Propeller",
+      "k_T_mod__Propeller"
+    ],
+    "DependentFunction": "(2119858418352128*D__Propeller**4*k_T__Propeller*k_T_mod__Propeller)/69451166723500375"
+  },
+  {
+    "Name": "K_t",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.0098956441300660312,
+    "Description": "",
+    "Unit": "Nm/A",
+    "StrID": "K_t__Motor",
+    "Parent": "Motor",
+    "Component": "PMSMMotor",
+    "Dependent": true,
+    "DependentArgs": "kV__Motor",
+    "DependentFunction": "30/(kV__Motor*pi)"
+  },
+  {
+    "Name": "Mass",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.52056181510744115,
+    "Description": "",
+    "Unit": "kg",
+    "StrID": "Mass__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": true,
+    "DependentArgs": [
+      "N_s__Battery",
+      "Q__Battery"
+    ],
+    "DependentFunction": "(1155654790088771*N_s__Battery*Q__Battery)/36893488147419103232 + 2792439508769607/144115188075855872"
+  },
+  {
+    "Name": "Mass",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.05971251885653437,
+    "Description": "",
+    "Unit": "kg",
+    "StrID": "Mass__Motor",
+    "Parent": "Motor",
+    "Component": "PMSMMotor",
+    "Dependent": true,
+    "DependentArgs": [
+      "Rm__Motor",
+      "kV__Motor"
+    ],
+    "DependentFunction": "(3246428381751795/(144115188075855872*(Rm__Motor + 1059273452419185/144115188075855872)))**(422049362820211/140737488355328) + (5158235197274125/(70368744177664*(kV__Motor + 7199440659304597/72057594037927936)))**(2600650284752775/2251799813685248) + 7809549900644489/1180591620717411303424"
+  },
+  {
+    "Name": "Mass",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.026,
+    "Description": "",
+    "Unit": "kg",
+    "StrID": "Mass__PMSMInverter_2",
+    "Parent": "PMSMInverter_2",
+    "Component": "PMSMInverter",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "Mass",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.014018143617038858,
+    "Description": "",
+    "Unit": "kg",
+    "StrID": "Mass__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": true,
+    "DependentArgs": [
+      "D__Propeller",
+      "P__Propeller"
+    ],
+    "DependentFunction": null
+  },
+  {
+    "Name": "MaxDischarge",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 300,
+    "Description": "Maximum constant discharge current",
+    "Unit": "A",
+    "StrID": "MaxDischarge__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": true,
+    "DependentArgs": "Q__Battery",
+    "DependentFunction": "(3*Q__Battery)/40"
+  },
+  {
+    "Name": "N_p",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 1,
+    "Description": "",
+    "Unit": "unit",
+    "StrID": "N_p__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "N_s",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 4,
+    "Description": "",
+    "Unit": "unit",
+    "StrID": "N_s__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "P",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.1143,
+    "Description": "",
+    "Unit": "m",
+    "StrID": "P__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "Price",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 71.511678930354066,
+    "Description": "",
+    "Unit": "USD",
+    "StrID": "Price__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": true,
+    "DependentArgs": [
+      "N_s__Battery",
+      "Q__Battery"
+    ],
+    "DependentFunction": "(2079290488265509*Q__Battery)/125877480672029808 - (37119326395822121*(N_s__Battery - 42/11)**2)/85005442966618112 + (6232943747338409*((4398046511104*Q__Battery)/7867342542001863 - 116328330218700800/86540767962020493)**2)/4503599627370496 - (2167810679581157*((4398046511104*Q__Battery)/7867342542001863 - 116328330218700800/86540767962020493)**3)/1125899906842624 + (35381332470939741*((4398046511104*Q__Battery)/7867342542001863 - 116328330218700800/86540767962020493)*(N_s__Battery - 42/11)**2)/170010885933236224 - (40327770631251257*22**(1/2)*151**(1/2)*(N_s__Battery - 42/11)**3)/51343287551837339648 + (8282812707804019*22**(1/2)*151**(1/2)*(N_s__Battery - 42/11))/42502721483309056 - (41592250548375*22**(1/2)*151**(1/2)*((4398046511104*Q__Battery)/7867342542001863 - 116328330218700800/86540767962020493)**2*(N_s__Battery - 42/11))/1125899906842624 + (2794894950800657*22**(1/2)*151**(1/2)*((4398046511104*Q__Battery)/7867342542001863 - 116328330218700800/86540767962020493)*(N_s__Battery - 42/11))/21251360741654528 + 8368618095241764144475516048001/3044882580829000396937600434176"
+  },
+  {
+    "Name": "Price",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 38.319038079849676,
+    "Description": "",
+    "Unit": "USD",
+    "StrID": "Price__Motor",
+    "Parent": "Motor",
+    "Component": "PMSMMotor",
+    "Dependent": true,
+    "DependentArgs": [
+      "Rm__Motor",
+      "kV__Motor"
+    ],
+    "DependentFunction": "(4513920974528961/(9007199254740992*(Rm__Motor + 6726244122427559/18446744073709551616)))**(4207545240207157/2251799813685248) + (5330373501533043/(1099511627776*(kV__Motor + 6910193868827447/70368744177664)))**(8719102902782495/4503599627370496) + 6026887646300621/590295810358705651712"
+  },
+  {
+    "Name": "Price",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 11.5,
+    "Description": "",
+    "Unit": "USD",
+    "StrID": "Price__PMSMInverter_2",
+    "Parent": "PMSMInverter_2",
+    "Component": "PMSMInverter",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "Price",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 2.6666717235999751,
+    "Description": "",
+    "Unit": "USD",
+    "StrID": "Price__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": true,
+    "DependentArgs": [
+      "D__Propeller",
+      "P__Propeller"
+    ],
+    "DependentFunction": null
+  },
+  {
+    "Name": "Q",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 4000,
+    "Description": "",
+    "Unit": "mAh",
+    "StrID": "Q__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "R",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.1,
+    "Description": "Resistance",
+    "Unit": "Ohm",
+    "StrID": "R__PMSMInverter_2",
+    "Parent": "PMSMInverter_2",
+    "Component": "PMSMInverter",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "R_p",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.01150180952433999,
+    "Description": "Pack Resistance",
+    "Unit": "Ohm",
+    "StrID": "R_p__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": true,
+    "DependentArgs": [
+      "N_p__Battery",
+      "N_s__Battery",
+      "R_s__Battery"
+    ],
+    "DependentFunction": "(N_s__Battery*R_s__Battery)/N_p__Battery"
+  },
+  {
+    "Name": "R_s",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.0028754523810849975,
+    "Description": "",
+    "Unit": "Ohm",
+    "StrID": "R_s__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": true,
+    "DependentArgs": [
+      "N_s__Battery",
+      "Q__Battery"
+    ],
+    "DependentFunction": "2159420663981339/(281474976710656*(Q__Battery - 7494900884965043/70368744177664)) - (71416823831477*N_s__Battery**(2689673617855525/(4503599627370496*Q__Battery)))/8796093022208 + 1143033091523253/140737488355328"
+  },
+  {
+    "Name": "Rm",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.102,
+    "Description": "",
+    "Unit": "Ohm",
+    "StrID": "Rm__Motor",
+    "Parent": "Motor",
+    "Component": "PMSMMotor",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "V_OCV_pack",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 14.8,
+    "Description": "",
+    "Unit": "V",
+    "StrID": "V_OCV_pack__Battery",
+    "Parent": "Battery",
+    "Component": "Battery",
+    "Dependent": true,
+    "DependentArgs": "N_s__Battery",
+    "DependentFunction": "(37*N_s__Battery)/10"
+  },
+  {
+    "Name": "kV",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 965,
+    "Description": "",
+    "Unit": "RPM/V",
+    "StrID": "kV__Motor",
+    "Parent": "Motor",
+    "Component": "PMSMMotor",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "k_P",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.044076738675625365,
+    "Description": "",
+    "Unit": "",
+    "StrID": "k_P__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": true,
+    "DependentArgs": [
+      "D__Propeller",
+      "P__Propeller"
+    ],
+    "DependentFunction": null
+  },
+  {
+    "Name": "k_P_mod",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 1.25,
+    "Description": "",
+    "Unit": "",
+    "StrID": "k_P_mod__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  },
+  {
+    "Name": "k_Q",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.008768788544494371,
+    "Description": "Drag Torque Coefficient",
+    "Unit": "N/(s*kg*m)",
+    "StrID": "k_Q__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": true,
+    "DependentArgs": [
+      "k_P__Propeller",
+      "k_P_mod__Propeller"
+    ],
+    "DependentFunction": "(k_P__Propeller*k_P_mod__Propeller)/(2*pi)"
+  },
+  {
+    "Name": "k_T",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.098712482499244275,
+    "Description": "",
+    "Unit": "",
+    "StrID": "k_T__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": true,
+    "DependentArgs": [
+      "D__Propeller",
+      "P__Propeller"
+    ],
+    "DependentFunction": null
+  },
+  {
+    "Name": "k_T_mod",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 0.85,
+    "Description": "",
+    "Unit": "",
+    "StrID": "k_T_mod__Propeller",
+    "Parent": "Propeller",
+    "Component": "Propeller",
+    "Dependent": false,
+    "DependentArgs": [],
+    "DependentFunction": ""
+  }
+]

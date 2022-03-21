@@ -4,17 +4,17 @@
     "Variables": [
       {
         "Variable": "x1",
-        "Description": "Battery SOC",
+        "Description": "Battery:Battery SOC",
         "Unit": ""
       },
       {
         "Variable": "x2",
-        "Description": "Rotor 1 Speed",
+        "Description": "MotorProp_1:Inertia (omega_m)",
         "Unit": ""
       },
       {
         "Variable": "x3",
-        "Description": "Rotor 2 Speed",
+        "Description": "MotorProp_2:Inertia (omega_m)",
         "Unit": ""
       }
     ]
@@ -24,42 +24,42 @@
     "Variables": [
       {
         "Variable": "a1",
-        "Description": "Bus Voltage",
+        "Description": "DCBus:Internal Voltage",
         "Unit": ""
       },
       {
         "Variable": "a2",
-        "Description": "Bus Current",
+        "Description": "DCBus:Internal Current 1",
         "Unit": ""
       },
       {
         "Variable": "a3",
-        "Description": "Inverter 1 Current",
+        "Description": "PMSMInverter_1:DC Inductance",
         "Unit": ""
       },
       {
         "Variable": "a4",
-        "Description": "Inverter 2 Voltage",
+        "Description": "PMSMInverter_1:q Capacitance",
         "Unit": ""
       },
       {
         "Variable": "a5",
-        "Description": "Inverter 2 Current",
+        "Description": "PMSMInverter_2:DC Inductance",
         "Unit": ""
       },
       {
         "Variable": "a6",
-        "Description": "Inverter 2 Voltage",
+        "Description": "PMSMInverter_2:q Capacitance",
         "Unit": ""
       },
       {
         "Variable": "a7",
-        "Description": "Motor 1 Inductance",
+        "Description": "Motor:Inductance (i_q)",
         "Unit": ""
       },
       {
         "Variable": "a8",
-        "Description": "Motor 2 Inductance",
+        "Description": "Motor:Inductance (i_q)",
         "Unit": ""
       }
     ]
@@ -69,12 +69,12 @@
     "Variables": [
       {
         "Variable": "u1",
-        "Description": "",
+        "Description": "PMSMInverter_1:d",
         "Unit": ""
       },
       {
         "Variable": "u2",
-        "Description": "",
+        "Description": "PMSMInverter_2:d",
         "Unit": ""
       }
     ]
@@ -87,136 +87,232 @@
     "Variables": [
       {
         "Variable": "y1",
-        "Description": "Rotor 1 Thrust",
+        "Description": "MotorProp_1:Thrust",
         "Unit": ""
       },
       {
         "Variable": "y2",
-        "Description": "Rotor 1 Torque",
+        "Description": "MotorProp_1:Torque",
         "Unit": ""
       },
       {
         "Variable": "y3",
-        "Description": "Rotor 2 Thrust",
+        "Description": "MotorProp_2:Thrust",
         "Unit": ""
       },
       {
         "Variable": "y4",
-        "Description": "Rotor 2 Torque",
+        "Description": "MotorProp_2:Torque",
         "Unit": ""
       }
     ]
   },
   "theta": {
-    "N": 18,
+    "N": 34,
     "Variables": [
       {
-        "Variable": "theta1",
-        "Description": "D__Motor",
-        "Unit": "m",
-        "Value": 0.028300000000000002
+        "Variable": "Capacity__Battery",
+        "Description": "Battery:Pack Capacity",
+        "Unit": "As",
+        "Value": 14400
       },
       {
-        "Variable": "theta2",
-        "Description": "D__Propeller",
+        "Variable": "D__Motor",
+        "Description": "Motor:",
+        "Unit": "m",
+        "Value": 0.028962684489902895
+      },
+      {
+        "Variable": "D__Propeller",
+        "Description": "Propeller:",
         "Unit": "m",
         "Value": 0.2286
       },
       {
-        "Variable": "theta3",
-        "Description": "J__Motor",
-        "Unit": "kg*m^2",
-        "Value": 6.4071200000000014E-6
+        "Variable": "I_max__PMSMInverter_2",
+        "Description": "PMSMInverter_2:Rated Current",
+        "Unit": "A",
+        "Value": 20
       },
       {
-        "Variable": "theta4",
-        "Description": "J__Propeller",
+        "Variable": "J__Motor",
+        "Description": "Motor:",
         "Unit": "kg*m^2",
-        "Value": 7.777806944355E-5
+        "Value": 6.2611344656328065E-6
       },
       {
-        "Variable": "theta5",
-        "Description": "N_p__Battery",
+        "Variable": "J__Propeller",
+        "Description": "Propeller:",
+        "Unit": "kg*m^2",
+        "Value": 6.1046632367789316E-5
+      },
+      {
+        "Variable": "J_r__MotorProp",
+        "Description": "MotorProp:Rotor Inertia",
+        "Unit": "kg*m^2",
+        "Value": 6.7307766833422117E-5
+      },
+      {
+        "Variable": "K_Q__Propeller",
+        "Description": "Propeller:Lumped Drag Coefficient",
+        "Unit": "N*m/(rad/s)^2",
+        "Value": 1.6708906849251808E-7
+      },
+      {
+        "Variable": "K_T__Propeller",
+        "Description": "Propeller:Lumped Thrust Coefficient",
+        "Unit": "N/(rad/s)^2",
+        "Value": 6.9939611275603339E-6
+      },
+      {
+        "Variable": "K_t__Motor",
+        "Description": "Motor:",
+        "Unit": "Nm/A",
+        "Value": 0.0098956441300660312
+      },
+      {
+        "Variable": "Mass__Battery",
+        "Description": "Battery:",
+        "Unit": "kg",
+        "Value": 0.52056181510744115
+      },
+      {
+        "Variable": "Mass__Motor",
+        "Description": "Motor:",
+        "Unit": "kg",
+        "Value": 0.05971251885653437
+      },
+      {
+        "Variable": "Mass__PMSMInverter_2",
+        "Description": "PMSMInverter_2:",
+        "Unit": "kg",
+        "Value": 0.026
+      },
+      {
+        "Variable": "Mass__Propeller",
+        "Description": "Propeller:",
+        "Unit": "kg",
+        "Value": 0.014018143617038858
+      },
+      {
+        "Variable": "MaxDischarge__Battery",
+        "Description": "Battery:Maximum constant discharge current",
+        "Unit": "A",
+        "Value": 300
+      },
+      {
+        "Variable": "N_p__Battery",
+        "Description": "Battery:",
         "Unit": "unit",
         "Value": 1
       },
       {
-        "Variable": "theta6",
-        "Description": "N_s__Battery",
+        "Variable": "N_s__Battery",
+        "Description": "Battery:",
         "Unit": "unit",
         "Value": 4
       },
       {
-        "Variable": "theta7",
-        "Description": "P__Propeller",
+        "Variable": "P__Propeller",
+        "Description": "Propeller:",
         "Unit": "m",
         "Value": 0.1143
       },
       {
-        "Variable": "theta8",
-        "Description": "Q__Battery",
+        "Variable": "Price__Battery",
+        "Description": "Battery:",
+        "Unit": "USD",
+        "Value": 71.511678930354066
+      },
+      {
+        "Variable": "Price__Motor",
+        "Description": "Motor:",
+        "Unit": "USD",
+        "Value": 38.319038079849676
+      },
+      {
+        "Variable": "Price__PMSMInverter_2",
+        "Description": "PMSMInverter_2:",
+        "Unit": "USD",
+        "Value": 11.5
+      },
+      {
+        "Variable": "Price__Propeller",
+        "Description": "Propeller:",
+        "Unit": "USD",
+        "Value": 2.6666717235999751
+      },
+      {
+        "Variable": "Q__Battery",
+        "Description": "Battery:",
         "Unit": "mAh",
         "Value": 4000
       },
       {
-        "Variable": "theta9",
-        "Description": "R_s__Battery",
+        "Variable": "R__PMSMInverter_2",
+        "Description": "PMSMInverter_2:Resistance",
         "Unit": "Ohm",
-        "Value": 0.003
+        "Value": 0.1
       },
       {
-        "Variable": "theta10",
-        "Description": "Rm__Motor",
+        "Variable": "R_p__Battery",
+        "Description": "Battery:Pack Resistance",
+        "Unit": "Ohm",
+        "Value": 0.01150180952433999
+      },
+      {
+        "Variable": "R_s__Battery",
+        "Description": "Battery:",
+        "Unit": "Ohm",
+        "Value": 0.0028754523810849975
+      },
+      {
+        "Variable": "Rm__Motor",
+        "Description": "Motor:",
         "Unit": "Ohm",
         "Value": 0.102
       },
       {
-        "Variable": "theta11",
-        "Description": "kV__Motor",
+        "Variable": "V_OCV_pack__Battery",
+        "Description": "Battery:",
+        "Unit": "V",
+        "Value": 14.8
+      },
+      {
+        "Variable": "kV__Motor",
+        "Description": "Motor:",
         "Unit": "RPM/V",
         "Value": 965
       },
       {
-        "Variable": "theta12",
-        "Description": "k_P__Propeller",
+        "Variable": "k_P__Propeller",
+        "Description": "Propeller:",
         "Unit": "",
-        "Value": 0.05
+        "Value": 0.044076738675625365
       },
       {
-        "Variable": "theta13",
-        "Description": "k_P_mod__Propeller",
+        "Variable": "k_P_mod__Propeller",
+        "Description": "Propeller:",
         "Unit": "",
         "Value": 1.25
       },
       {
-        "Variable": "theta14",
-        "Description": "k_T__Propeller",
-        "Unit": "",
-        "Value": 0.12
+        "Variable": "k_Q__Propeller",
+        "Description": "Propeller:Drag Torque Coefficient",
+        "Unit": "N/(s*kg*m)",
+        "Value": 0.008768788544494371
       },
       {
-        "Variable": "theta15",
-        "Description": "k_T_mod__Propeller",
+        "Variable": "k_T__Propeller",
+        "Description": "Propeller:",
+        "Unit": "",
+        "Value": 0.098712482499244275
+      },
+      {
+        "Variable": "k_T_mod__Propeller",
+        "Description": "Propeller:",
         "Unit": "",
         "Value": 0.85
-      },
-      {
-        "Variable": "theta16",
-        "Description": "Mass__Battery",
-        "Unit": "kg",
-        "Value": 0.529
-      },
-      {
-        "Variable": "theta17",
-        "Description": "Mass__Motor",
-        "Unit": "kg",
-        "Value": 0.064
-      },
-      {
-        "Variable": "theta18",
-        "Description": "Mass__Propeller",
-        "Unit": "kg",
-        "Value": 0.017860185
       }
     ]
   }

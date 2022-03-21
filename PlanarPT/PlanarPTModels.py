@@ -3,7 +3,45 @@
 import os
 import DynamicModel as dm
 import StaticModel as sm
+import openmdao.api as om
+import Param
+
+class PlanarPTParams(Param.ParamGroup):
+    def __init__(self, **kwargs):
+        ps = Param.ParamSet()
+        f = open(os.path.join(os.path.dirname(__file__), "PlanarPTModelDAE", "ParamMetadata.json"))
+        ps.load(f)
         
+        # Temporarily make Propeller params Independent:
+        for p in ps:
+            if p.parent == "Propeller":
+                p.dep = False
+ 
+        super().__init__(param_set=ps,**kwargs)
+
+class PlanarPTDynamicTraj(dm.DynamicTrajectory):
+    def __init__(self, phases, **kwargs):
+        super().__init__(phases, linked_vars=['*'], phase_names="phase", **kwargs)
+    
+    def init_vars(self):
+        super().init_vars(openmdao_path = "", parameter_names = ['theta'], 
+                var_opts = {
+                    "theta":{'opt':False,'static_target':True}
+                    })
+
+class PlanarPTDynamicPhase(dm.DynamicPhase):
+    def __init__(self, **kwargs):
+        # Instantiate a Phase and add it to the Trajectory.
+        # Here the transcription is necessary but not particularly relevant.
+        super().__init__(ode_class=PlanarPTModelDAE, **kwargs)
+    
+    def init_vars(self):
+        super().init_vars(state_names=["x"],
+                        control_names = ["u","d"],
+                        #parameter_names = ["theta"], # We want to declare the parameters in the trajectory
+                        #output_names = ["y", "a"],
+                        output_names = ["y"],
+                        var_opts = {"x":{"fix_initial":True}})
 
 class PlanarPTModelDAE(dm.DynamicModel):
     def initialize(self):
@@ -15,29 +53,6 @@ class PlanarPTModelDAE(dm.DynamicModel):
         self.options["Path"] = mdl_path
         self.options["Functions"] = ["h", "f", "g"]
         self.options["StaticVars"] = ["theta"]
-
-class PlanarPTModelODE(dm.DynamicModel):
-    def initialize(self):
-        super().initialize()
-        
-        mdl = "PlanarPTModelODE"
-        mdl_path = os.path.dirname(__file__)
-        self.options["Model"] = mdl
-        self.options["Path"] = mdl_path
-        self.options["Functions"] = ["f", "g"]
-        self.options["StaticVars"] = ["theta"]
-
-class PlanarPTModelDAE_Simple(sm.StaticModel):
-    # TODO: Add a version of this that calculates u_ss as a function of thrust
-
-    def initialize(self):
-        super().initialize()
-        
-        mdl = "PlanarPTModelDAE_Simple"
-        mdl_path = os.path.dirname(__file__)
-        self.options["Model"] = mdl
-        self.options["Path"] = mdl_path
-        self.options["Functions"] = ["h", "f", "g"]
     
 #%%        
 if __name__ == "__main__":
@@ -81,7 +96,8 @@ if __name__ == "__main__":
         
         os.chdir('..')
     
-    model_types = [PlanarPTModelDAE, PlanarPTModelODE, PlanarPTModelDAE_Simple]
+    #model_types = [PlanarPTModelDAE, PlanarPTModelDAE_Simple]
+    model_types = [PlanarPTModelDAE]
     
     for mtype in model_types:
         checkModelClass(mtype)
