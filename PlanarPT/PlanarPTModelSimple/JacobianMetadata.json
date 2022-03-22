@@ -4,20 +4,11 @@
       "Name": "J_f_x",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 2,
+        "NCalc": 1,
         "NConst": 0,
-        "iCalc": [
-          5,
-          9
-        ],
-        "rCalc": [
-          2,
-          3
-        ],
-        "cCalc": [
-          2,
-          3
-        ],
+        "iCalc": 1,
+        "rCalc": 1,
+        "cCalc": 1,
         "rConst": [],
         "cConst": [],
         "valConst": []
@@ -27,23 +18,11 @@
       "Name": "J_f_a",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 3,
+        "NCalc": 1,
         "NConst": 0,
-        "iCalc": [
-          4,
-          20,
-          24
-        ],
-        "rCalc": [
-          1,
-          2,
-          3
-        ],
-        "cCalc": [
-          2,
-          7,
-          8
-        ],
+        "iCalc": 5,
+        "rCalc": 1,
+        "cCalc": 5,
         "rConst": [],
         "cConst": [],
         "valConst": []
@@ -81,33 +60,21 @@
       "Name": "J_f_theta",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 7,
+        "NCalc": 3,
         "NConst": 0,
         "iCalc": [
-          1,
-          20,
-          21,
-          23,
-          24,
-          29,
-          30
+          7,
+          8,
+          10
         ],
         "rCalc": [
           1,
-          2,
-          3,
-          2,
-          3,
-          2,
-          3
+          1,
+          1
         ],
         "cCalc": [
-          1,
-          7,
           7,
           8,
-          8,
-          10,
           10
         ],
         "rConst": [],
@@ -121,20 +88,11 @@
       "Name": "J_h_x",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 2,
+        "NCalc": 1,
         "NConst": 0,
-        "iCalc": [
-          15,
-          24
-        ],
-        "rCalc": [
-          7,
-          8
-        ],
-        "cCalc": [
-          2,
-          3
-        ],
+        "iCalc": 5,
+        "rCalc": 5,
+        "cCalc": 1,
         "rConst": [],
         "cConst": [],
         "valConst": []
@@ -144,52 +102,36 @@
       "Name": "J_h_a",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 9,
-        "NConst": 10,
+        "NCalc": 5,
+        "NConst": 6,
         "iCalc": [
           3,
-          5,
-          10,
-          17,
-          19,
-          33,
-          37,
-          55,
-          64
+          7,
+          11,
+          13,
+          25
         ],
         "rCalc": [
           3,
-          5,
           2,
           1,
           3,
-          1,
-          5,
-          7,
-          8
+          5
         ],
         "cCalc": [
           1,
-          1,
           2,
           3,
           3,
-          5,
-          5,
-          7,
-          8
+          5
         ],
         "rConst": [
           2,
           1,
           4,
           3,
-          7,
-          6,
           5,
-          8,
-          4,
-          6
+          4
         ],
         "cConst": [
           1,
@@ -197,11 +139,7 @@
           3,
           4,
           4,
-          5,
-          6,
-          6,
-          7,
-          8
+          5
         ],
         "valConst": [
           -1,
@@ -209,10 +147,6 @@
           0.81649658092772615,
           -0.81649658092772615,
           1,
-          0.81649658092772615,
-          -0.81649658092772615,
-          1,
-          -1,
           -1
         ]
       }
@@ -221,25 +155,19 @@
       "Name": "J_h_u",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 4,
+        "NCalc": 2,
         "NConst": 0,
         "iCalc": [
           1,
-          3,
-          9,
-          13
+          3
         ],
         "rCalc": [
           1,
-          3,
-          1,
-          5
+          3
         ],
         "cCalc": [
           1,
-          1,
-          2,
-          2
+          1
         ],
         "rConst": [],
         "cConst": [],
@@ -264,33 +192,24 @@
       "Name": "J_h_theta",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 7,
+        "NCalc": 4,
         "NConst": 1,
         "iCalc": [
-          79,
-          80,
-          203,
-          205,
-          210,
-          231,
-          232
+          50,
+          128,
+          132,
+          145
         ],
         "rCalc": [
-          7,
-          8,
-          3,
           5,
+          3,
           2,
-          7,
-          8
+          5
         ],
         "cCalc": [
           10,
-          10,
-          26,
           26,
           27,
-          29,
           29
         ],
         "rConst": 2,
@@ -304,26 +223,11 @@
       "Name": "J_g_x",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 4,
+        "NCalc": 1,
         "NConst": 0,
-        "iCalc": [
-          5,
-          6,
-          11,
-          12
-        ],
-        "rCalc": [
-          1,
-          2,
-          3,
-          4
-        ],
-        "cCalc": [
-          2,
-          2,
-          3,
-          3
-        ],
+        "iCalc": 1,
+        "rCalc": 1,
+        "cCalc": 1,
         "rConst": [],
         "cConst": [],
         "valConst": []
@@ -375,26 +279,11 @@
       "Name": "J_g_theta",
       "Flat": true,
       "FlatMetadata": {
-        "NCalc": 4,
+        "NCalc": 1,
         "NConst": 0,
-        "iCalc": [
-          30,
-          32,
-          33,
-          35
-        ],
-        "rCalc": [
-          2,
-          4,
-          1,
-          3
-        ],
-        "cCalc": [
-          8,
-          8,
-          9,
-          9
-        ],
+        "iCalc": 9,
+        "rCalc": 1,
+        "cCalc": 9,
         "rConst": [],
         "cConst": [],
         "valConst": []

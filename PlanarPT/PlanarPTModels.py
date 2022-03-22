@@ -4,21 +4,16 @@ import os
 import DynamicModel as dm
 import StaticModel as sm
 import openmdao.api as om
-import Param
+import Param as P
 
-class PlanarPTParams(Param.ParamGroup):
-    def __init__(self, **kwargs):
-        ps = Param.ParamSet()
-        f = open(os.path.join(os.path.dirname(__file__), "PlanarPTModelDAE", "ParamMetadata.json"))
-        ps.load(f)
+class PlanarPTParams(P.ParamSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
-        # Temporarily make Propeller params Independent:
-        for p in ps:
-            if p.parent == "Propeller":
-                p.dep = False
- 
-        super().__init__(param_set=ps,**kwargs)
-
+        f = open(os.path.join(os.path.dirname(__file__), "PlanarPTModelDAE", "ParamMetadata.json"))
+        self = self.load(f)
+        pass
+        
 class PlanarPTDynamicTraj(dm.DynamicTrajectory):
     def __init__(self, phases, **kwargs):
         super().__init__(phases, linked_vars=['*'], phase_names="phase", **kwargs)
@@ -53,6 +48,16 @@ class PlanarPTModelDAE(dm.DynamicModel):
         self.options["Path"] = mdl_path
         self.options["Functions"] = ["h", "f", "g"]
         self.options["StaticVars"] = ["theta"]
+        
+class PlanarPTModelStatic(sm.StaticModel):
+    def initialize(self):
+        super().initialize()
+        
+        mdl = "PlanarPTModelSimple"
+        mdl_path = os.path.dirname(__file__)
+        self.options["Model"] = mdl
+        self.options["Path"] = mdl_path
+        self.options["Functions"] = ["h", "f", "g"]
     
 #%%        
 if __name__ == "__main__":
@@ -96,8 +101,7 @@ if __name__ == "__main__":
         
         os.chdir('..')
     
-    #model_types = [PlanarPTModelDAE, PlanarPTModelDAE_Simple]
-    model_types = [PlanarPTModelDAE]
+    model_types = [PlanarPTModelDAE, PlanarPTModelStatic]
     
     for mtype in model_types:
         checkModelClass(mtype)

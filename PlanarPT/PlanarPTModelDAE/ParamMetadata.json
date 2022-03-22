@@ -241,6 +241,27 @@
       1,
       1
     ],
+    "Value": 0.72002314005458778,
+    "Description": "",
+    "Unit": "kg",
+    "StrID": "Mass__PlanarPowerTrain",
+    "Parent": "PlanarPowerTrain",
+    "Component": "PlanarPT_InitialDesign",
+    "Dependent": true,
+    "DependentArgs": [
+      "Mass__Battery",
+      "Mass__Motor",
+      "Mass__PMSMInverter_2",
+      "Mass__Propeller"
+    ],
+    "DependentFunction": "2*Mass__Motor + Mass__Battery + 2*Mass__Propeller + 2*Mass__PMSMInverter_2"
+  },
+  {
+    "Name": "Mass",
+    "Size": [
+      1,
+      1
+    ],
     "Value": 0.014018143617038858,
     "Description": "",
     "Unit": "kg",
@@ -371,6 +392,27 @@
     "Dependent": false,
     "DependentArgs": [],
     "DependentFunction": ""
+  },
+  {
+    "Name": "Price",
+    "Size": [
+      1,
+      1
+    ],
+    "Value": 176.48309853725334,
+    "Description": "",
+    "Unit": "USD",
+    "StrID": "Price__PlanarPowerTrain",
+    "Parent": "PlanarPowerTrain",
+    "Component": "PlanarPT_InitialDesign",
+    "Dependent": true,
+    "DependentArgs": [
+      "Price__Battery",
+      "Price__Motor",
+      "Price__PMSMInverter_2",
+      "Price__Propeller"
+    ],
+    "DependentFunction": "2*Price__Motor + Price__Battery + 2*Price__Propeller + 2*Price__PMSMInverter_2"
   },
   {
     "Name": "Price",

@@ -5,9 +5,9 @@ def J_h_a(x,a,u,d,theta):
 
 	u1=u[0]
 	u2=u[1]
-	R__PMSMInverter_2=theta[23]
-	R_p__Battery=theta[24]
-	Rm__Motor=theta[26]
+	R__PMSMInverter_2=theta[25]
+	R_p__Battery=theta[26]
+	Rm__Motor=theta[28]
 	
 	out1 = u1
 	out2 = u2

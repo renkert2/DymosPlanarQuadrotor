@@ -1,111 +1,60 @@
 {
   "x": {
-    "N": 3,
-    "Variables": [
-      {
-        "Variable": "x1",
-        "Description": "Battery:Battery SOC",
-        "Unit": ""
-      },
-      {
-        "Variable": "x2",
-        "Description": "MotorProp_1:Inertia (omega_m)",
-        "Unit": ""
-      },
-      {
-        "Variable": "x3",
-        "Description": "MotorProp_2:Inertia (omega_m)",
-        "Unit": ""
-      }
-    ]
+    "N": 1,
+    "Variables": {
+      "Variable": "x1",
+      "Description": "Rotor Speed",
+      "Unit": ""
+    }
   },
   "a": {
-    "N": 8,
+    "N": 5,
     "Variables": [
       {
         "Variable": "a1",
-        "Description": "DCBus:Internal Voltage",
+        "Description": "Bus Voltage",
         "Unit": ""
       },
       {
         "Variable": "a2",
-        "Description": "DCBus:Internal Current 1",
+        "Description": "Bus Current",
         "Unit": ""
       },
       {
         "Variable": "a3",
-        "Description": "PMSMInverter_1:DC Inductance",
+        "Description": "Inverter Current",
         "Unit": ""
       },
       {
         "Variable": "a4",
-        "Description": "PMSMInverter_1:q Capacitance",
+        "Description": "Inverter Voltage",
         "Unit": ""
       },
       {
         "Variable": "a5",
-        "Description": "PMSMInverter_2:DC Inductance",
-        "Unit": ""
-      },
-      {
-        "Variable": "a6",
-        "Description": "PMSMInverter_2:q Capacitance",
-        "Unit": ""
-      },
-      {
-        "Variable": "a7",
-        "Description": "Motor:Inductance (i_q)",
-        "Unit": ""
-      },
-      {
-        "Variable": "a8",
-        "Description": "Motor:Inductance (i_q)",
+        "Description": "Motor Inductance",
         "Unit": ""
       }
     ]
   },
   "u": {
-    "N": 2,
-    "Variables": [
-      {
-        "Variable": "u1",
-        "Description": "PMSMInverter_1:d",
-        "Unit": ""
-      },
-      {
-        "Variable": "u2",
-        "Description": "PMSMInverter_2:d",
-        "Unit": ""
-      }
-    ]
+    "N": 1,
+    "Variables": {
+      "Variable": "u1",
+      "Description": "Inverter Input",
+      "Unit": ""
+    }
   },
   "d": {
     "N": 0
   },
   "y": {
-    "N": 4,
-    "Variables": [
-      {
-        "Variable": "y1",
-        "Description": "MotorProp_1:Thrust",
-        "Unit": ""
-      },
-      {
-        "Variable": "y2",
-        "Description": "MotorProp_1:Torque",
-        "Unit": ""
-      },
-      {
-        "Variable": "y3",
-        "Description": "MotorProp_2:Thrust",
-        "Unit": ""
-      },
-      {
-        "Variable": "y4",
-        "Description": "MotorProp_2:Torque",
-        "Unit": ""
-      }
-    ]
+    "N": 1,
+    "Variables": {
+      "Variable": "y1",
+      "Description": "Total Thrust",
+      "Unit": ""
+    }
   },
   "theta": {
     "N": 36,

@@ -7,9 +7,16 @@ Created on Fri Jan 28 17:07:49 2022
 
 import warnings
 import os
+import sys
 import openmdao.api as om
 
-def init_study(filepath, suppress_warnings=True):
+def init(filepath):
+    res_path = os.getenv('ARG_RESEARCH')
+    home_path = os.path.join(res_path, 'DymosPlanarQuadrotor')
+    if home_path not in sys.path:
+        sys.path.append(home_path)
+    
+def init_output(filepath, suppress_warnings=True):
     os.chdir(os.path.dirname(filepath))
     if not os.path.isdir("Output"):
         os.mkdir("Output")
