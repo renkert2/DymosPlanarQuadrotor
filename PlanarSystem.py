@@ -115,6 +115,25 @@ class PlanarSystemStaticModel(om.Group):
         self.options.declare("IncludeBody", types=bool, default=False)
         self.options.declare("SolveMode", types=str, default="Forward")
         # SolveMode can be "Forward" to calculate thrust as a function of input, or "Backward" to calculate input as a function of thrust
+
+class ThrustRatioComp(om.ExplicitComponent):
+    def setup(self):
+        self.add_input('HoverThrust__System', val=1, desc='mass')
+        self.add_input('TMax', val=1, desc='Maximum thrust')
+        
+        self.add_output('TR', desc="Thrust Ratio")
+    
+        self.declare_partials('*', '*', method='exact')
+    def compute(self, inputs, outputs):
+        ht = inputs['HoverThrust__System']
+        TMax = inputs["TMax"]
+        outputs["TR"] = TMax / ht
+    def compute_partials(self, inputs, partials):
+        ht = inputs['HoverThrust__System']
+        TMax = inputs["TMax"]
+        partials["TR", "HoverThrust__System"] = -TMax/(ht**2)
+        partials["TR", "TMax"] = 1/(ht)
+        
     
 class PlanarSystemModel(P.ParamSystem):
     def __init__(self, traj, **kwargs):
@@ -131,11 +150,11 @@ class PlanarSystemModel(P.ParamSystem):
         self.set_input_defaults("static.u1", val=1.0)
         
         # TODO: Add Thrust Ratio
-        # tr_comp = bm.PlanarQuadrotorThrustRatio()
-        # self.add_subsystem("thrust_ratio", tr_comp)
+        tr_comp = ThrustRatioComp()
+        self.add_subsystem("thrust_ratio", tr_comp, params="HoverThrust__System")
         
         # Connect output of StaticModel to Thrust Ratio
-        #self.connect("static.PT.y1", "thrust_ratio.TMax")
+        self.connect("static.y1", "thrust_ratio.TMax")
         
         # Add the Dynamic Model Subsystem
         self.add_subsystem("traj", self._traj)
