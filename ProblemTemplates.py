@@ -41,7 +41,6 @@ def ForwardSimulation():
 
     prob = om.Problem(model=planar_model)
     prob.driver = om.ScipyOptimizeDriver()
-    prob = Recorders.SimpleRecorder(prob)
     prob.model.linear_solver = om.DirectSolver()
     
     prob.setup()
@@ -121,7 +120,6 @@ class StepProblem(om.Problem):
         super().__init__(model=planar_model)
         
         self.driver = om.ScipyOptimizeDriver()
-        self = Recorders.SimpleRecorder(self)
     
     def init_vals(self):
         # Set Initial Values

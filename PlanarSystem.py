@@ -12,6 +12,8 @@ import dymos as dm
 import DynamicModel as DM
 import os
 import Param as P
+import PlanarPT.SUPPORT.Surrogate as S
+import SUPPORT_FUNCTIONS.init as init
 
 # CONSTANTS
 g = 9.80665
@@ -24,11 +26,18 @@ class PlanarSystemParams(P.ParamSet):
         pt_params = pt.PlanarPTParams()
         self.update(pt_params)
         
-                
-        # Temporarily make Propeller params Independent:
-        for p in self:
-            if p.parent == "Propeller":
-                p.dep = False
+        # Add Dependencies to Propeller Params Manually
+        surr_path = os.path.join(init.HOME_PATH, "PlanarPT/PlanarPTModelDAE/SurrogateMetadata.json")
+        f = open(surr_path)
+        s_dict = S.Surrogate.load(f)
+        
+        surr_params = ["k_P__Propeller", "k_T__Propeller", "Mass__Propeller", "Price__Propeller"]
+        for p in surr_params:
+            s = s_dict[p]
+            s.setup()
+            self[p].setDependency(s.comp)
+            self[p].dep = True
+        
         
         # Manually Define parameters required for Body Model
         self.add(P.Param(name='rho', val=0.1, desc='Frame Density', strID="rho__Frame", parent="Frame"))

@@ -73,3 +73,7 @@ m_simple.export(opts)
 %% Export the Parameters
 p = ppt.Params;
 p.export('ExportMethod', "JSON", 'FilePath', "PlanarPTModelDAE/ParamMetadata.json", "FilterTunable", true);
+
+%% Export the Surrogates
+surr = [ppt.Battery.Surrogate.Fit, ppt.Motor.Surrogate.Fit, ppt.Propeller.Surrogate.Fit];
+surr_exp = export(surr, 'SamplePoints', 50, 'FilePath', 'PlanarPTModelDAE/SurrogateMetadata.json');

@@ -15,19 +15,23 @@ init.init_output(__file__)
 case_reader = om.CaseReader('cases.sql')
 cases = case_reader.get_cases("problem")
 
-# mass = []
-# final_times = []
-# thrust_ratio = []
-# for case in cases:
-#     mass.append(case.get_)
+mass = []
+final_times = []
+thrust_ratio = []
+for case in cases:
+    mass.append(case.get_val("params.Mass__Frame"))
+    final_times.append(case.get_val("traj.phase0.t_duration"))
+    thrust_ratio.append(case.get_val("thrust_ratio.TR"))
 #%% Plots
-# plt.subplots(sim_out, prob, path='traj.phase0.timeseries',
-#              vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']] + [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']],
-#              labels=['$x$', '$y$', r'$\theta$', "$u_1$", "$u_2$"], 
-#              title="Planar Quadrotor Input Optimization", save=True)
 
-# plt.plot(mass_vals, time_vals)
-# plt.title("Frame Mass vs. Optimal Time")
-# plt.xlabel("Mass (kg)")
-# plt.ylabel("Time (s)")
-# #plt.savefig("frame_mass_vs_time.png")
+fig, axes = plt.subplots(2,1)
+fig.suptitle(r"\textbf{Frame Mass Sweep}")
+
+axes[0].plot(mass, final_times)
+axes[0].set_ylabel("Final Time (s)")
+
+axes[1].plot(mass, thrust_ratio)
+axes[1].set_ylabel("Thrust Ratio")
+axes[-1].set_xlabel("Frame Mass (kg)")
+
+plt.savefig("frame_mass_sweep.png")

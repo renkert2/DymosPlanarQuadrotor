@@ -1,0 +1,405 @@
+<?xml version="1.0" standalone="no"?>
+<svg
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	xmlns="http://www.w3.org/2000/svg" id="svgId" width="1371.259375px" height="920.15px" transform="translate(0 0)">
+	<style title="svgStyle">rect {
+    stroke: #eee;
+}
+
+#tree &gt; g.output &gt; rect {
+    fill: #9FC4C6;
+    fill-opacity: .8;
+}
+
+#tree &gt; g.output_implicit &gt; rect {
+    fill: #C7D06D;
+    fill-opacity: .8;
+}
+
+#tree &gt; g.input &gt; rect {
+    fill: #30B0AD;
+    fill-opacity: .8;
+}
+
+#tree &gt; g.unconnected_input &gt; rect {
+    fill: #F42F0D;
+    fill-opacity: .8;
+}
+
+#tree &gt; g.subsystem &gt; rect {
+    cursor: pointer;
+    fill-opacity: .8;
+    fill: #6092B5;
+}
+
+#tree &gt; g.component &gt; rect {
+    cursor: pointer;
+    fill-opacity: .8;
+    fill: #02BFFF;
+}
+
+#tree &gt; g.input_group &gt; rect {
+    cursor: pointer;
+    fill-opacity: .8;
+    fill: Orchid;
+}
+
+#tree &gt; g.output_group &gt; rect {
+    cursor: pointer;
+    fill-opacity: .8;
+    fill: #888;
+}
+
+#tree &gt; g.minimized &gt; rect {
+    cursor: pointer;
+    fill-opacity: .8;
+    fill: #555555;
+}
+
+#tree &gt; g.minimized &gt; text {
+    fill: white;
+}
+
+#tree &gt; g.autoivc_input &gt; rect {
+    cursor: pointer;
+    fill-opacity: .8;
+    fill: #ff7000;
+}
+
+text {
+}
+
+#svgId g.partition_group &gt; text {
+    text-anchor: end;
+    pointer-events: none;
+    font-family: helvetica, sans-serif;
+    font-size: 18px;
+}
+
+text.offgridLabel {
+    font-family: helvetica, sans-serif;
+    font-size: 18px;
+}
+
+#svgId g.solver_group &gt; text {
+    text-anchor: end;
+    pointer-events: none;
+    font-family: helvetica, sans-serif;
+    font-size: 18px;
+}
+
+g.component_box &gt; rect {
+    stroke: #555;
+    stroke-width: 2;
+    fill: none;
+}
+
+.bordR1, .bordR2, .bordR3, .bordR4, .ssMid, .grpMid, .svMid, .vsMid, .vMid, .sgrpMid, .grpsMid {
+    stroke: none;
+    stroke-width: 0;
+    fill-opacity: 1;
+}
+
+[class^=n2_hover_elements] {
+    pointer-events: none;
+}
+
+.background {
+    fill: #eee;
+}
+
+.horiz_line, .vert_line {
+    stroke: white;
+}
+
+g.solver_none &gt; rect {
+    fill: #8dd3c7;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_ln_lnbj &gt; rect {
+    fill: #ffffb3;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_nl_nlbj &gt; rect {
+    fill: #ffffb3;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_ln_scipy &gt; rect {
+    fill: #bebada;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_ln_runonce &gt; rect {
+    fill: #fb8072;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_nl_runonce &gt; rect {
+    fill: #fb8072;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_ln_direct &gt; rect {
+    fill: #80b1d3;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_ln_petsckrylov &gt; rect {
+    fill: #fdb462;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_ln_lnbgs &gt; rect {
+    fill: #b3de69;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_nl_nlbgs &gt; rect {
+    fill: #b3de69;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_ln_user &gt; rect {
+    fill: #fccde5;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_nl_newton &gt; rect {
+    fill: #d9d9d9;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_broyden &gt; rect {
+    fill: #bc80bd;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_solve_linear &gt; rect {
+    fill: #ccebc5;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_solve_nonlinear &gt; rect {
+    fill: #ccebc5;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+g.solver_other &gt; rect {
+    fill: #ffed6f;
+    cursor: pointer;
+    fill-opacity: .8;
+}
+
+</style>
+	<defs>
+		<marker id="arrow" viewBox="0 -5 10 10" refX="5" refY="0" markerWidth="7.1212" markerHeight="7.1212" orient="auto">
+			<path d="M0,-5L10,0L0,5L0,-5" class="arrowHead"></path>
+		</marker>
+		<clipPath id="partitionTreeClip">
+			<rect id="tree-clip-rect" x="0" y="0" width="1200" height="890.15"></rect>
+		</clipPath>
+		<clipPath id="n2MatrixClip">
+			<rect id="matrix-clip-rect" x="-1" y="-1" width="892.15" height="892.15"></rect>
+		</clipPath>
+		<clipPath id="solverTreeClip">
+			<rect id="solver-clip-rect" x="0" y="0" width="1200" height="890.15"></rect>
+		</clipPath>
+		<g id="matrix-connector-arrow" width="10" height="10">
+			<path d="M0,3 h2 q5,0 5,5 h1 l-3,2 l-3,-2 h1 q0,-1 -1,-1 h-2 z"></path>
+		</g>
+		<g id="matrix-connector-square" width="10" height="10">
+			<rect x="2" y="2" width="6" height="6"></rect>
+		</g>
+	</defs>
+	<g id="tree" clip-path="url(#partitionTreeClip)" height="890.15" width="171.078125" transform="translate(0 15)">
+		<g class="partition_group subsystem" transform="">
+			<rect width="65.03125" height="890.15" id="" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(57.03125, 445.07501220703125)" style="opacity: 1;">model</text>
+		</g>
+		<g class="partition_group minimized" transform="translate(65.03125, 0)">
+			<rect width="106.046875" height="178.03" id="_auto_ivc" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(98.046875, 89.01499938964844)" style="opacity: 1;">Auto-IVC</text>
+		</g>
+		<g class="partition_group minimized" transform="translate(65.03125, 178.02999877929688)">
+			<rect width="106.046875" height="178.03" id="params" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(98.046875, 89.01499938964844)" style="opacity: 1;">params</text>
+		</g>
+		<g class="partition_group minimized" transform="translate(65.03125, 356.05999755859375)">
+			<rect width="106.046875" height="178.03" id="static" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(98.046875, 89.01499938964844)" style="opacity: 1;">static</text>
+		</g>
+		<g class="partition_group minimized" transform="translate(65.03125, 534.0900268554688)">
+			<rect width="106.046875" height="178.03" id="thrust_ratio" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(98.046875, 89.01499938964844)" style="opacity: 1;">thrust_ratio</text>
+		</g>
+		<g class="partition_group minimized" transform="translate(65.03125, 712.1199951171875)">
+			<rect width="106.046875" height="178.03" id="traj" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(98.046875, 89.01499938964844)" style="opacity: 1;">traj</text>
+		</g>
+	</g>
+	<g id="highlight-bar" height="890.15" width="8" transform="translate(171.078125, 15)"></g>
+	<g id="solver_tree" clip-path="url(#solverTreeClip)" height="890.15" transform="translate(1091.2281494140625, 15)">
+		<g class="solver_ln_runonce solver_group subsystem" transform="translate(140.015625, 0)">
+			<rect width="140.015625" height="890.15" id="" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(132.015625, 445.07501220703125)" style="opacity: 1;">LN: RUNONCE</text>
+		</g>
+		<g class="solver_none solver_group minimized" transform="">
+			<rect width="140.015625" height="178.03" id="_auto_ivc" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(132.015625, 89.01499938964844)" style="opacity: 1;">None</text>
+		</g>
+		<g class="solver_ln_runonce solver_group minimized" transform="translate(0, 178.02999877929688)">
+			<rect width="140.015625" height="178.03" id="params" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(132.015625, 89.01499938964844)" style="opacity: 1;">LN: RUNONCE</text>
+		</g>
+		<g class="solver_ln_direct solver_group minimized" transform="translate(0, 356.05999755859375)">
+			<rect width="140.015625" height="178.03" id="static" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(132.015625, 89.01499938964844)" style="opacity: 1;">LN: Direct</text>
+		</g>
+		<g class="solver_none solver_group minimized" transform="translate(0, 534.0900268554688)">
+			<rect width="140.015625" height="178.03" id="thrust_ratio" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(132.015625, 89.01499938964844)" style="opacity: 1;">None</text>
+		</g>
+		<g class="solver_ln_runonce solver_group minimized" transform="translate(0, 712.1199951171875)">
+			<rect width="140.015625" height="178.03" id="traj" rx="12" ry="12"></rect>
+			<text dy=".35em" transform="translate(132.015625, 89.01499938964844)" style="opacity: 1;">LN: RUNONCE</text>
+		</g>
+	</g>
+	<g id="n2outer" height="920.15" width="920.15" transform="translate(171.078125, 0)">
+		<g id="n2inner" height="890.15" width="890.15" transform="translate(15, 15)">
+			<rect id="backgroundRect" class="background" width="890.15" height="890.15" transform="translate(0 0)"></rect>
+			<g id="n2background" clip-path="url(#n2MatrixClip)"></g>
+			<g id="n2gridlines" clip-path="url(#n2MatrixClip)">
+				<g class="horiz_line" transform="translate(0,0)">
+					<line x2="890.15"></line>
+				</g>
+				<g class="vert_line" transform="translate(0)rotate(-90)">
+					<line x1="-890.15"></line>
+				</g>
+				<g class="horiz_line" transform="translate(0, 178.02999877929688)">
+					<line x2="890.15"></line>
+				</g>
+				<g class="horiz_line" transform="translate(0, 356.05999755859375)">
+					<line x2="890.15"></line>
+				</g>
+				<g class="horiz_line" transform="translate(0, 534.0900268554688)">
+					<line x2="890.15"></line>
+				</g>
+				<g class="horiz_line" transform="translate(0, 712.1199951171875)">
+					<line x2="890.15"></line>
+				</g>
+				<g class="vert_line" transform="translate(178.02999877929688, 0) rotate(-90)">
+					<line x1="-890.15"></line>
+				</g>
+				<g class="vert_line" transform="translate(356.05999755859375, 0) rotate(-90)">
+					<line x1="-890.15"></line>
+				</g>
+				<g class="vert_line" transform="translate(534.0900268554688, 0) rotate(-90)">
+					<line x1="-890.15"></line>
+				</g>
+				<g class="vert_line" transform="translate(712.1199951171875, 0) rotate(-90)">
+					<line x1="-890.15"></line>
+				</g>
+			</g>
+			<g id="n2elements" clip-path="url(#n2MatrixClip)">
+				<g class="n2cell" transform="translate(89.01499938964844, 89.01499938964844)">
+					<rect class="bordR1" x="-89.015" y="-89.015" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR2" x="-89.015" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR3" x="71.212" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR4" x="-89.015" y="71.212" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="gMid" id="cellShape_node_1" x="-53.409" y="-53.409" width="106.818" height="106.818" style="fill: rgb(85, 85, 85);"></rect>
+				</g>
+				<g class="n2cell" transform="translate(445.07501220703125, 89.01499938964844)">
+					<use class="vMid" id="cellShape_conn_1_to_153" x="-5" y="-5" xlink:href="#matrix-connector-square" transform="scale(17.80299949645996,17.80299949645996)" style="fill: gray;"></use>
+				</g>
+				<g class="n2cell" transform="translate(267.0450134277344, 267.0450134277344)">
+					<rect class="bordR1" x="-89.015" y="-89.015" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR2" x="-89.015" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR3" x="71.212" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR4" x="-89.015" y="71.212" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="gMid" id="cellShape_node_3" x="-53.409" y="-53.409" width="106.818" height="106.818" style="fill: rgb(85, 85, 85);"></rect>
+				</g>
+				<g class="n2cell" transform="translate(445.07501220703125, 267.0450134277344)">
+					<use class="vMid" id="cellShape_conn_3_to_153" x="-5" y="-5" xlink:href="#matrix-connector-square" transform="scale(17.80299949645996,17.80299949645996)" style="fill: gray;"></use>
+				</g>
+				<g class="n2cell" transform="translate(801.135009765625, 267.0450134277344)">
+					<use class="vMid" id="cellShape_conn_3_to_291" x="-5" y="-5" xlink:href="#matrix-connector-square" transform="scale(17.80299949645996,17.80299949645996)" style="fill: gray;"></use>
+				</g>
+				<g class="n2cell" transform="translate(267.045,267.045)">
+					<rect class="bordR1" x="-89.015" y="-89.015" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR2" x="-89.015" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR3" x="71.212" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR4" x="-89.015" y="71.212" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="gMid" id="cellShape_node_3" x="-53.409" y="-53.409" width="106.818" height="106.818" style="fill: rgb(85, 85, 85);"></rect>
+				</g>
+				<g class="n2cell" transform="translate(623.10498046875, 267.0450134277344)">
+					<use class="vMid" id="cellShape_conn_3_to_287" x="-5" y="-5" xlink:href="#matrix-connector-square" transform="scale(17.80299949645996,17.80299949645996)" style="fill: gray;"></use>
+				</g>
+				<g class="n2cell" transform="translate(445.07501220703125, 445.07501220703125)">
+					<rect class="bordR1" x="-89.015" y="-89.015" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR2" x="-89.015" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR3" x="71.212" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR4" x="-89.015" y="71.212" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="gMid" id="cellShape_node_153" x="-53.409" y="-53.409" width="106.818" height="106.818" style="fill: rgb(85, 85, 85);"></rect>
+				</g>
+				<g class="n2cell" transform="translate(445.07501220703125, 445.07501220703125)">
+					<rect class="bordR1" x="-89.015" y="-89.015" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR2" x="-89.015" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR3" x="71.212" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR4" x="-89.015" y="71.212" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="gMid" id="cellShape_node_153" x="-53.409" y="-53.409" width="106.818" height="106.818" style="fill: rgb(85, 85, 85);"></rect>
+				</g>
+				<g class="n2cell" transform="translate(623.10498046875, 445.07501220703125)">
+					<use class="vMid" id="cellShape_conn_153_to_287" x="-5" y="-5" xlink:href="#matrix-connector-square" transform="scale(17.80299949645996,17.80299949645996)" style="fill: gray;"></use>
+				</g>
+				<g class="n2cell" transform="translate(623.10498046875, 623.10498046875)">
+					<rect class="bordR1" x="-89.015" y="-89.015" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR2" x="-89.015" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR3" x="71.212" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR4" x="-89.015" y="71.212" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="gMid" id="cellShape_node_287" x="-53.409" y="-53.409" width="106.818" height="106.818" style="fill: rgb(85, 85, 85);"></rect>
+				</g>
+				<g class="n2cell" transform="translate(801.135009765625, 801.135009765625)">
+					<rect class="bordR1" x="-89.015" y="-89.015" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR2" x="-89.015" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR3" x="71.212" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR4" x="-89.015" y="71.212" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="gMid" id="cellShape_node_291" x="-53.409" y="-53.409" width="106.818" height="106.818" style="fill: rgb(85, 85, 85);"></rect>
+				</g>
+				<g class="n2cell" transform="translate(801.135009765625, 801.135009765625)">
+					<rect class="bordR1" x="-89.015" y="-89.015" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR2" x="-89.015" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR3" x="71.212" y="-89.015" width="17.803" height="178.03" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="bordR4" x="-89.015" y="71.212" width="178.03" height="17.803" style="fill: rgb(85, 85, 85);"></rect>
+					<rect class="gMid" id="cellShape_node_291" x="-53.409" y="-53.409" width="106.818" height="106.818" style="fill: rgb(85, 85, 85);"></rect>
+				</g>
+			</g>
+			<g id="n2componentBoxes" clip-path="url(#n2MatrixClip)"></g>
+			<g id="n2arrows"></g>
+		</g>
+		<g id="n2top" class="offgridLabel" transform="translate(15 0)" width="890.15" height="13"></g>
+		<g id="n2left" class="offgridLabel"></g>
+		<g id="n2right" class="offgridLabel"></g>
+		<g id="n2bottom" class="offgridLabel" transform="translate(0 890.1513)" width="920.15" height="13"></g>
+	</g>
+	<g id="text-width-renderer" class="partition_group">
+		<text x="-200">traj</text>
+	</g>
+</svg>
