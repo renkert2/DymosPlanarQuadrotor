@@ -121,6 +121,23 @@ classdef Boundary
             plot(obj.BoundaryPoints(:,1), obj.BoundaryPoints(:,2), '-r', 'LineWidth', 2)
             hold off
         end
+        
+        function S = export(obj, opts)
+            arguments
+                obj
+                opts.ExportFile logical = false
+                opts.FilePath string = "./BoundaryMetadata"
+            end
+            
+            S = struct();
+            S.BoundaryPoints = obj.BoundaryPoints;
+            S.X_lb = obj.X_lb;
+            S.X_ub = obj.X_ub;
+            S.X_mean = obj.X_mean;
+            S.N = obj.N_vars; % Dimension of the Boundary Space
+            
+            %TODO: Exporting Boundary to File
+        end
     end
     
     methods (Static)

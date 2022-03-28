@@ -1,15 +1,9 @@
-classdef BatterySurrogate < handle
+classdef BatterySurrogate < Surrogate
     properties
-        CD ComponentData
-        Fit paramFit
-        
+        CD
+        Fit
+
         N_s_min double = 0
-    end
-    properties (Dependent)
-        FilteredCD ComponentData
-    end
-    properties (SetAccess = private)
-        CDTable table
     end
 
     methods
@@ -20,22 +14,10 @@ classdef BatterySurrogate < handle
                 load("BatteryComponentData.mat", "BatteryComponentData"); 
                 obj.CD = BatteryComponentData;
             end
-            obj.CDTable = table(obj.CD);
             
             % Construct paramFit object
             obj.Fit = paramFit(2,3);
             obj.setFitTypesOpts();
-            obj.updateFitData();
-        end
-        
-        function fcd = get.FilteredCD(obj)
-            N_s_vals = obj.CDTable.N_s;
-            I = N_s_vals >= obj.N_s_min;
-            fcd = obj.CD(I);
-        end
-        
-        function set.N_s_min(obj,val)
-            obj.N_s_min = val;
             obj.updateFitData();
         end
         
@@ -69,7 +51,7 @@ classdef BatterySurrogate < handle
         end
         
         function updateFitData(obj)
-            [t,~] = table(obj.FilteredCD);
+            [t,~] = table(obj.CD);
             input_data = [t.N_s, t.Q];
             output_data = [t.R_s,t.Mass, t.Price];
             obj.Fit.setData(input_data, output_data);

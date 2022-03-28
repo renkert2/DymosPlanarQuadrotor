@@ -53,7 +53,7 @@ classdef PlanarPT_InitialDesign < PlanarPowerTrain
             motor_I = (motor_table.kV == 965) & (motor_table.Rm == 0.102);
             motor = motor_CD(motor_I);
             %%
-            prop_CD = obj.Propeller.Surrogate.CD.FilteredCD;
+            prop_CD = obj.Propeller.Surrogate.CD;
             prop_table = table(prop_CD);
             prop_I = (prop_table.D == 0.2286) & (prop_table.P == 0.1143);
             prop = prop_CD(prop_I);

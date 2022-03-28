@@ -1,15 +1,8 @@
-classdef MotorSurrogate < handle
+classdef MotorSurrogate < Surrogate
     properties
-        CD ComponentData
-        Fit paramFit
+        CD
+        Fit
     end
-    properties (Dependent)
-        FilteredCD ComponentData
-    end
-    properties (SetAccess = private)
-        CDTable table
-    end
-
     methods
         function obj = MotorSurrogate(cd)
             if nargin ==1
@@ -18,16 +11,11 @@ classdef MotorSurrogate < handle
                 load("MotorComponentData.mat", "MotorComponentData"); 
                 obj.CD = MotorComponentData;
             end
-            obj.CDTable = table(obj.CD);
             
             % Construct paramFit object
             obj.Fit = paramFit(2,3);
             obj.setFitTypesOpts();
             obj.updateFitData();
-        end
-        
-        function fcd = get.FilteredCD(obj)
-            fcd = obj.CD;
         end
         
         function setFitTypesOpts(obj)
@@ -62,7 +50,7 @@ classdef MotorSurrogate < handle
         end
         
         function updateFitData(obj)
-            [t,~] = table(obj.FilteredCD);
+            [t,~] = table(obj.CD);
             input_data = [t.kV, t.Rm];
             output_data = [t.Mass,t.D, t.Price];
             obj.Fit.setData(input_data, output_data);

@@ -1,18 +1,21 @@
-classdef PropellerSurrogate < handle
+classdef PropellerSurrogate < Surrogate
     properties
-        CD PropellerComponentData
-        Fit paramFit
+        Fit
+    end
+    properties (Dependent)
+        CD
     end
     properties
         ProductLines
+        PropCD PropellerComponentData
     end
 
     methods
-        function obj = PropellerSurrogate(cd)
+        function obj = PropellerSurrogate(pcd)
             if nargin ==1
-                obj.CD = cd;
+                obj.PropCD = pcd;
             else
-                obj.CD = PropellerComponentData();
+                obj.PropCD = PropellerComponentData();
             end
             
             % Construct paramFit object
@@ -21,13 +24,17 @@ classdef PropellerSurrogate < handle
             obj.updateFitData();
         end
         
+        function cd = get.CD(obj)
+            cd = obj.PropCD.FilteredCD;
+        end
+        
         function p = get.ProductLines(obj)
-            p = obj.CD.ProductLines;
+            p = obj.PropCD.ProductLines;
         end
 
         function set.ProductLines(obj, p)
-            obj.CD.ProductLines = p;
-            obj.setFitTypesOpts;
+            obj.PropCD.ProductLines = p;
+            obj.setFitTypesOpts();
             obj.updateFitData();
         end
  
@@ -66,7 +73,7 @@ classdef PropellerSurrogate < handle
         end
         
         function updateFitData(obj)
-            [t,~] = table(obj.CD.FilteredCD);
+            [t,~] = table(obj.CD);
             input_data = [t.D, t.P];
             output_data = [t.k_P, t.k_T, t.Mass, t.Price];
             obj.Fit.setData(input_data, output_data);

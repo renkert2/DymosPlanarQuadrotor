@@ -171,6 +171,27 @@ classdef ComponentData
 
             tbl = table(tbldat{:}, 'VariableNames', comp_fields);
         end
+        
+        function S = export(obj_array, opts)
+            arguments
+                obj_array
+                opts.ExportFile logical = false
+            end
+            meta = ?ComponentData;
+            meta_props = string({meta.PropertyList.Name});
+            for i = 1:numel(obj_array)
+                obj = obj_array(i);
+                for j = 1:numel(meta_props)
+                    prop = meta_props(j);
+                    switch prop
+                        case "Data"
+                            S(i).(meta_props(j)) = export(obj.(meta_props(j)));
+                        otherwise
+                            S(i).(meta_props(j)) = obj.(meta_props(j));
+                    end
+                end
+            end
+        end
     end
     
     methods (Static)

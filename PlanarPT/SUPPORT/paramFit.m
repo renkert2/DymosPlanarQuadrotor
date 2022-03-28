@@ -175,9 +175,9 @@ classdef paramFit < handle
                 
                 out_I = out_plts(i);
                 plot(obj.Models{out_I}, obj.Data(out_I).Inputs, obj.Data(out_I).Outputs);
-
+                
                 [olb,oub] = bounds(obj.Data(out_I).Outputs);
-
+                
                 switch obj.N_ins
                     case 1
                         pfun = @plot;
@@ -232,84 +232,79 @@ classdef paramFit < handle
         end
     end
     methods (Sealed)
-        function S = export(obj_array, opts)
+        function S = export(obj, opts)
             arguments
-                obj_array
+                obj
                 opts.SamplePoints = 100
-                opts.FilePath string = "./SurrogateMetadata"
+                opts.ExportFile logical = false
+                opts.FilePath string = "./FitMetadata"
             end
-            S = struct();
-            for I = 1:numel(obj_array)
-                obj = obj_array(I);
-                % Make Grid using Boundary
-                B = obj.Boundary;
-                if ~isempty(B)
-                    X_lb = B.X_lb;
-                    X_ub = B.X_ub;
-                else
-                    % Get the max and min from the combined dataset for each model
-                    dat = vertcat(obj.Data.Inputs);
-                    X_lb = zeros(obj.N_ins,1);
-                    X_ub = zeros(obj.N_ins,1);
-                    for i = 1:obj.N_ins
-                        X_lb(i,1) = min(dat(:,i));
-                        X_ub(i,1) = max(dat(:,i));
-                    end
-                end
-                
-                X_vec = {};
+            % Make Grid using Boundary
+            B = obj.Boundary;
+            if ~isempty(B)
+                X_lb = B.X_lb;
+                X_ub = B.X_ub;
+            else
+                % Get the max and min from the combined dataset for each model
+                dat = vertcat(obj.Data.Inputs);
+                X_lb = zeros(obj.N_ins,1);
+                X_ub = zeros(obj.N_ins,1);
                 for i = 1:obj.N_ins
-                    if isscalar(opts.SamplePoints)
-                        N = opts.SamplePoints;
-                    else
-                        N = opts.SamplePoints(i);
-                    end
-                    X_vec{i} = linspace(X_lb(i), X_ub(i), N);
-                end
-                
-                X_grid = cell(obj.N_ins,1);
-                [X_grid{:}] = ndgrid(X_vec{:});
-                
-                % Sample Surrogates over Grid
-                bw_cache = obj.BoundaryWarning;
-                obj.BoundaryWarning = false; % Temporarily disable boundary checking
-                Y_grid = cell(obj.N_outs,1);
-                for i = 1:obj.N_outs
-                    f = obj.Functions{i};
-                    Y_grid{i} = f(X_grid{:});
-                end
-                obj.BoundaryWarning = bw_cache;
-                
-                % Output Structures
-                for i = 1:obj.N_outs
-                    out = obj.Outputs(i).StrID;
-                    s = struct();
-                    s.Output = out;
-                    s.OutputName = obj.Outputs(i).Name;
-                    s.Inputs = [obj.Inputs.StrID];
-                    s.InputsName = [obj.Inputs.Name];
-                    
-                    s.X_vec = X_vec;
-                    s.X_grid = X_grid;
-                    s.Y_grid = Y_grid{i};
-                    S.(out) = s;
+                    X_lb(i,1) = min(dat(:,i));
+                    X_ub(i,1) = max(dat(:,i));
                 end
             end
             
-            % Output to file
-            if verLessThan('matlab', '9.10')
-                jsonenc_args = {};
-            else
-                jsonenc_args = {"PrettyPrint", true};
+            X_vec = {};
+            for i = 1:obj.N_ins
+                if isscalar(opts.SamplePoints)
+                    N = opts.SamplePoints;
+                else
+                    N = opts.SamplePoints(i);
+                end
+                X_vec{i} = linspace(X_lb(i), X_ub(i), N);
             end
-            S_json = jsonencode(S, jsonenc_args{:});
-            file_path = opts.FilePath;
-            [path,name,~] = fileparts(file_path);
-            file_path = fullfile(path, name); % Remove extension from path
-            fname = file_path + ".json";
-            f = fopen(fname, 'w');
-            fprintf(f, S_json);
-            fclose(f);    
+            
+            X_grid = cell(obj.N_ins,1);
+            [X_grid{:}] = ndgrid(X_vec{:});
+            
+            % Sample Surrogates over Grid
+            bw_cache = obj.BoundaryWarning;
+            obj.BoundaryWarning = false; % Temporarily disable boundary checking
+            Y_grid = cell(obj.N_outs,1);
+            for i = 1:obj.N_outs
+                f = obj.Functions{i};
+                Y_grid{i} = f(X_grid{:});
+            end
+            obj.BoundaryWarning = bw_cache;
+            
+            % Output Structures
+            S = struct();
+            S.Output = [obj.Outputs.StrID];
+            S.OutputName = [obj.Outputs.Name];
+            S.Inputs = [obj.Inputs.StrID];
+            S.InputsName = [obj.Inputs.Name];
+            
+            S.X_vec = X_vec;
+            S.X_grid = X_grid;
+            S.Y_grid = Y_grid;
+            
+            % Output to file
+            if opts.ExportFile
+                if verLessThan('matlab', '9.10')
+                    jsonenc_args = {};
+                else
+                    jsonenc_args = {"PrettyPrint", true};
+                end
+                S_json = jsonencode(S, jsonenc_args{:});
+                file_path = opts.FilePath;
+                [path,name,~] = fileparts(file_path);
+                file_path = fullfile(path, name); % Remove extension from path
+                fname = file_path + ".json";
+                f = fopen(fname, 'w');
+                fprintf(f, S_json);
+                fclose(f);
+            end
         end
     end
     methods (Access = protected)
