@@ -13,11 +13,13 @@ file_path = os.path.join(init.HOME_PATH, "PlanarPT/PlanarPTModelDAE/SurrogateMet
 f = open(file_path)
 s_dict = S.Surrogate.load(f)
 
-s = s_dict["k_P__Propeller"]
+s = s_dict["Propeller"]
 s.setup()
 
 prob = om.Problem()
-prob.model.add_subsystem("mm", s.comp)
+
+comp = s.fits["k_P__Propeller"]
+prob.model.add_subsystem("mm", comp)
 
 prob.setup()
 prob.final_setup()
@@ -26,6 +28,6 @@ prob.set_val('mm.D__Propeller', 0.5)
 prob.set_val('mm.P__Propeller', 0.1)
 
 prob.run_model()
-print(prob.get_val("mm.k_P__Propeller"))
+print(prob.get_val("mm.k_P"))
 
-s.plot()
+# s.plot()

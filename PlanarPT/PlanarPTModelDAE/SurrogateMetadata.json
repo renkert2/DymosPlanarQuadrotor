@@ -1,12 +1,13 @@
 [
   {
+    "ComponentName": "Battery",
     "Fits": {
-      "Output": [
+      "Outputs": [
         "R_s__Battery",
         "Mass__Battery",
         "Price__Battery"
       ],
-      "OutputName": [
+      "OutputsName": [
         "R_s",
         "Mass",
         "Price"
@@ -13141,6 +13142,10 @@
       ]
     },
     "Boundary": {
+      "Args": [
+        "N_s__Battery",
+        "Q__Battery"
+      ],
       "BoundaryPoints": [
         [
           4,
@@ -15820,13 +15825,14 @@
     ]
   },
   {
+    "ComponentName": "PMSMMotor",
     "Fits": {
-      "Output": [
+      "Outputs": [
         "Mass__Motor",
         "D__Motor",
         "Price__Motor"
       ],
-      "OutputName": [
+      "OutputsName": [
         "Mass",
         "D",
         "Price"
@@ -28961,6 +28967,10 @@
       ]
     },
     "Boundary": {
+      "Args": [
+        "kV__Motor",
+        "Rm__Motor"
+      ],
       "BoundaryPoints": [
         [
           105,
@@ -31142,14 +31152,15 @@
     ]
   },
   {
+    "ComponentName": "Propeller",
     "Fits": {
-      "Output": [
+      "Outputs": [
         "k_P__Propeller",
         "k_T__Propeller",
         "Mass__Propeller",
         "Price__Propeller"
       ],
-      "OutputName": [
+      "OutputsName": [
         "k_P",
         "k_T",
         "Mass",
@@ -46887,6 +46898,10 @@
       ]
     },
     "Boundary": {
+      "Args": [
+        "D__Propeller",
+        "P__Propeller"
+      ],
       "BoundaryPoints": [
         [
           0.10413999999999998,

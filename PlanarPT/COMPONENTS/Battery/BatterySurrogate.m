@@ -1,5 +1,6 @@
 classdef BatterySurrogate < Surrogate
     properties
+        ComponentName = "Battery"
         CD
         Fit
 

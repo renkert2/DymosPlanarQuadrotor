@@ -3,6 +3,7 @@ classdef Surrogate < handle & matlab.mixin.Heterogeneous
     %   Detailed explanation goes here
     
     properties (Abstract)
+        ComponentName string
         CD ComponentData
         Fit paramFit
     end
@@ -18,6 +19,8 @@ classdef Surrogate < handle & matlab.mixin.Heterogeneous
             
             for i = 1:numel(obj_array)
                 obj = obj_array(i);
+                
+                S(i).ComponentName = obj.ComponentName;
                 
                 % Export Fits
                 S(i).Fits = obj.Fit.export('ExportFile', false, 'SamplePoints', opts.SamplePoints);

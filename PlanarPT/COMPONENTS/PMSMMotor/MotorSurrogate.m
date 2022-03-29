@@ -1,5 +1,6 @@
 classdef MotorSurrogate < Surrogate
     properties
+        ComponentName = "PMSMMotor"
         CD
         Fit
     end

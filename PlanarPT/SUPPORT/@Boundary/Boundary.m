@@ -7,6 +7,7 @@ classdef Boundary
     %   Detailed explanation goes here
     
     properties
+        Args string
         Data (:,:) double
         BoundaryPoints (:,:) double
     end
@@ -22,7 +23,7 @@ classdef Boundary
     end
     
     methods
-        function obj = Boundary(data)
+        function obj = Boundary(data, args)
             % - data: each variable is a column, i.e. [X], [X Y], or [X Y Z]
             N_vars = size(data,2);
             obj.N_vars = N_vars;
@@ -45,6 +46,8 @@ classdef Boundary
             if bound_flag
                 obj.BoundaryPoints = obj.Data(bound,:);
             end
+            
+            obj.Args = args;
         end
         
         function d = distToBoundary(obj,varargin)
@@ -130,6 +133,7 @@ classdef Boundary
             end
             
             S = struct();
+            S.Args = obj.Args;
             S.BoundaryPoints = obj.BoundaryPoints;
             S.X_lb = obj.X_lb;
             S.X_ub = obj.X_ub;

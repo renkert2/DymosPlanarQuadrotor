@@ -19,26 +19,25 @@ import SUPPORT_FUNCTIONS.init as init
 g = 9.80665
 
 class PlanarSystemParams(P.ParamSet):
-    def __init__(self, **kwargs):
+    def __init__(self, surrogates=None, **kwargs):
         super().__init__(**kwargs)
         
         # Add Params from Power Train
         pt_params = pt.PlanarPTParams()
         self.update(pt_params)
         
-        # Add Dependencies to Propeller Params Manually
-        surr_path = os.path.join(init.HOME_PATH, "PlanarPT/PlanarPTModelDAE/SurrogateMetadata.json")
-        f = open(surr_path)
-        s_dict = S.Surrogate.load(f)
-        
-        surr_params = ["k_P__Propeller", "k_T__Propeller", "Mass__Propeller", "Price__Propeller"]
-        for p in surr_params:
-            s = s_dict[p]
-            s.setup()
-            self[p].setDependency(s.comp)
+        # Add Dependencies to Propeller Params
+        if not surrogates:
+            surr_path = os.path.join(init.HOME_PATH, "PlanarPT/PlanarPTModelDAE/SurrogateMetadata.json")
+            f = open(surr_path)
+            surrogates = S.Surrogate.load(f)
+
+        prop_fit = surrogates["Propeller"].fits # prop_surr.Fits
+        prop_fit.setup()
+        for (p,c) in prop_fit.comps.items():
+            self[p].setDependency(c)
             self[p].dep = True
-        
-        
+
         # Manually Define parameters required for Body Model
         self.add(P.Param(name='rho', val=0.1, desc='Frame Density', strID="rho__Frame", parent="Frame"))
         self.add(P.Param(name='r', val=1, desc='Arm Length', strID="r__Frame", parent = "Frame"))
@@ -146,19 +145,28 @@ class ThrustRatioComp(om.ExplicitComponent):
     
 class PlanarSystemModel(P.ParamSystem):
     def __init__(self, traj, **kwargs):
-        ps = PlanarSystemParams()
+        surr_path = os.path.join(init.HOME_PATH, "PlanarPT/PlanarPTModelDAE/SurrogateMetadata.json")
+        f = open(surr_path)
+        surrogates = S.Surrogate.load(f)
+        
+        ps = PlanarSystemParams(surrogates=surrogates)
         pg = P.ParamGroup(param_set = ps)
         
         super().__init__(pg, **kwargs)
         
         self._traj = traj
+        self.surrogates = surrogates
     
     def setup(self):
-        # TODO: Add the Static Model Subsystem
+        # Setup the Surrogates
+        for s in self.surrogates:
+            self.surrogates[s].setup()
+        
+        # Add the Static Model Subsystem
         self.add_subsystem("static", pt.PlanarPTModelStatic())
         self.set_input_defaults("static.u1", val=1.0)
         
-        # TODO: Add Thrust Ratio
+        # Add Thrust Ratio
         tr_comp = ThrustRatioComp()
         self.add_subsystem("thrust_ratio", tr_comp, params="HoverThrust__System")
         

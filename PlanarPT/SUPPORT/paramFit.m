@@ -44,6 +44,10 @@ classdef paramFit < handle
         function set.Inputs(obj, ins)
             obj.Inputs = ins;
             obj.N_ins = numel(ins);
+            if ~isempty(obj.Boundary)
+                args = [obj.Inputs.StrID];
+                obj.Boundary.Args = args;
+            end
         end
         
         function set.Outputs(obj, outs)
@@ -75,7 +79,8 @@ classdef paramFit < handle
         end
         
         function setBoundary(obj)
-            obj.Boundary = Boundary(obj.Data(1).Inputs);
+            args = [obj.Inputs.StrID];
+            obj.Boundary = Boundary(obj.Data(1).Inputs, args);
         end
         
         function setModels(obj, fit_type, fit_opts)
@@ -280,8 +285,8 @@ classdef paramFit < handle
             
             % Output Structures
             S = struct();
-            S.Output = [obj.Outputs.StrID];
-            S.OutputName = [obj.Outputs.Name];
+            S.Outputs = [obj.Outputs.StrID];
+            S.OutputsName = [obj.Outputs.Name];
             S.Inputs = [obj.Inputs.StrID];
             S.InputsName = [obj.Inputs.Name];
             

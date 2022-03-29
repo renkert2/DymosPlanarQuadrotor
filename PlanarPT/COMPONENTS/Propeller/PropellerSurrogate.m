@@ -1,5 +1,6 @@
 classdef PropellerSurrogate < Surrogate
     properties
+        ComponentName = "Propeller"
         Fit
     end
     properties (Dependent)
