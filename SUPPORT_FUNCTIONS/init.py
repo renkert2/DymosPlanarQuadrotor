@@ -14,6 +14,10 @@ HOME_PATH =  os.path.join(os.getenv('ARG_RESEARCH'), 'DymosPlanarQuadrotor')
 if HOME_PATH not in sys.path:
     sys.path.append(HOME_PATH)
 
+# Get Latest Weekly Report Directory
+def get_latest_directory(directory=os.getenv("WEEKLY_REPORTS"), method="FolderName", date_format = "MMddyyyy"):
+    pass
+
 def init_output(filepath, suppress_warnings=True):
     os.chdir(os.path.dirname(filepath))
     if not os.path.isdir("Output"):

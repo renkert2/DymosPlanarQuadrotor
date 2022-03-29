@@ -8,6 +8,7 @@ import os
 from SUPPORT_FUNCTIONS.slugify import slugify
 import matplotlib.pyplot as plt
 import numpy as np
+import init
 
 mtlb = os.getenv('MYPYTHON')
 plt.style.use(os.path.join(mtlb, 'research_default.mplstyle'))
@@ -60,3 +61,6 @@ def iterplots(case_reader, vars, labels=[], title="", save=False, **kwargs):
             name = slugify(title)
             plt.savefig(f'{name}.png')
     plt.show()
+    
+def export(fig, fname = None, title = None, directory = None):
+    
