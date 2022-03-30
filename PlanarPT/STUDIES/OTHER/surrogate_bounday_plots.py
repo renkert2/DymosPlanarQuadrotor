@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-home = "C:/Users/renkert2/Documents/ARG_Research/DymosPlanarQuadrotor"
-if home not in  sys.path:
-    sys.path.append(home)
 import PlanarSystem as PS
 import SUPPORT_FUNCTIONS.init as init
-import openmdao.api as om
+import my_plt
 import matplotlib.pyplot as plt
 
 p = PS.PlanarSystemParams()
@@ -16,5 +11,9 @@ s.setup()
 
 
 #%% Boundary Plots
+figs = s.plot_boundary_3D()
+names = [x+"_surrogate_boundary_plot" for x in s.surrogates.keys()]
+for (fig,name) in zip(figs, names):
+    my_plt.export(fig, fname = name)
 
-s.plot_boundary_3D()
+plt.show()

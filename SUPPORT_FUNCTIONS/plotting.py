@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-C:\Users\renkert2\Box\ARG_Research\Python\my_plt.py
 """
 Created on Fri Jan 21 09:58:24 2022
 
@@ -9,9 +9,7 @@ from SUPPORT_FUNCTIONS.slugify import slugify
 import matplotlib.pyplot as plt
 import numpy as np
 import init
-
-mtlb = os.getenv('MYPYTHON')
-plt.style.use(os.path.join(mtlb, 'research_default.mplstyle'))
+import my_plt # loads style, provides export method
 
 def subplots(sim, prob, path='traj.phase0.timeseries', vars=[], labels=[], title="", save=False):
     if sim:
@@ -61,6 +59,4 @@ def iterplots(case_reader, vars, labels=[], title="", save=False, **kwargs):
             name = slugify(title)
             plt.savefig(f'{name}.png')
     plt.show()
-    
-def export(fig, fname = None, title = None, directory = None):
-    
+

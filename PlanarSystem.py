@@ -14,10 +14,34 @@ import os
 import Param as P
 import PlanarPT.SUPPORT.Surrogate as S
 import SUPPORT_FUNCTIONS.init as init
+import matplotlib.pyplot as plt
 
 # CONSTANTS
 g = 9.80665
 
+class PlanarSystemSurrogates:
+    def __init__(self, params):
+        surr_path = os.path.join(init.HOME_PATH, "PlanarPT/PlanarPTModelDAE/SurrogateMetadata.json")
+        f = open(surr_path)
+        self.surrogates = S.Surrogate.load(f, params)
+    
+    def __getitem__(self, val):
+        return self.surrogates[val]
+    
+    def setup(self):
+        for s in self.surrogates:
+            self.surrogates[s].setup()
+        
+    def plot_boundary_3D(self):
+        figs = []
+        for i,pair in enumerate(self.surrogates.items()):
+            fig = plt.figure(i)
+            pair[1].plot_boundary_3D(fig = fig)
+            
+            figs.append(fig)
+        return figs
+ 
+        
 class PlanarSystemParams(P.ParamSet):
     def __init__(self, surrogates=None, **kwargs):
         super().__init__(**kwargs)
@@ -25,18 +49,6 @@ class PlanarSystemParams(P.ParamSet):
         # Add Params from Power Train
         pt_params = pt.PlanarPTParams()
         self.update(pt_params)
-        
-        # Add Dependencies to Propeller Params
-        if not surrogates:
-            surr_path = os.path.join(init.HOME_PATH, "PlanarPT/PlanarPTModelDAE/SurrogateMetadata.json")
-            f = open(surr_path)
-            surrogates = S.Surrogate.load(f)
-
-        prop_fit = surrogates["Propeller"].fits # prop_surr.Fits
-        prop_fit.setup()
-        for (p,c) in prop_fit.comps.items():
-            self[p].setDependency(c)
-            self[p].dep = True
 
         # Manually Define parameters required for Body Model
         self.add(P.Param(name='rho', val=0.1, desc='Frame Density', strID="rho__Frame", parent="Frame"))
@@ -145,22 +157,21 @@ class ThrustRatioComp(om.ExplicitComponent):
     
 class PlanarSystemModel(P.ParamSystem):
     def __init__(self, traj, **kwargs):
-        surr_path = os.path.join(init.HOME_PATH, "PlanarPT/PlanarPTModelDAE/SurrogateMetadata.json")
-        f = open(surr_path)
-        surrogates = S.Surrogate.load(f)
-        
-        ps = PlanarSystemParams(surrogates=surrogates)
+        ps = PlanarSystemParams()
+        psurr = PlanarSystemSurrogates(params=ps)
         pg = P.ParamGroup(param_set = ps)
         
         super().__init__(pg, **kwargs)
         
         self._traj = traj
-        self.surrogates = surrogates
+        self.surrogates = psurr
     
     def setup(self):
         # Setup the Surrogates
-        for s in self.surrogates:
-            self.surrogates[s].setup()
+        self.surrogates.setup()
+        
+        # Attach the propeller surrogates
+        self.surrogates["Propeller"].fits.attach_outputs()
         
         # Add the Static Model Subsystem
         self.add_subsystem("static", pt.PlanarPTModelStatic())

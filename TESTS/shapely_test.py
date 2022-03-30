@@ -13,6 +13,7 @@ from matplotlib import cm
 import matplotlib as mpl
 from pprint import pprint
 mpl.rcParams["image.aspect"] = "equal"
+import my_plt
 
 
 
@@ -152,5 +153,7 @@ x,y = poly_smooth.exterior.xy
 ax.plot(x,y)
 
 ax.plot_surface(X, Y, Z, alpha=0.5, cmap = cm.coolwarm)
+
+my_plt.export(fig, title="Padded Boundary Function Test")
 
 plt.show()
