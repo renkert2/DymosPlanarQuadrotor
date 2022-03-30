@@ -17,4 +17,7 @@ s.setup()
 
 #%% Boundary Plots
 
-s.plot_boundary_3D()
+#s.plot_boundary_3D()
+
+#%% Setup()
+c = s["Propeller"].boundary

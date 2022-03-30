@@ -28,6 +28,9 @@ class PlanarSystemSurrogates:
     def __getitem__(self, val):
         return self.surrogates[val]
     
+    def items(self):
+        return self.surrogates.items()
+    
     def setup(self):
         for s in self.surrogates:
             self.surrogates[s].setup()
@@ -173,6 +176,11 @@ class PlanarSystemModel(P.ParamSystem):
         # Attach the propeller surrogates
         self.surrogates["Propeller"].fits.attach_outputs()
         
+        ### Build the Model ###
+        # Attach the boundary constraint components
+        for (n,s) in self.surrogates.items():
+            s.boundary.add_to_system(self, name=f"{n}_boundary")
+        
         # Add the Static Model Subsystem
         self.add_subsystem("static", pt.PlanarPTModelStatic())
         self.set_input_defaults("static.u1", val=1.0)
@@ -186,6 +194,10 @@ class PlanarSystemModel(P.ParamSystem):
         
         # Add the Dynamic Model Subsystem
         self.add_subsystem("traj", self._traj)
+        
+        ### Constraints ### 
+        
+        ### Design Variables ###
         
         # Run the superclass setup
         super().setup()
@@ -217,6 +229,9 @@ if __name__ == "__main__":
             p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
             p.check_partials(compact_print=True, show_only_incorrect=True)
             p.cleanup()
+            
+            # Print Constraints
+            print(p.list_problem_vars())
     
     ## Dynamic Model
     print("Checking PlanarSystemDynamicModel")
@@ -249,5 +264,7 @@ if __name__ == "__main__":
     
     p = om.Problem(model=sys)
     checkProblem(p)
+    
+    
 
     os.chdir('..')

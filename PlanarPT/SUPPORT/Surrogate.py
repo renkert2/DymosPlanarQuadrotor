@@ -9,6 +9,7 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib as mpl
+import Param as P
 
 class Fit:
     def __init__(self, outputs = None, inputs = None):
@@ -97,9 +98,10 @@ class Boundary:
         self.mean = []
         
         # OPTIONS     
-        self.grid_resolution = 100
+        self.grid_resolution = 50
         self.grid_buffer = 0.2
         self.smooth_distance = 0.1
+        self.constraint_padding = 0.0
         
         # Internal
         self.polygon = None
@@ -108,11 +110,12 @@ class Boundary:
         
         self.polygon_smooth = None
         
+        self.vec_X = None
+        self.vec_Y = None
         self.grid_X = None
         self.grid_Y = None
         self.grid_D = None
 
-        self.distance_func = None
         self.distance_comp = None
 
     
@@ -184,7 +187,7 @@ class Boundary:
         poly_outer = self.unscale(poly_outer_scaled)
         pbox = poly_outer.bounds
 
-        (self.grid_X, self.grid_Y) = box_grid(pbox, N)
+        (self.vec_X, self.vec_Y, self.grid_X, self.grid_Y) = box_grid(pbox, N)
     
     def sample(self):  
         def poly_dist(polygon, X, Y):
@@ -202,13 +205,37 @@ class Boundary:
             return D
         
         self.grid_D = poly_dist(self.polygon_smooth_scaled, self.grid_X, self.grid_Y)
+    
+    def setup_comp(self):
+        comp = om.MetaModelStructuredComp(method='scipy_cubic', extrapolate=True)
+        
+        vecs = [self.vec_X, self.vec_Y] # Later add third dimension if necessary
+        for (j,p) in enumerate(self.args):
+            comp.add_input(p.strID, 1.0, training_data=np.array(vecs[j]))
+        
+        outname = "distance"
+        comp.add_output(outname, 1.0, training_data = np.array(self.grid_D))
+        comp.add_constraint("distance", lower=None, upper=self.constraint_padding)
+        
+        self.distance_comp = comp
         
     def setup(self):
         self.setup_geometry()
         self.setup_grid()
         self.sample()
+        self.setup_comp()
         
+    def add_to_system(self, sys, name="boundary"):
+        if isinstance(sys, P.ParamSystem):
+            kwargs = {"params":[p.strID for p in self.args]}
+        else:
+            kwargs = {}
+            
+        if not self.distance_comp:
+            raise Exception("Please run boundary.setup() before adding to system")
         
+        sys.add_subsystem(name, self.distance_comp, **kwargs)
+
     def plot3D(self, ax=None, fig = None):
         if not fig:
             fig = plt.figure(0)
@@ -241,7 +268,7 @@ def box_grid(box, N):
     Y_pnts = np.linspace(box[1], box[3], N)
 
     (X, Y) = np.meshgrid(X_pnts, Y_pnts)
-    return (X,Y)
+    return (X_pnts, Y_pnts, X,Y)
     
 
 
