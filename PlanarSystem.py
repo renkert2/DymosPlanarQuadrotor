@@ -15,6 +15,7 @@ import Param as P
 import PlanarPT.SUPPORT.Surrogate as S
 import SUPPORT_FUNCTIONS.init as init
 import matplotlib.pyplot as plt
+import Constraints as C
 
 # CONSTANTS
 g = 9.80665
@@ -46,7 +47,7 @@ class PlanarSystemSurrogates:
  
         
 class PlanarSystemParams(P.ParamSet):
-    def __init__(self, surrogates=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
         # Add Params from Power Train
@@ -84,7 +85,7 @@ class PlanarSystemParams(P.ParamSet):
         self["HoverThrust"].setDependency(om.ExecComp(f"HoverThrust = {g}*m"), {"m":self["Mass__System"]})
         self["HoverThrust"].dep=True
         
-class PlanarSystemDynamicModel(om.Group):
+class PlanarSystemDAE(om.Group):
     def initialize(self):
         self.options.declare('num_nodes', types=int)
         
@@ -113,7 +114,7 @@ class PlanarSystemDynamicPhase(DM.DynamicPhase):
     def __init__(self, **kwargs):
         # Instantiate a Phase and add it to the Trajectory.
         # Here the transcription is necessary but not particularly relevant.
-        super().__init__(ode_class=PlanarSystemDynamicModel, **kwargs)
+        super().__init__(ode_class=PlanarSystemDAE, **kwargs)
     
         ## Add PowerTrain Information.  In the PlanarSystemDynamicModel, the PlanarPowerTrainModel dynamic model 
         # is added as a subsystem named PT.  When we specify the open_mdao path as PT, init_vars will find the 
@@ -132,34 +133,8 @@ class PlanarSystemDynamicPhase(DM.DynamicPhase):
         # and manually adds its states and controls to it.  
         self = bm.ModifyPhase(self, openmdao_path="BM", declare_controls=False)
         
-        
-class PlanarSystemStaticModel(om.Group):
-    def initialize(self):
-        self.options.declare("IncludeBody", types=bool, default=False)
-        self.options.declare("SolveMode", types=str, default="Forward")
-        # SolveMode can be "Forward" to calculate thrust as a function of input, or "Backward" to calculate input as a function of thrust
-
-class ThrustRatioComp(om.ExplicitComponent):
-    def setup(self):
-        self.add_input('HoverThrust__System', val=1, desc='mass')
-        self.add_input('TMax', val=1, desc='Maximum thrust')
-        
-        self.add_output('TR', desc="Thrust Ratio")
-    
-        self.declare_partials('*', '*', method='exact')
-    def compute(self, inputs, outputs):
-        ht = inputs['HoverThrust__System']
-        TMax = inputs["TMax"]
-        outputs["TR"] = TMax / ht
-    def compute_partials(self, inputs, partials):
-        ht = inputs['HoverThrust__System']
-        TMax = inputs["TMax"]
-        partials["TR", "HoverThrust__System"] = -TMax/(ht**2)
-        partials["TR", "TMax"] = 1/(ht)
-        
-    
 class PlanarSystemModel(P.ParamSystem):
-    def __init__(self, traj, **kwargs):
+    def __init__(self, traj, cons = None, **kwargs):
         ps = PlanarSystemParams()
         psurr = PlanarSystemSurrogates(params=ps)
         pg = P.ParamGroup(param_set = ps)
@@ -168,44 +143,69 @@ class PlanarSystemModel(P.ParamSystem):
         
         self._traj = traj
         self.surrogates = psurr
-    
-    def initialize(self):
-        self.options.declare('opt_comps', types=dict, default={})
+        
+        if not cons:
+            cons = C.ConstraintSet() # Create an empty constraint set
+            cons.add(C.Current__Battery())
+        elif not isinstance(cons, C.ConstraintSet):
+            raise Exception("cons argument must be a constraint set")
+            
+        self.cons = cons # Problem Constraints
     
     def setup(self):
         # Setup the Surrogates
         self.surrogates.setup()
         
         ### Build the Model ###
-        # Attach the boundary constraint components
+        # Attach the surrogate fits
         for (n,s) in self.surrogates.items():
-            s.boundary.attach_args()
             s.fits.attach_outputs()
-            s.boundary.add_to_system(self, name=f"{n}_boundary")
-
-        
-        # Add the Static Model Subsystem
-        self.add_subsystem("static", pt.PlanarPTModelStatic())
-        self.set_input_defaults("static.u1", val=1.0)
-        
-        # Add Thrust Ratio
-        tr_comp = ThrustRatioComp()
-        self.add_subsystem("thrust_ratio", tr_comp, params="HoverThrust__System")
-        
-        # Connect output of StaticModel to Thrust Ratio
-        self.connect("static.y1", "thrust_ratio.TMax")
         
         # Add the Dynamic Model Subsystem
-        
         self.add_subsystem("traj", self._traj)
         
         ### Constraints ### 
-        # for phase in self._traj._phases.values():
-        #     phase.add_path_constraint("PT.h.a3", upper=)
-        # TODO: Make component that calculates deviation from max current 
-        # and constrain it.  
-        self.add_constraint('thrust_ratio.TR', lower=1.5)
+        for c in self.cons:
+            c.add_to_system(self)
+
+
+        self.setup_post() # Defined in Subclasses
         
+        # Run the superclass setup
+        super().setup()
+    
+    def setup_post(self):
+        # Reserved for subclasses
+        pass
+    
+class PlanarSystemDesignModel(PlanarSystemModel):
+    # Adds additional components, design variables, and constraints requried for 
+    # plant optimization in the continuous domain. 
+    
+    def __init__(self, des_cons = None, **kwargs):
+        super().init(**kwargs)
+        if not des_cons:
+            des_cons = C.ConstraintSet()
+            des_cons.add(C.ThrustRatio())
+        elif not isinstance(des_cons, C.ConstraintSet):
+            raise Exception("cons argument must be a constraint set")
+        self.cons.add(des_cons)
+    
+    def initialize(self):
+        super().initialize()
+        self.options.declare('opt_comps', types=dict, default={})
+        self.options.declare('tr_lower', types=dict, default=1.2)
+    
+    def setup_post(self):
+        # Attach the boundary constraint components
+        for (n,s) in self.surrogates.items():
+            s.boundary.attach_args()
+            s.boundary.add_to_system(self, name=f"{n}_boundary")
+
+        # Add the Static Model Subsystem
+        self.add_subsystem("static", pt.PlanarPTModelStatic())
+        self.set_input_defaults("static.u1", val=1.0)
+    
         ### Design Variables ###
         opt_comps = self.options["opt_comps"]
         for c in opt_comps:
@@ -217,10 +217,7 @@ class PlanarSystemModel(P.ParamSystem):
                     p.opt = True
                 else:
                     p.opt = False
-        
-        # Run the superclass setup
-        super().setup()
-    
+
 
 if __name__ == "__main__":
     # Run N2 and Model Checks
@@ -255,12 +252,12 @@ if __name__ == "__main__":
             #print(p.list_problem_vars())
     
     ## Dynamic Model
-    print("Checking PlanarSystemDynamicModel")
+    print("Checking PlanarSystemDAE")
     
-    if not os.path.isdir('./PlanarSystemDynamicModel/'):
-        os.mkdir('./PlanarSystemDynamicModel/')
-    os.chdir('./PlanarSystemDynamicModel/')
-    p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10))
+    if not os.path.isdir('./PlanarSystemDAE/'):
+        os.mkdir('./PlanarSystemDAE/')
+    os.chdir('./PlanarSystemDAE/')
+    p = om.Problem(model=PlanarSystemDAE(num_nodes = 10))
     #checkProblem(p)
     
     os.chdir('..')

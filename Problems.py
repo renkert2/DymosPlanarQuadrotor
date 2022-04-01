@@ -11,7 +11,6 @@ import openmdao.api as om
 import numpy as np
 import Recorders
 
-
 def ForwardSimulation():
     nn = 20
     tx = dm.GaussLobatto(num_segments=nn, solve_segments='forward')
