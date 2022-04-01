@@ -65,7 +65,7 @@ def ForwardSimulation():
     return prob
 
 class StepProblem(om.Problem):
-    def __init__(self):
+    def __init__(self, model_kw={}, trans="GaussLobatto", nn = 20):
         # Set up Desired Final Location:
         x_init=0
         y_init=0    
@@ -83,8 +83,12 @@ class StepProblem(om.Problem):
         (x_lb, x_ub) = pos_margin([x_init, x_des], 0.1)
         (y_lb, y_ub) = pos_margin([y_init, y_des], 0.1)
         
-        nn = 20
-        tx = dm.GaussLobatto(num_segments=nn)
+        if trans == "GaussLobatto":
+            dmt = dm.GaussLobatto
+        elif trans == "Radau":
+            dmt = dm.Radau
+        
+        tx = dmt(num_segments=nn)
         phase = ps.PlanarSystemDynamicPhase(transcription=tx)
         phase.init_vars()
         
@@ -115,7 +119,7 @@ class StepProblem(om.Problem):
         traj = ps.PlanarSystemDynamicTraj(phase)
         traj.init_vars()
         
-        planar_model=ps.PlanarSystemModel(traj)
+        planar_model=ps.PlanarSystemModel(traj, **model_kw)
         
         super().__init__(model=planar_model)
         
@@ -140,3 +144,8 @@ class StepProblem(om.Problem):
         self.set_val('traj.phase0.states:BM_y', phase.interp('BM_y', ys=[0, 10]))
         self.set_val('traj.phase0.states:BM_omega', phase.interp('BM_omega', ys=[0, 0]))
         self.set_val('traj.phase0.states:BM_theta', phase.interp('BM_theta', ys=[0, 0]))
+        
+    def list_problem_vars(self):
+        super().list_problem_vars(desvar_opts=['lower', 'upper', 'ref', 'ref0'],
+                       cons_opts=['lower', 'upper', 'ref', 'ref0'],
+                       objs_opts=['ref', 'ref0'])

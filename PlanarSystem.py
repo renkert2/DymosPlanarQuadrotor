@@ -125,7 +125,7 @@ class PlanarSystemDynamicPhase(DM.DynamicPhase):
         super().init_vars(openmdao_path="PT", 
                         state_names=["x"],
                         control_names = ["u","d"],
-                        output_names = ["y"],
+                        output_names = ["y", "a"],
                         var_opts = {"d":{"val":0}})
         ## Add Body Model Information
         # The PlanarQuadrotorODE Module has a method which takes an existing phase
@@ -169,17 +169,20 @@ class PlanarSystemModel(P.ParamSystem):
         self._traj = traj
         self.surrogates = psurr
     
+    def initialize(self):
+        self.options.declare('opt_comps', types=dict, default={})
+    
     def setup(self):
         # Setup the Surrogates
         self.surrogates.setup()
         
-        # Attach the propeller surrogates
-        self.surrogates["Propeller"].fits.attach_outputs()
-        
         ### Build the Model ###
         # Attach the boundary constraint components
         for (n,s) in self.surrogates.items():
+            s.boundary.attach_args()
+            s.fits.attach_outputs()
             s.boundary.add_to_system(self, name=f"{n}_boundary")
+
         
         # Add the Static Model Subsystem
         self.add_subsystem("static", pt.PlanarPTModelStatic())
@@ -193,11 +196,27 @@ class PlanarSystemModel(P.ParamSystem):
         self.connect("static.y1", "thrust_ratio.TMax")
         
         # Add the Dynamic Model Subsystem
+        
         self.add_subsystem("traj", self._traj)
         
         ### Constraints ### 
+        # for phase in self._traj._phases.values():
+        #     phase.add_path_constraint("PT.h.a3", upper=)
+        # TODO: Make component that calculates deviation from max current 
+        # and constrain it.  
+        self.add_constraint('thrust_ratio.TR', lower=1.5)
         
         ### Design Variables ###
+        opt_comps = self.options["opt_comps"]
+        for c in opt_comps:
+            s = self.surrogates[c]
+            for p in s.fits.inputs:
+                if not opt_comps[c]: 
+                    p.opt = True
+                elif (p.strID in opt_comps[c]) or (p.name in opt_comps[c]): 
+                    p.opt = True
+                else:
+                    p.opt = False
         
         # Run the superclass setup
         super().setup()
@@ -219,19 +238,21 @@ if __name__ == "__main__":
     
     def checkProblem(p):
             p.setup()
+            p.final_setup()
+            #om.n2(p, outfile="n2_prerun.html")
             p.run_model()
         
             # Visualize:
             om.n2(p)
-            om.view_connections(p)
+            #om.view_connections(p)
             
             # Checks:
-            p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
+            #p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
             p.check_partials(compact_print=True, show_only_incorrect=True)
             p.cleanup()
             
             # Print Constraints
-            print(p.list_problem_vars())
+            #print(p.list_problem_vars())
     
     ## Dynamic Model
     print("Checking PlanarSystemDynamicModel")
@@ -240,7 +261,20 @@ if __name__ == "__main__":
         os.mkdir('./PlanarSystemDynamicModel/')
     os.chdir('./PlanarSystemDynamicModel/')
     p = om.Problem(model=PlanarSystemDynamicModel(num_nodes = 10))
-    checkProblem(p)
+    #checkProblem(p)
+    
+    os.chdir('..')
+    
+    ## Params
+    print("Checking PlanarSystemParams")
+    
+    if not os.path.isdir('./PlanarSystemParams/'):
+        os.mkdir('./PlanarSystemParams/')
+    os.chdir('./PlanarSystemParams/')
+    pmod = P.ParamGroup(param_set = PlanarSystemParams())
+    p = om.Problem(model=om.Group())
+    p.model.add_subsystem('params', pmod)
+    #checkProblem(p)
     
     os.chdir('..')
     

@@ -224,6 +224,14 @@ class Boundary:
         self.setup_grid()
         self.sample()
         self.setup_comp()
+    
+    def attach_args(self):
+        for (i,p) in enumerate(self.args):
+            if self.lb:
+                p.lb = self.lb[i]
+            if self.ub:
+                p.ub = self.ub[i]
+            
         
     def add_to_system(self, sys, name="boundary"):
         if isinstance(sys, P.ParamSystem):

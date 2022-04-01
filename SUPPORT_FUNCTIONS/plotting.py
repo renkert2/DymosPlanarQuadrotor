@@ -8,7 +8,7 @@ import os
 from SUPPORT_FUNCTIONS.slugify import slugify
 import matplotlib.pyplot as plt
 import numpy as np
-import init
+from . import init
 import my_plt # loads style, provides export method
 
 def subplots(sim, prob, path='traj.phase0.timeseries', vars=[], labels=[], title="", save=False):
