@@ -144,9 +144,9 @@ class PlanarSystemModel(P.ParamSystem):
         self._traj = traj
         self.surrogates = psurr
         
-        if not cons:
+        if cons==None:
             cons = C.ConstraintSet() # Create an empty constraint set
-            cons.add(C.Current__Battery())
+            cons.add(C.BatteryCurrent())
         elif not isinstance(cons, C.ConstraintSet):
             raise Exception("cons argument must be a constraint set")
             
@@ -161,15 +161,19 @@ class PlanarSystemModel(P.ParamSystem):
         for (n,s) in self.surrogates.items():
             s.fits.attach_outputs()
         
-        # Add the Dynamic Model Subsystem
-        self.add_subsystem("traj", self._traj)
+        self.setup_post() # Defined in Subclasses
         
         ### Constraints ### 
         for c in self.cons:
-            c.add_to_system(self)
-
-
-        self.setup_post() # Defined in Subclasses
+            if isinstance(c, C.ConstraintParam):
+                c.set_bounds(self._param_group)
+            if isinstance(c, C.ConstraintComp):
+                c.add_to_system(self)
+            if isinstance(c, C.TrajConstraint):
+                c.add_to_traj(self._traj)
+              
+        # Add the Dynamic Model Subsystem
+        self.add_subsystem("traj", self._traj)
         
         # Run the superclass setup
         super().setup()
@@ -182,9 +186,9 @@ class PlanarSystemDesignModel(PlanarSystemModel):
     # Adds additional components, design variables, and constraints requried for 
     # plant optimization in the continuous domain. 
     
-    def __init__(self, des_cons = None, **kwargs):
-        super().init(**kwargs)
-        if not des_cons:
+    def __init__(self, traj, des_cons = None, **kwargs):
+        super().__init__(traj, **kwargs)
+        if des_cons == None:
             des_cons = C.ConstraintSet()
             des_cons.add(C.ThrustRatio())
         elif not isinstance(des_cons, C.ConstraintSet):
@@ -194,7 +198,6 @@ class PlanarSystemDesignModel(PlanarSystemModel):
     def initialize(self):
         super().initialize()
         self.options.declare('opt_comps', types=dict, default={})
-        self.options.declare('tr_lower', types=dict, default=1.2)
     
     def setup_post(self):
         # Attach the boundary constraint components
@@ -249,7 +252,7 @@ if __name__ == "__main__":
             p.cleanup()
             
             # Print Constraints
-            #print(p.list_problem_vars())
+            print(p.list_problem_vars())
     
     ## Dynamic Model
     print("Checking PlanarSystemDAE")
@@ -261,20 +264,6 @@ if __name__ == "__main__":
     #checkProblem(p)
     
     os.chdir('..')
-    
-    ## Params
-    print("Checking PlanarSystemParams")
-    
-    if not os.path.isdir('./PlanarSystemParams/'):
-        os.mkdir('./PlanarSystemParams/')
-    os.chdir('./PlanarSystemParams/')
-    pmod = P.ParamGroup(param_set = PlanarSystemParams())
-    p = om.Problem(model=om.Group())
-    p.model.add_subsystem('params', pmod)
-    #checkProblem(p)
-    
-    os.chdir('..')
-    
     
     ## System Model, Requires Trajectory and Phase
     print("Checking PlanarSystemModel")
@@ -292,6 +281,28 @@ if __name__ == "__main__":
     traj.init_vars()
     
     sys = PlanarSystemModel(traj)
+    
+    p = om.Problem(model=sys)
+    checkProblem(p)
+    
+    os.chdir('..')
+    
+    ## System Design Model, Requires Trajectory and Phase
+    print("Checking PlanarSystemDesignModel")
+        
+    if not os.path.isdir('./PlanarSystemDesignModel/'):
+        os.mkdir('./PlanarSystemDesignModel/')
+    os.chdir('./PlanarSystemDesignModel/')
+    
+    nn = 20
+    tx = dm.GaussLobatto(num_segments=nn)
+    phase = PlanarSystemDynamicPhase(transcription=tx)
+    phase.init_vars()
+    
+    traj = PlanarSystemDynamicTraj(phase)
+    traj.init_vars()
+    
+    sys = PlanarSystemDesignModel(traj)
     
     p = om.Problem(model=sys)
     checkProblem(p)
