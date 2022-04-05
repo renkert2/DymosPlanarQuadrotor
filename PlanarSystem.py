@@ -163,18 +163,20 @@ class PlanarSystemModel(P.ParamSystem):
         
         self.setup_post() # Defined in Subclasses
         
+        # Add the Dynamic Model Subsystem
+        self.add_subsystem("traj", self._traj)
+        
         ### Constraints ### 
         for c in self.cons:
             if isinstance(c, C.ConstraintParam):
                 c.set_bounds(self._param_group)
-            if isinstance(c, C.ConstraintComp):
+            if isinstance(c, C.TrajConstraintComp): 
+                c.add_to_system(self, self._traj)
+            elif isinstance(c, C.ConstraintComp):
                 c.add_to_system(self)
-            if isinstance(c, C.TrajConstraint):
+            elif isinstance(c, C.TrajConstraint):
                 c.add_to_traj(self._traj)
-              
-        # Add the Dynamic Model Subsystem
-        self.add_subsystem("traj", self._traj)
-        
+
         # Run the superclass setup
         super().setup()
     

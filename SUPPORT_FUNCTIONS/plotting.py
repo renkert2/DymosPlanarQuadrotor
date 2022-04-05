@@ -19,6 +19,8 @@ def subplots(sim, prob, path='traj.phase0.timeseries', vars=[], labels=[], title
         
     
     fig, axes = plt.subplots(len(vars), 1)
+    if not hasattr(axes, "__len__"):
+        axes = (axes,)
     for i, var in enumerate(vars):
         if sim:
             axes[i].plot(t_sim, sim.get_val(f'{path}.{var}'), '-')
