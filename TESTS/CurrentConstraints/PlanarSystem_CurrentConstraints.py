@@ -71,7 +71,8 @@ def model_invcon(traj):
     return model
 
 outs = []
-for (conmdl, name) in zip([model_nocon, model_battcon, model_invcon], ["nocon", "battcon", "invcon"]):
+#for (conmdl, name) in zip([model_nocon, model_battcon, model_invcon], ["nocon", "battcon", "invcon"]):
+for (conmdl, name) in zip([model_invcon], ["invcon"]):
     out = run_prob(conmdl, name)
     outs.append(out)
 

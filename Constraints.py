@@ -6,6 +6,7 @@ Created on Fri Apr  1 11:32:38 2022
 """
 import openmdao.api as om
 import openmdao.core.component as omcomp
+import SUPPORT_FUNCTIONS.support_funcs as SF
 import tabulate
 import Param as P
 
@@ -61,7 +62,7 @@ class ConstraintParam(Constraint):
         else:
             val = self._lb
         
-        val = ConstraintParam.scalarize(val)
+        val = SF.scalarize(val)
         return val
     
     @property
@@ -73,15 +74,7 @@ class ConstraintParam(Constraint):
         else:
             val = self._ub
             
-        val = ConstraintParam.scalarize(val)
-        return val
-    
-    def scalarize(val):
-        if hasattr(val, "__len__"): # Check if array valued
-            if len(val) == 1:
-                val = val[0] # Get first element in list
-            else:
-                raise Exception("Scalar values required for upper and lower bounds")
+        val = SF.scalarize(val)
         return val
     
 class TrajConstraint(Constraint):
@@ -91,8 +84,10 @@ class TrajConstraint(Constraint):
     
     def add_to_traj(self, traj):
         if self.active:
+            convars = SF.iterize(self._traj_convar)
             for phase in traj._phases.values():
-                phase.add_path_constraint(name=self._traj_convar, lower=self.lb, upper=self.ub, ref=self.ref, ref0=self.ref0)
+                for v in convars:
+                    phase.add_path_constraint(name=v, lower=self.lb, upper=self.ub, ref=self.ref, ref0=self.ref0)
               
 class ConstraintComp(Constraint, omcomp.Component):
     def __init__(self, **kwargs):
@@ -104,7 +99,9 @@ class ConstraintComp(Constraint, omcomp.Component):
         
     def setup(self):     
         if self.active:
-            self.add_constraint(self._convar, lower=self.lb, upper=self.ub, ref0=self.ref0, ref=self.ref)
+            convars = SF.iterize(self._convar)
+            for v in convars:
+                self.add_constraint(v, lower=self.lb, upper=self.ub, ref0=self.ref0, ref=self.ref)
     
     def add_to_system(self, sys):
         self._mdl_name = "constraint__" + self.name
@@ -234,7 +231,7 @@ class BatteryCurrent(TrajConstraintComp, om.AddSubtractComp):
         
 class InverterCurrent(TrajConstraint):
     def __init__(self):
-        TrajConstraint.__init__(self, traj_convar="PT.a3")
+        TrajConstraint.__init__(self, traj_convar=["PT.a3", "PT.a5"])
         self.name = "inverter_current"
         self._lb = None
         self._ub = 20

@@ -27,8 +27,8 @@ sim_cases = [r.get_cases("problem")[0] for r in readers]
 #%% Print
 
 (fig, axes) = plotting.subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
-                              vars=["outputs:PT_a2", "outputs:PT_a3"], 
-                              labels=["Battery Current (A)", "Inverter Current (A)"], 
+                              vars=["outputs:PT_a2", "outputs:PT_a3", "outputs:PT_a5"], 
+                              labels=["Battery Current (A)", "Inverter 1 Current (A)", "Inverter 2 Current (A)"], 
                               title="Current Constraints", 
                               legend=["None", "Battery Current", "Inverter Current"])
 
