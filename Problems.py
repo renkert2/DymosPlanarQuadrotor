@@ -13,23 +13,45 @@ import Recorders
 import Trajectories
 
 class Problem(om.Problem):
-    def __init__(self, planar_traj = None, model = None, **kwargs):
+    def __init__(self, model = None, planar_traj = None, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), **kwargs):
         super().__init__(model=model, **kwargs)
+        self.planar_model = model
         self.planar_traj = planar_traj
-        self.driver = om.ScipyOptimizeDriver()
+        self.driver = driver
+        self.planar_recorder = planar_recorder
         
-    def setup(self):
+    def setup(self):        
+        r = self.planar_recorder
+        r.add_prob(self)
+        r.add_driver(self.driver)
+        r.add_traj(self.planar_traj.traj)
+        
         super().setup()
         
     def init_vals(self):
         self.planar_traj.init_vals(self)
+    
+    def run(self, desc="problem"):
+        self.run_model(reset_iter_counts=True)
+        self.record_all(f"{desc}_initial")
+        self.run_driver(reset_iter_counts=True)
+        self.record_all(f"{desc}_final")
         
     def list_problem_vars(self):
         super().list_problem_vars(desvar_opts=['lower', 'upper', 'ref', 'ref0'],
                        cons_opts=['lower', 'upper', 'ref', 'ref0'],
                        objs_opts=['ref', 'ref0'])        
+    
+    def record_all(self, case="final"):
+        self.planar_recorder.record_all(case)
+    
+    def cleanup_all(self):
+        self.planar_recorder.cleanup_all()
+    
 
- 
+
+
+### ARCHIVE ###
 def ForwardSimulation():
     nn = 20
     tx = dm.GaussLobatto(num_segments=nn, solve_segments='forward')

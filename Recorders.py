@@ -58,16 +58,24 @@ class Recorder:
     
     def add_traj(self, traj):
         self.traj = traj
-        self.sim_prob = traj.simulate()
-        self.sim_prob.add_recorder(self.sim_recorder)
         
-    def record(self, case="final"):
+    def record_all(self, case="final"):
         if self.prob:
             self.prob.record(case)
         if self.traj:
-            self.sim_prob.run_model()
+            if not self.sim_prob:
+                self.sim_prob = self.traj.simulate()
+                self.sim_prob.add_recorder(self.sim_recorder)
+            self.sim_prob.run_model() 
             self.sim_prob.record(case+"_sim")
+
+    def cleanup_all(self):
+        self.prob.cleanup()
+        self.sim_prob.cleanup()
         
+        
+        
+### ARCHIVE ###
 def SimpleRecorder(prob, recorder = None, name='cases.sql'):
     if not recorder:
         recorder = om.SqliteRecorder(name, record_viewer_data=False)

@@ -27,8 +27,8 @@ sim_cases = [r.get_cases("problem")[0] for r in readers]
 #%% Print
 
 (fig, axes) = plotting.subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
-                              vars=["outputs:PT_a2", "outputs:PT_a3", "outputs:PT_a5"], 
-                              labels=["Battery Current (A)", "Inverter 1 Current (A)", "Inverter 2 Current (A)"], 
+                              vars=["outputs:PT_a2", "outputs:PT_a3", "outputs:PT_a5", "controls:PT_u1", "controls:PT_u2"], 
+                              labels=["Battery Current (A)", "Inverter 1 Current (A)", "Inverter 2 Current (A)", "Input 1", "Input 2"], 
                               title="Current Constraints", 
                               legend=["None", "Battery Current", "Inverter Current"])
 
@@ -36,6 +36,7 @@ axes[0].axhline(y=42.0, linestyle="--", color='r', label="Constraint Value")
 axes[0].legend()
 
 axes[1].axhline(y=22.0, linestyle="--", color='r')
+axes[2].axhline(y=22.0, linestyle="--", color='r')
 
 plt.show()
 

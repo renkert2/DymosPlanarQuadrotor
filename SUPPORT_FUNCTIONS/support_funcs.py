@@ -14,7 +14,7 @@ def scalarize(val):
     return val
 
 def iterize(val):
-    if hasattr(val, "__iter__"):
+    if (not isinstance(val, str)) and hasattr(val, "__iter__"):
         return val
     else:
         return (val,)

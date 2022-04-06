@@ -147,6 +147,7 @@ class PlanarSystemModel(P.ParamSystem):
         if cons==None:
             cons = C.ConstraintSet() # Create an empty constraint set
             cons.add(C.BatteryCurrent())
+            cons.add(C.InverterCurrent())
         elif not isinstance(cons, C.ConstraintSet):
             raise Exception("cons argument must be a constraint set")
             
