@@ -6,14 +6,28 @@ Created on Tue Mar 22 15:47:29 2022
 """
 
 import openmdao.api as om
+import os
 
 class Recorder:
-    def __init__(self, recorder = None, name='cases.sql'):
+    def __init__(self, recorder = None, sim_recorder=None, name='cases.sql'):
+        name, ext = os.path.splitext(name)
+        
         if not recorder:
-            recorder = om.SqliteRecorder(name, record_viewer_data=False)
+            recorder = om.SqliteRecorder(name+ext, record_viewer_data=False)
         self.recorder = recorder
         
-    def add_to_prob(self, prob):
+        if not sim_recorder:
+            sim_recorder = om.SqliteRecorder(name+"_sim"+ext, record_viewer_data=False)
+        self.sim_recorder = sim_recorder
+        
+        self.prob = None
+        
+        self.traj = None
+        self.sim_prob = None
+        
+        self.driver = None
+        
+    def add_prob(self, prob):
         prob.add_recorder(self.recorder)
         prob.recording_options['record_desvars'] = True
         prob.recording_options['record_responses'] = True
@@ -26,9 +40,10 @@ class Recorder:
         
         prob.recording_options['includes'] = ["*"]
         
+        self.prob = prob
         return prob
     
-    def add_to_driver(self, driver):
+    def add_driver(self, driver):
         driver.add_recorder(self.recorder)
         driver.recording_options['includes'] = ['*']
         driver.recording_options['record_objectives'] = True
@@ -38,8 +53,21 @@ class Recorder:
         driver.recording_options['record_outputs'] = False
         driver.recording_options['record_residuals'] = False
         
+        self.driver = driver
         return driver
-
+    
+    def add_traj(self, traj):
+        self.traj = traj
+        self.sim_prob = traj.simulate()
+        self.sim_prob.add_recorder(self.sim_recorder)
+        
+    def record(self, case="final"):
+        if self.prob:
+            self.prob.record(case)
+        if self.traj:
+            self.sim_prob.run_model()
+            self.sim_prob.record(case+"_sim")
+        
 def SimpleRecorder(prob, recorder = None, name='cases.sql'):
     if not recorder:
         recorder = om.SqliteRecorder(name, record_viewer_data=False)

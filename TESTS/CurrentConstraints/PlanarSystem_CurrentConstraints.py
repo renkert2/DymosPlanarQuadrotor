@@ -23,30 +23,33 @@ import PlanarSystem as ps
 
 init.init_output(__file__)
 
-
-
-def prob_nocon():
+def run_prob(model_maker, name):
     traj = T.Step()
     traj.setup()
     
-    cons = C.ConstraintSet()
-    model = ps.PlanarSystemModel(traj.traj, cons = cons)
+    model = model_maker(traj)
     
     prob = P.Problem(model=model, planar_traj = traj)
-    rec = R.Recorder(name="nocon_cases.sqr")
-    rec.add_to_prob(prob)
-    prob.setup()
-    prob.init_vals()
+    rec = R.Recorder(name=f"{name}_cases.sql")
+    rec.add_prob(prob)
     
+    prob.setup()
+    
+    prob.init_vals()
     prob.run_driver()
     
-    prob.record('final_nocon')
+    rec.add_traj(traj.traj)
+    rec.record(case=f'final_{name}')
+    
+    prob.cleanup()
     return prob, traj
 
-def prob_battcon():
-    traj = T.Step()
-    traj.setup()
-    
+def model_nocon(traj):
+    cons = C.ConstraintSet()
+    model = ps.PlanarSystemModel(traj.traj, cons = cons)
+    return model
+
+def model_battcon(traj):
     cons = C.ConstraintSet()
     c = C.BatteryCurrent()
     cons.add(c)
@@ -56,49 +59,21 @@ def prob_battcon():
     batt_max_i.val=42.0
     batt_max_i.x0=42.0
     
-    prob = P.Problem(model=model, planar_traj = traj)
-    rec = R.Recorder(name="battcon_cases.sqr")
-    rec.add_to_prob(prob)
-    prob.setup()
-    prob.init_vals()
-    
-    prob.run_driver()
-    
-    prob.record('final_battcon')
-    return prob, traj
+    return model
 
-def prob_invcon():
-    traj = T.Step()
-    traj.setup()
-    
+def model_invcon(traj):
     cons = C.ConstraintSet()
     c = C.InverterCurrent()
-    c._ub = 10
+    c._ub = 22
     cons.add(c)
     model = ps.PlanarSystemModel(traj.traj, cons = cons)
   
-    prob = P.Problem(model=model, planar_traj = traj)
-    rec = R.Recorder(name="invcon_cases.sqr")
-    rec.add_to_prob(prob)
-    prob.setup()
-    prob.init_vals()
-    
-    prob.run_driver()
-    
-    prob.record('final_invcon')
-    return prob, traj
+    return model
 
 outs = []
-for probfun in [prob_nocon, prob_battcon, prob_invcon]:
-    out = probfun()
-    outs.append(outs)
-    
+for (conmdl, name) in zip([model_nocon, model_battcon, model_invcon], ["nocon", "battcon", "invcon"]):
+    out = run_prob(conmdl, name)
+    outs.append(out)
 
-#%% Simulations
-#sim = traj.traj.simulate()
-
-#%% Print
-#my_plt.subplots(sim, prob, path='traj.phase0.timeseries', vars=["outputs:PT_a2"], labels=["Battery Current"], title="Current Constraints", save=False)
-#plt.show()
 
 
