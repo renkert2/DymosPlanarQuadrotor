@@ -28,7 +28,7 @@ print(reader.list_cases())
 print(sim_reader.list_cases())
 
 #%% Trajectory Comparisons
-(fig, axes) = plotting.subplots(cases, None, path='traj.phase0.timeseries', save=False, 
+(fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phase0.timeseries', save=False, 
                                 vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']] + [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']],
                                 labels=['$x$', '$y$', r'$\theta$', "$u_1$", "$u_2$"], 
                                 title="Planar Quadrotor Input Optimization", 

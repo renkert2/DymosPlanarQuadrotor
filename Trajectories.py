@@ -9,37 +9,103 @@ import PlanarSystem as ps
 import dymos as dm
 import openmdao.api as om
 import numpy as np
-import Recorders
 from dymos.grid_refinement.refinement import _refine_iter
+from dymos.utils.misc import _unspecified
 
-class PlanarTrajectory:
+class SimProblem(om.Problem):
+    def __init__(self, traj, times_per_seg=10, method=_unspecified, atol=_unspecified, rtol=_unspecified, first_step=_unspecified, max_step=_unspecified):
+       
+       sim_traj = dm.Trajectory(sim_mode=True)
+    
+       for name, phs in traj._phases.items():
+           sim_phs = phs.get_simulation_phase(times_per_seg=times_per_seg, method=method, atol=atol, rtol=rtol, first_step=first_step, max_step=max_step)
+           sim_traj.add_phase(name, sim_phs)
+     
+       sim_traj.parameter_options.update(traj.parameter_options)
+     
+       super().__init__(model=om.Group())
+     
+       traj_name = traj.name if traj.name else 'sim_traj'
+       self.model.add_subsystem(traj_name, sim_traj)
+       
+       self._sim_traj = sim_traj
+       self._traj_name = traj_name
+       self._traj = traj
+    
+    def add_recorder(self, rec=om.SqliteRecorder("sim_cases.sql")):
+        super().add_recorder(rec)
+        # record_inputs is needed to capture potential input parameters that aren't connected
+        self.recording_options['record_inputs'] = True
+        # record_outputs is need to capture the timeseries outputs
+        self.recording_options['record_outputs'] = True
+    
+    def simulate(self):   
+        sim_traj = self._sim_traj
+        traj_name = self._traj_name
+        traj = self._traj
+    
+        # Assign trajectory parameter values
+        param_names = [key for key in traj.parameter_options.keys()]
+        for name in param_names:
+            prom_path = f'{traj.name}.parameters:{name}'
+            src = traj.get_source(prom_path)
+     
+            # We use this private function to grab the correctly sized variable from the
+            # auto_ivc source.
+            val = traj._abs_get_val(src, False, None, 'nonlinear', 'output', False, from_root=True)
+            sim_prob_prom_path = f'{traj_name}.parameters:{name}'
+            self[sim_prob_prom_path][...] = val
+     
+        for phase_name, phs in sim_traj._phases.items():
+            skip_params = set(param_names)
+            for name in param_names:
+                targets = traj.parameter_options[name]['targets']
+                if targets and phase_name in targets:
+                    targets_phase = targets[phase_name]
+                    if targets_phase is not None:
+                        if isinstance(targets_phase, str):
+                            targets_phase = [targets_phase]
+                        skip_params = skip_params.union(targets_phase)
+     
+            phs.initialize_values_from_phase(self, traj._phases[phase_name],
+                                             phase_path=traj_name,
+                                             skip_params=skip_params)
+     
+        print('\nSimulating trajectory {0}'.format(traj.pathname))
+        self.run_model()
+        print('Done simulating trajectory {0}'.format(traj.pathname))
+ 
+        return self
+
+class PlanarTrajectory(ps.PlanarSystemDynamicTraj): 
      # Superclass for specific optimal control trajectories that we want the vehicle to take.
      # We want all options, etc to be constant so that the trajectories are uniform across all problems
      
-     def __init__(self, traj=None, tx=None, prob=None):
-         self.traj = traj # PlanarSystemDynamicTraj, Used to construct System Model
-         self.tx = tx # Problem transcription
-         self.prob = prob # Used for solving the optimal control problem, requires ParameterSystem for initialization of variables
+     def __init__(self, tx=None, sim_args={"times_per_seg":20}):
+         self.tx = tx # Problem transcription         
+         phases = self.init_phases()
+         super().__init__(phases)
+         super().init_vars()
          
-         self.setup()
-         
-     def setup(self):
+         self._sim_args = sim_args
+     
+     def init_phases(self):
          pass
-         # Setup Problem
 
      def init_vals(self, prob):
          pass
      
-     def refine(self, **kwargs):
-         self.prob.final_setup()
-         failed = _refine_iter(self.prob, **kwargs)
-         return self.prob.model.traj
+     def simprob(self):
+         return SimProblem(self, **self._sim_args)
      
-
+     def refine(self, prob, **kwargs):
+         prob.final_setup()
+         failed = _refine_iter(prob, **kwargs)
+         return prob.model.traj
+        
 ### Trajectories ###
 class Step(PlanarTrajectory):
     def __init__(self, **kwargs):
-        
         tx=dm.GaussLobatto(num_segments=20)
         self.x_init=0
         self.y_init=0    
@@ -49,7 +115,7 @@ class Step(PlanarTrajectory):
         
         super().__init__(tx=tx)
 
-    def setup(self):
+    def init_phases(self):
         def pos_margin(p, margin):
             # Takes a list of positions and returns the min and the max with a padded boundary
             p_max = max(p)
@@ -86,9 +152,7 @@ class Step(PlanarTrajectory):
         
         # Minimize time at the end of the phase
         phase.add_objective('time', loc='final')
-        
-        self.traj = ps.PlanarSystemDynamicTraj(phase)
-        self.traj.init_vars()
+        return phase
     
     def init_vals(self, prob, name="traj"):
         # Set Initial Values
@@ -100,7 +164,7 @@ class Step(PlanarTrajectory):
         
         prob.set_val(f'{name}.phase0.states:PT_x1', 1.0)
         
-        phase = list(self.traj._phases.values())[0]
+        phase = list(self._phases.values())[0]
         prob.set_val(f'{name}.phase0.states:PT_x2', phase.interp('PT_x2', ys=(0,1000)))
         prob.set_val(f'{name}.phase0.states:PT_x3', phase.interp('PT_x3', ys=(0,1000)))
         prob.set_val(f'{name}.phase0.states:BM_v_x', phase.interp('BM_v_x', ys=[0, 0]))

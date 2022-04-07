@@ -20,12 +20,10 @@ class Recorder:
             sim_recorder = om.SqliteRecorder(name+"_sim"+ext, record_viewer_data=False)
         self.sim_recorder = sim_recorder
         
+        # Do we need these?
         self.prob = None
-        
-        self.traj = None
-        self.sim_prob = None
-        
         self.driver = None
+        self.sim_prob = None
         
     def add_prob(self, prob):
         prob.add_recorder(self.recorder)
@@ -56,22 +54,10 @@ class Recorder:
         self.driver = driver
         return driver
     
-    def add_traj(self, traj):
-        self.traj = traj
-        
-    def record_all(self, case="final"):
-        if self.prob:
-            self.prob.record(case)
-        if self.traj:
-            if not self.sim_prob:
-                self.sim_prob = self.traj.simulate()
-                self.sim_prob.add_recorder(self.sim_recorder)
-            self.sim_prob.run_model() 
-            self.sim_prob.record(case+"_sim")
-
-    def cleanup_all(self):
-        self.prob.cleanup()
-        self.sim_prob.cleanup()
+    def add_sim_prob(self, sim_prob):        
+        sim_prob.add_recorder(rec=self.sim_recorder)
+        # can modify options here if we want with sim_prob.recording_options
+        self.sim_prob = sim_prob
         
         
         

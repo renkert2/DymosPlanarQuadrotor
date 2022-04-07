@@ -13,28 +13,40 @@ import Recorders
 import Trajectories
 
 class Problem(om.Problem):
-    def __init__(self, model = None, planar_traj = None, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), **kwargs):
+    def __init__(self, model = None, traj = None, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), **kwargs):
         super().__init__(model=model, **kwargs)
         self.planar_model = model
-        self.planar_traj = planar_traj
         self.driver = driver
+        
+        self.traj = traj
+        self.sim_prob = None
+        
         self.planar_recorder = planar_recorder
         
-    def setup(self):        
+    def setup(self):           
         r = self.planar_recorder
         r.add_prob(self)
         r.add_driver(self.driver)
-        r.add_traj(self.planar_traj.traj)
-        
+     
         super().setup()
+
+        sp = self.traj.simprob()
+        r.add_sim_prob(sp)
+        sp.setup()
+        self.sim_prob = sp
         
     def init_vals(self):
-        self.planar_traj.init_vals(self)
+        self.traj.init_vals(self)
     
     def run(self, desc="problem"):
         self.run_model(reset_iter_counts=True)
+        self.sim_prob.simulate()
+        
         self.record_all(f"{desc}_initial")
+        
         self.run_driver(reset_iter_counts=True)
+        self.sim_prob.simulate()
+        
         self.record_all(f"{desc}_final")
         
     def list_problem_vars(self):
@@ -43,10 +55,13 @@ class Problem(om.Problem):
                        objs_opts=['ref', 'ref0'])        
     
     def record_all(self, case="final"):
-        self.planar_recorder.record_all(case)
+        self.record(case)
+        if self.sim_prob:
+            self.sim_prob.record(case+"_sim")
     
     def cleanup_all(self):
-        self.planar_recorder.cleanup_all()
+        self.cleanup()
+        self.sim_prob.cleanup()
     
 
 

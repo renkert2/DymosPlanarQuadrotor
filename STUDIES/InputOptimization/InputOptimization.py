@@ -22,11 +22,10 @@ import PlanarSystem as ps
 init.init_output(__file__)
 
 traj = T.Step()
-traj.setup()
-model = ps.PlanarSystemModel(traj.traj)
+model = ps.PlanarSystemModel(traj)
 
 rec = R.Recorder(name="input_opt_cases.sql")
-prob = P.Problem(model=model, planar_traj = traj, planar_recorder=rec)
+prob = P.Problem(model=model, traj = traj, planar_recorder=rec)
 
 prob.setup()
 prob.init_vals()
