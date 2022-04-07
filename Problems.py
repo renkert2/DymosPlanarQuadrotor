@@ -48,6 +48,7 @@ class Problem(om.Problem):
         self.sim_prob.simulate()
         
         self.record_all(f"{desc}_final")
+        self.planar_recorder.record_results()
         
     def list_problem_vars(self):
         super().list_problem_vars(desvar_opts=['lower', 'upper', 'ref', 'ref0'],

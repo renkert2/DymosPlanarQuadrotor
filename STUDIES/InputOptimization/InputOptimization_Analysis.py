@@ -33,3 +33,8 @@ print(sim_reader.list_cases())
                                 labels=['$x$', '$y$', r'$\theta$', "$u_1$", "$u_2$"], 
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial", "Final"])
+
+#%% Driver Output
+driver_cases = reader.get_cases("driver")
+last_case = driver_cases[-1]
+

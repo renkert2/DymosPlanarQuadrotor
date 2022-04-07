@@ -7,6 +7,7 @@ Created on Tue Mar 22 15:47:29 2022
 
 import openmdao.api as om
 import os
+import json
 
 class Recorder:
     def __init__(self, recorder = None, sim_recorder=None, name='cases.sql'):
@@ -20,7 +21,7 @@ class Recorder:
             sim_recorder = om.SqliteRecorder(name+"_sim"+ext, record_viewer_data=False)
         self.sim_recorder = sim_recorder
         
-        # Do we need these?
+        self.name = name
         self.prob = None
         self.driver = None
         self.sim_prob = None
@@ -59,8 +60,45 @@ class Recorder:
         # can modify options here if we want with sim_prob.recording_options
         self.sim_prob = sim_prob
         
+    def record_results(self):
+        results = {}
+        results["prob_recorder"] = self.recorder._filepath
+        results["sim_recorder"] = self.sim_recorder._filepath
+        results["name"] = self.name
+        
+                
+        driver_results = dict(self.driver.result)
+        for key in ["x", "jac"]:
+            del driver_results[key]
+        for k,v in driver_results.items():
+            if hasattr(v, "tolist"): # Convert numpy arrays to json
+                driver_results[k] = v.tolist()
         
         
+        results["driver"] = driver_results
+        
+        cons = self.prob.model.cons
+        results["cons"] = [con.props() for con in cons]
+        
+            
+        def param_props(param):
+            propnames = ["strID", "val", "dep", "opt", "x0", "lb", "ub"]
+            d = {}
+            for p in propnames:
+                v = getattr(param, p)
+                if hasattr(v, "tolist"): # Convert numpy arrays to json
+                    v = v.tolist()
+                d[p]=v
+            return d
+        params = self.prob.model._params
+        results["params"] = [param_props(p) for p in params]
+        
+        with open(f'{self.name}_results.json', 'w') as fp:
+            json.dump(results, fp, indent=4)
+        
+        return results
+
+    
 ### ARCHIVE ###
 def SimpleRecorder(prob, recorder = None, name='cases.sql'):
     if not recorder:

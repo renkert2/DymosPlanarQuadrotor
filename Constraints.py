@@ -35,6 +35,16 @@ class Constraint:
     @property
     def ref0(self):
         return self._ref0
+    
+    def props(self):
+        base_props = ["name", "active", "lb", "ub", "ref", "ref0"]
+        
+        prop_dict = {}
+        for p in base_props:
+            prop_dict[p] = getattr(self, p)
+        
+        return prop_dict
+            
            
 class ConstraintParam(Constraint):
     # Constraint defined by a calculated Parameter in the model        
@@ -77,6 +87,16 @@ class ConstraintParam(Constraint):
         val = SF.scalarize(val)
         return val
     
+    def props(self):
+        prop_dict = super().props()
+        
+        for bound in ["lb", "ub"]:
+            val = getattr(self, f"_{bound}")
+            if isinstance(val, P.Param):
+                prop_dict[f"{bound}_param"] = val.strID
+        
+        return prop_dict
+    
 class TrajConstraint(Constraint):
     def __init__(self, traj_convar=None, **kwargs):
         Constraint.__init__(self,**kwargs)
@@ -88,6 +108,12 @@ class TrajConstraint(Constraint):
             for phase in traj._phases.values():
                 for v in convars:
                     phase.add_path_constraint(name=v, lower=self.lb, upper=self.ub, ref=self.ref, ref0=self.ref0)
+    
+    def props(self):
+        prop_dict = super().props()
+        prop_dict["traj_convar"] = self._traj_convar
+        
+        return prop_dict 
               
 class ConstraintComp(Constraint, omcomp.Component):
     def __init__(self, **kwargs):
@@ -113,7 +139,16 @@ class ConstraintComp(Constraint, omcomp.Component):
         for c in self._connections:
             from_var = c[0]
             to_var = self._mdl_name + "." + c[1]
-            sys.connect(from_var, to_var)        
+            sys.connect(from_var, to_var)
+            
+    def props(self):
+        prop_dict = Constraint.props(self)
+        
+        base_props = ["_mdl_name", "_connections", "_params", "_convar"]
+        for p in base_props:
+            prop_dict[p] = getattr(self, p)
+        
+        return prop_dict
     
 class TrajConstraintComp(TrajConstraint, ConstraintComp):
     def __init__(self, **kwargs):
@@ -148,7 +183,15 @@ class TrajConstraintComp(TrajConstraint, ConstraintComp):
             for p in self._traj_phases:
                 from_var = ".".join([self._traj_path, p, self._traj_name_prefix, c[0]])
                 to_var = ".".join([self._mdl_name, c[1]])
-                sys.connect(from_var, to_var)     
+                sys.connect(from_var, to_var)  
+                
+    def props(self):
+        prop_dict = TrajConstraint.props(self)
+        prop_dict.update(ConstraintComp.props(self))
+        
+        prop_dict["traj_connections"] = self._traj_connections
+        
+        return prop_dict
     
 class ConstraintSet(set):
     def __init__(self, arg=set()):
