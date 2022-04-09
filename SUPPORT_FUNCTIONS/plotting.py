@@ -67,7 +67,50 @@ def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels
             plt.savefig(f'{name}.png')
     
     return fig, axes
+
+def timeseries_plots(sim_cases, title="Optimization"):
+    graphics = []
     
+    # Body States
+    g = subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
+                                    vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']],
+                                    labels=['$x$', '$y$', r'$\theta$'], 
+                                    title=f"{title}: Body States", 
+                                    legend=["Initial", "Final"])
+    graphics.append(g)
+    
+    # PT States
+    v = ["states:PT_x1", "outputs:PT_a1", "outputs:PT_a2"]
+    labels = ["SOC", "Bus Voltage", "Battery Current (A)"]
+    g = subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
+                                    vars=v,
+                                    labels=labels, 
+                                    title=f"{title}: Powertrain States ", 
+                                    legend=["Initial", "Final"])
+    graphics.append(g)
+    
+    
+    v = ["outputs:PT_a3", "outputs:PT_a5"]
+    labels = ["Inverter 1 Current (A)", "Inverter 2 Current (A)"]
+    g = subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
+                                    vars=v,
+                                    labels=labels, 
+                                    title=f"{title}: Inverter Currents", 
+                                    legend=["Initial", "Final"])
+    graphics.append(g)
+    
+    v = [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']]
+    labels = ["Inverter 1 Input", "Inverter 2 Input"]
+    g = subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
+                                    vars=v,
+                                    labels=labels, 
+                                    title=f"{title}: Inverter Inputs", 
+                                    legend=["Initial", "Final"])
+    graphics.append(g)
+    return graphics
+    
+    
+
 def iterplots(case_reader, vars, labels=[], title="", save=False, **kwargs):
     # Get driver cases (do not recurse to system/solver cases)
     driver_cases = case_reader.get_cases('driver', recurse=False)

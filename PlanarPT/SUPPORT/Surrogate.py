@@ -264,6 +264,23 @@ class Boundary:
         ax.set_zlabel("Distance") 
         
         return (fig, ax)
+    
+    def plot2D(self, ax=None, fig = None):
+        if not fig:
+            fig = plt.figure(0)
+        if not ax:
+            ax = plt.axes()
+
+        x,y = self.polygon.exterior.xy
+        ax.plot(x,y, '--r', linewidth = 1)
+        
+        x,y = self.polygon_smooth.exterior.xy
+        ax.plot(x,y, '-r', linewidth = 2)
+        
+        ax.set_xlabel(self.args[0].latex())
+        ax.set_ylabel(self.args[1].latex())
+        
+        return (fig, ax)
 
 def eff_length(box):
     dx = box[2] - box[0]
@@ -359,5 +376,10 @@ class Surrogate:
             
         (fig,ax) = self.boundary.plot3D(fig=fig,ax=ax)
         fig.suptitle(f"Surrogate: {self.comp_name}")
+        
+        return (fig, ax)
 
-            
+    def plot_boundary_2D(self, fig = None, ax=None):
+        (fig,ax) = self.boundary.plot2D(fig=fig,ax=ax)
+        fig.suptitle(f"Surrogate: {self.comp_name}")
+        return (fig,ax)

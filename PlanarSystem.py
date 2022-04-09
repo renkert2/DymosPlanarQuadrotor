@@ -37,13 +37,22 @@ class PlanarSystemSurrogates:
             self.surrogates[s].setup()
         
     def plot_boundary_3D(self):
-        figs = []
+        graphics = []
         for i,pair in enumerate(self.surrogates.items()):
             fig = plt.figure(i)
-            pair[1].plot_boundary_3D(fig = fig)
+            g = pair[1].plot_boundary_3D(fig = fig)
             
-            figs.append(fig)
-        return figs
+            graphics.append(g)
+        return graphics
+    
+    def plot_boundary_2D(self):
+        graphics = []
+        for i,pair in enumerate(self.surrogates.items()):
+            fig = plt.figure(i)
+            g = pair[1].plot_boundary_2D(fig = fig)
+            
+            graphics.append(g)
+        return graphics
  
         
 class PlanarSystemParams(P.ParamSet):

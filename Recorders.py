@@ -6,8 +6,10 @@ Created on Tue Mar 22 15:47:29 2022
 """
 
 import openmdao.api as om
+from openmdao.recorders.sqlite_reader import SqliteCaseReader
 import os
 import json
+import numpy as np
 
 class Recorder:
     def __init__(self, recorder = None, sim_recorder=None, name='cases.sql'):
@@ -98,6 +100,20 @@ class Recorder:
         
         return results
 
+class Reader(SqliteCaseReader):
+    def get_itervals(self, itervars):
+            driver_cases = self.get_cases('driver', recurse=False)
+            N = len(driver_cases)
+            iters = np.arange(N)
+            
+            var_data = []
+            for i, var in enumerate(itervars):
+                vd = np.zeros((N,))
+                for j, case in enumerate(driver_cases):
+                    vd[j] = case[var]
+                var_data.append(vd)
+            
+            return iters, var_data
     
 ### ARCHIVE ###
 def SimpleRecorder(prob, recorder = None, name='cases.sql'):
