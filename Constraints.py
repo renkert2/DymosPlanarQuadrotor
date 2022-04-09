@@ -277,7 +277,7 @@ class InverterCurrent(TrajConstraint):
         TrajConstraint.__init__(self, traj_convar=["PT.a3", "PT.a5"])
         self.name = "inverter_current"
         self._lb = None
-        self._ub = 125 # Based off of KDE-Direct's largest inverter
-        self._ref = 125
+        self._ub = 80 # Based off of a reasonably large inverter, suggested by Dr. Alleyne
+        self._ref = 80
         self._ref0 = None
     

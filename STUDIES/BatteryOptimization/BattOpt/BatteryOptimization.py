@@ -10,44 +10,27 @@ import dymos as dm
 import openmdao.api as om
 import numpy as np
 
-import SUPPORT_FUNCTIONS.plotting as my_plt # Just to get the default formatting
 import SUPPORT_FUNCTIONS.init as init
-import SUPPORT_FUNCTIONS.timing as timing
-import ProblemTemplates as PT
+import Problems as P
 import Recorders as R
-import openmdao.api as om
+import Trajectories as T
+import PlanarSystem as ps
 
 init.init_output(__file__)
 
-prob_temp = PT.StepProblem
-
-prob = prob_temp(model_kw={})
-prob = R.SimpleRecorder(prob, name="init_cases.sql")
+traj = T.Step()
+model = ps.PlanarSystemDesignModel(traj, opt_comps={"Battery":[]})
+rec = R.Recorder(name="batt_opt_cases.sql")
+prob = P.Problem(model=model, traj = traj, planar_recorder=rec)
 prob.setup()
 prob.init_vals()
-prob.final_setup()
-prob.list_problem_vars()
 
-# Run the Initial Optimization Problem
-run_driver = timing.simple_timer(prob.run_driver)
-run_driver()
-prob.record('init')
+#%% Initialize from Input Optimization
+reader = om.CaseReader(os.path.join(init.INPUT_OPT_PATH, "input_opt_cases.sql"))
+input_opt_final = reader.get_case("input_opt_final")
+prob.load_case(input_opt_final)
+
+#%%
+prob.run("batt_opt")
+om.n2(prob, outfile = "batt_opt_n2.html")
 prob.cleanup()
-
-prob = prob_temp(model_kw={"opt_comps":{"Battery":[]}})
-prob = R.OptiRecorder(prob, name="opt_cases.sql")
-prob.setup()
-
-prob.init_vals()
-
-prob.final_setup()
-prob.list_problem_vars()
-om.n2(prob)
-# Run the PlantDesign Optimization Problem
-run_driver = timing.simple_timer(prob.run_driver)
-run_driver()
-prob.record('opt')
-prob.cleanup()
-
-# TODO: Run and save simulations
-#

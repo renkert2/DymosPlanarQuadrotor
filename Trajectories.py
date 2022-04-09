@@ -98,9 +98,11 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
      def simprob(self):
          return SimProblem(self, **self._sim_args)
      
-     def refine(self, prob, **kwargs):
-         prob.final_setup()
-         failed = _refine_iter(prob, **kwargs)
+     def refine(self, prob, refine_method = "hp", refine_iteration_limit = 0, **phase_kwargs):
+         for phase in self._phases.values():
+             phase.set_refine_options(refine=True, **phase_kwargs)
+         failed = _refine_iter(prob, refine_iteration_limit, refine_method)
+         
          return prob.model.traj
         
 ### Trajectories ###

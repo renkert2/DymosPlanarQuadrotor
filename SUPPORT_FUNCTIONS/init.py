@@ -14,6 +14,10 @@ HOME_PATH =  os.path.join(os.getenv('ARG_RESEARCH'), 'DymosPlanarQuadrotor')
 if HOME_PATH not in sys.path:
     sys.path.append(HOME_PATH)
 
+INPUT_OPT_PATH = os.path.join(HOME_PATH, "STUDIES", "InputOptimization", "Output")
+if INPUT_OPT_PATH not in sys.path:
+    sys.path.append(INPUT_OPT_PATH)
+
 def init_output(filepath, suppress_warnings=True):
     os.chdir(os.path.dirname(filepath))
     if not os.path.isdir("Output"):

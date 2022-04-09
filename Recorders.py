@@ -44,12 +44,12 @@ class Recorder:
     
     def add_driver(self, driver):
         driver.add_recorder(self.recorder)
-        driver.recording_options['includes'] = ['*']
+        driver.recording_options['excludes'] = ['traj.*']
         driver.recording_options['record_objectives'] = True
         driver.recording_options['record_constraints'] = True
         driver.recording_options['record_desvars'] = True
-        driver.recording_options['record_inputs'] = False
-        driver.recording_options['record_outputs'] = False
+        driver.recording_options['record_inputs'] = True
+        driver.recording_options['record_outputs'] = True
         driver.recording_options['record_residuals'] = False
         
         self.driver = driver
