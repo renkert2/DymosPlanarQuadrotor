@@ -11,8 +11,9 @@ import numpy as np
 from . import init
 import my_plt # loads style, provides export method
 
-def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels=[], legend=[], title="", save=False):
-    fig, axes = plt.subplots(len(vars), 1)
+def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels=[], legend=[], title="", save=False, axes=None, fig=None, simplot_kwargs={}, probplot_kwargs={}):
+    if axes is None:
+        fig, axes = plt.subplots(len(vars), 1)
     if not hasattr(axes, "__len__"):
         axes = (axes,)
         
@@ -43,13 +44,19 @@ def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels
         for i, var in enumerate(vars):
             lines = []
             if s:
-                l, = axes[i].plot(t_sim, s.get_val(f'{path}.{var}'), '-')
+                l, = axes[i].plot(t_sim, s.get_val(f'{path}.{var}'), '-', **simplot_kwargs)
                 lines.append(l)
+                
+                axes[i].axvline(x=t_sim[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
             if p:
-                l, = axes[i].plot(t_prob, p.get_val(f'{path}.{var}'), 'o')
+                l, = axes[i].plot(t_prob, p.get_val(f'{path}.{var}'), 'o', **probplot_kwargs)
                 lines.append(l)
+                
+                if not s:
+                    axes[i].axvline(x=t_sim[-1], linestyle="--", linewidth=l.linewidth/2, color=l.color)
             
-            axes[i].set_ylabel(labels[i])
+            if labels:
+                axes[i].set_ylabel(labels[i])
             
             if legend:
                 lines[0].set_label(legend[j])
@@ -68,45 +75,28 @@ def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels
     
     return fig, axes
 
-def timeseries_plots(sim_cases, title="Optimization"):
+def timeseries_plots(sim_cases, title="Optimization", legend=["Initial", "Final"], show_plts=range(4)):    
+    shared_args = [None, sim_cases]
+    shared_kwargs = {"path":'traj.phase0.timeseries', "save":False, "legend":legend}
+    
+    v = [[] for i in range(4)]
+    v[0] = [f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']]
+    v[1] = ["states:PT_x1", "outputs:PT_a1", "outputs:PT_a2"]
+    v[2] = ["outputs:PT_a3", "outputs:PT_a5"]
+    v[3] = [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']]
+    
+    l = [[] for i in range(4)]
+    l[0] = ['$x$', '$y$', r'$\theta$']
+    l[1] = ["SOC", "Bus Voltage", "Battery Current (A)"]
+    l[2] = ["Inverter 1 Current (A)", "Inverter 2 Current (A)"]
+    l[3] =  ["Inverter 1 Input", "Inverter 2 Input"]
+    
+    t = ["Body States", "Powertrain States", "Inverter Currents", "Inverter Inputs"]
+    
     graphics = []
-    
-    # Body States
-    g = subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
-                                    vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']],
-                                    labels=['$x$', '$y$', r'$\theta$'], 
-                                    title=f"{title}: Body States", 
-                                    legend=["Initial", "Final"])
-    graphics.append(g)
-    
-    # PT States
-    v = ["states:PT_x1", "outputs:PT_a1", "outputs:PT_a2"]
-    labels = ["SOC", "Bus Voltage", "Battery Current (A)"]
-    g = subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
-                                    vars=v,
-                                    labels=labels, 
-                                    title=f"{title}: Powertrain States ", 
-                                    legend=["Initial", "Final"])
-    graphics.append(g)
-    
-    
-    v = ["outputs:PT_a3", "outputs:PT_a5"]
-    labels = ["Inverter 1 Current (A)", "Inverter 2 Current (A)"]
-    g = subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
-                                    vars=v,
-                                    labels=labels, 
-                                    title=f"{title}: Inverter Currents", 
-                                    legend=["Initial", "Final"])
-    graphics.append(g)
-    
-    v = [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']]
-    labels = ["Inverter 1 Input", "Inverter 2 Input"]
-    g = subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
-                                    vars=v,
-                                    labels=labels, 
-                                    title=f"{title}: Inverter Inputs", 
-                                    legend=["Initial", "Final"])
-    graphics.append(g)
+    for i in show_plts:
+        g = subplots(*shared_args, **shared_kwargs, vars=v[i], labels=l[i], title=f"{title}: {t[i]}")
+        graphics.append(g)
     return graphics
     
     
@@ -128,7 +118,7 @@ def iterplots(case_reader, vars, labels=[], title="", save=False, **kwargs):
         axes[i].plot(iters, var_data)
         if labels:
             axes[i].set_ylabel(labels[i])
-    axes[-1].set_xlabel('Iteration')
+    axes[-1].set_xlabel('Function Evaluations')
     plt.tight_layout()
     if title:
         fig.suptitle(r"\textbf{"+title+"}")
@@ -136,4 +126,22 @@ def iterplots(case_reader, vars, labels=[], title="", save=False, **kwargs):
             name = slugify(title)
             plt.savefig(f'{name}.png')
     plt.show()
+    
+def boundaryiterplots(b, reader):
+    (fig, ax) = b.plot_boundary_2D()
+    fig.suptitle(f"Design Space: {b.comp_name}")
+    opt_vars = [f"params.{p.strID}" for p in b.boundary.args]
+    (iters, vals) = reader.get_itervals(opt_vars)
+    ax.plot(vals[0], vals[1], '.-k', markersize=10, linewidth=1)
+    
+    mkropts = {"marker":"o", "markersize":15, "markerfacecolor":"none", "markeredgewidth":2, "color":"k"}
+    # Initial Point
+    x_0 = [v[0] for v in vals]
+    l_i, = ax.plot(*x_0, markeredgecolor="orange",  label="Initial", **mkropts)
+    
+    # Initial Point
+    x_f = [v[-1] for v in vals]
+    l_f, = ax.plot(*x_f, markeredgecolor="green",  label="Final", **mkropts)
+    
+    ax.legend(handles=[l_i, l_f])
 

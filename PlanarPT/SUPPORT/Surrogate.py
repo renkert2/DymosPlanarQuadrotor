@@ -246,7 +246,7 @@ class Boundary:
 
     def plot3D(self, ax=None, fig = None):
         if not fig:
-            fig = plt.figure(0)
+            fig = plt.figure()
         if not ax:
             ax = plt.axes(projection='3d')
         
@@ -267,7 +267,7 @@ class Boundary:
     
     def plot2D(self, ax=None, fig = None):
         if not fig:
-            fig = plt.figure(0)
+            fig = plt.figure()
         if not ax:
             ax = plt.axes()
 

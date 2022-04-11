@@ -216,6 +216,9 @@ class PlanarSystemDesignModel(PlanarSystemModel):
         for (n,s) in self.surrogates.items():
             s.boundary.attach_args()
             s.boundary.add_to_system(self, name=f"{n}_boundary")
+            
+        # Manually constrain the maximum propeller diameter. Must do after s.boundary.attach_args()
+        self._params["D__Propeller"]._ub = 0.356 # Constrained by frame size
 
         # Add the Static Model Subsystem
         self.add_subsystem("static", pt.PlanarPTModelStatic())

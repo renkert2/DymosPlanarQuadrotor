@@ -15,7 +15,7 @@ import Recorders as R
 
 init.init_output(__file__)
 
-name = "batt_opt_cases"
+name = "motor_opt_cases"
 sim_name= name+"_sim"
 
 reader = R.Reader(name+".sql")
@@ -26,20 +26,21 @@ sim_cases = sim_reader.get_cases("problem")
 
 
 #%% Trajectory Comparisons
-graphics = plotting.timeseries_plots(sim_cases, title="Battery Optimization")
+graphics = plotting.timeseries_plots(sim_cases, title="Motor Optimization")
 
 
 #%% Optimization Variables
-opt_vars=["params.N_s__Battery", "params.Q__Battery"]
-plotting.iterplots(reader, opt_vars, labels=["$N_s$", "$Q$ (mAh)"], title="Battery Optimization: Design Variables", save=False)
+opt_vars=["params.kV__Motor", "params.Rm__Motor"]
+plotting.iterplots(reader, opt_vars, labels=["$kV$ (RPM/V)", "$Rm$ ($\Omega$)"], title="Motor Optimization: Design Variables", save=False)
 
 #%% Boundary Plots
 import PlanarSystem as PS
 pp = PS.PlanarSystemParams()
 ps = PS.PlanarSystemSurrogates(pp)
 ps.setup()
-pb = ps["Battery"]
+pb = ps["PMSMMotor"]
 plotting.boundaryiterplots(pb, reader)
+
 
 
 

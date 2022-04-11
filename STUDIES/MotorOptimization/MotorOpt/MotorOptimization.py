@@ -19,8 +19,8 @@ import PlanarSystem as ps
 init.init_output(__file__)
 
 traj = T.Step()
-model = ps.PlanarSystemDesignModel(traj, opt_comps={"Battery":[], "PMSMMotor":[], "Propeller":[]})
-rec = R.Recorder(name="sys_opt_cases.sql")
+model = ps.PlanarSystemDesignModel(traj, opt_comps={"PMSMMotor":[]})
+rec = R.Recorder(name="motor_opt_cases.sql")
 prob = P.Problem(model=model, traj = traj, planar_recorder=rec)
 prob.setup()
 prob.init_vals()
@@ -31,9 +31,6 @@ input_opt_final = reader.get_case("input_opt_final")
 prob.load_case(input_opt_final)
 
 #%%
-# Can also try trust-const algorithm
-prob.driver.options["maxiter"] = 500
-
-prob.run("sys_opt")
-om.n2(prob, outfile = "sys_opt_n2.html")
+prob.run("motor_opt")
+om.n2(prob, outfile = "motor_opt_n2.html")
 prob.cleanup()
