@@ -1,0 +1,44 @@
+[
+   {
+     "Name": "D",
+     "Value": 0.356,
+     "Unit": "m",
+     "Description": "",
+     "Component": "Propeller"
+   },
+   {
+     "Name": "P",
+     "Value": 0.0970181818181818,
+     "Unit": "m",
+     "Description": "",
+     "Component": "Propeller"
+   },
+   {
+     "Name": "N_s",
+     "Value": 5.9277230056946406,
+     "Unit": "unit",
+     "Description": "",
+     "Component": "Battery"
+   },
+   {
+     "Name": "Q",
+     "Value": 6000,
+     "Unit": "mAh",
+     "Description": "",
+     "Component": "Battery"
+   },
+   {
+     "Name": "kV",
+     "Value": 764.73831280455761,
+     "Unit": "RPM/V",
+     "Description": "",
+     "Component": "PMSMMotor"
+   },
+   {
+     "Name": "Rm",
+     "Value": 0.15389980355064861,
+     "Unit": "Ohm",
+     "Description": "",
+     "Component": "PMSMMotor"
+   }
+ ]

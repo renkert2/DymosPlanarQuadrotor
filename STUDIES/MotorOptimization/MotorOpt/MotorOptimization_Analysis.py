@@ -24,6 +24,8 @@ cases = reader.get_cases("problem")
 sim_reader = om.CaseReader(sim_name+".sql")
 sim_cases = sim_reader.get_cases("problem")
 
+#%% Design Variable Results
+(d,t_latex) = reader.delta_table()
 
 #%% Trajectory Comparisons
 graphics = plotting.timeseries_plots(sim_cases, title="Motor Optimization")
@@ -31,7 +33,8 @@ graphics = plotting.timeseries_plots(sim_cases, title="Motor Optimization")
 
 #%% Optimization Variables
 opt_vars=["params.kV__Motor", "params.Rm__Motor"]
-plotting.iterplots(reader, opt_vars, labels=["$kV$ (RPM/V)", "$Rm$ ($\Omega$)"], title="Motor Optimization: Design Variables", save=False)
+(fig, ax) = plotting.iterplots(reader, opt_vars, labels=["$kV$ (RPM/V)", "$Rm$ ($\Omega$)"], title="Motor Optimization: Design Variables", save=False)
+my_plt.export(fig, fname="motor_opt_des_var_iters", directory=os.getcwd())
 
 #%% Boundary Plots
 import PlanarSystem as PS
@@ -39,7 +42,27 @@ pp = PS.PlanarSystemParams()
 ps = PS.PlanarSystemSurrogates(pp)
 ps.setup()
 pb = ps["PMSMMotor"]
-plotting.boundaryiterplots(pb, reader)
+
+fig, ax, mkropts = plotting.boundaryiterplots(pb, reader)
+
+# Append boundary plots with solution to Flight Time per Price Problem
+import Param
+
+prev_sol = Param.ParamValSet()
+
+with open(os.path.join(init.HOME_PATH, "STUDIES", "FlightTimePerPrice", "continuous_solution.json")) as source:
+    prev_sol.load(source)
+
+#
+prev_pnts = [prev_sol[x].val for x in [x.name for x in pb.boundary.args]]
+
+l, = ax.plot(*prev_pnts, markeredgecolor="blue",  label="Endurance", **mkropts)
+leg_hndls = ax.get_legend().legendHandles
+
+ax.legend()
+
+#%%
+my_plt.export(fig, fname="motor_opt_designspace", directory=os.getcwd())
 
 
 

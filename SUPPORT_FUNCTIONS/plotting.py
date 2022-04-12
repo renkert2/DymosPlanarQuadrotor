@@ -127,6 +127,8 @@ def iterplots(case_reader, vars, labels=[], title="", save=False, **kwargs):
             plt.savefig(f'{name}.png')
     plt.show()
     
+    return (fig, axes)
+    
 def boundaryiterplots(b, reader):
     (fig, ax) = b.plot_boundary_2D()
     fig.suptitle(f"Design Space: {b.comp_name}")
@@ -144,4 +146,6 @@ def boundaryiterplots(b, reader):
     l_f, = ax.plot(*x_f, markeredgecolor="green",  label="Final", **mkropts)
     
     ax.legend(handles=[l_i, l_f])
+    
+    return (fig, ax, mkropts)
 

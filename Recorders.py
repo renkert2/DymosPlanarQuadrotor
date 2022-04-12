@@ -10,6 +10,9 @@ from openmdao.recorders.sqlite_reader import SqliteCaseReader
 import os
 import json
 import numpy as np
+from tabulate import tabulate
+import fnmatch
+from SUPPORT_FUNCTIONS import support_funcs
 
 class Recorder:
     def __init__(self, recorder = None, sim_recorder=None, name='cases.sql'):
@@ -102,18 +105,76 @@ class Recorder:
 
 class Reader(SqliteCaseReader):
     def get_itervals(self, itervars):
-            driver_cases = self.get_cases('driver', recurse=False)
-            N = len(driver_cases)
-            iters = np.arange(N)
+        driver_cases = self.get_cases('driver', recurse=False)
+        N = len(driver_cases)
+        iters = np.arange(N)
+        
+        var_data = []
+        for i, var in enumerate(itervars):
+            vd = np.zeros((N,))
+            for j, case in enumerate(driver_cases):
+                vd[j] = case[var]
+            var_data.append(vd)
+        
+        return iters, var_data
+    
+    def delta_table(self, init_case_name = None, final_case_name = None, includes = {"objectives":None, "design_vars":"params.*"}):
+        prob_cases = self.get_cases("problem")
+        if init_case_name:
+            init_case = self.get_case(init_case_name)
+        else:
+            init_case = prob_cases[0]
             
-            var_data = []
-            for i, var in enumerate(itervars):
-                vd = np.zeros((N,))
-                for j, case in enumerate(driver_cases):
-                    vd[j] = case[var]
-                var_data.append(vd)
+        if final_case_name:
+            final_case = self.get_case(final_case_name)
+        else:
+            final_case = prob_cases[-1]
             
-            return iters, var_data
+        delta_dict = {}
+        for c,n in zip((init_case, final_case), ("initial", "final")):
+            for method, name in zip([c.get_objectives, c.get_design_vars, c.get_constraints], ["objectives", "design_vars", "constraints"]):
+                if name in includes:
+                    vals = method(scaled=False)
+                    
+                    # Filter with Includes
+                    inc = includes[name]
+                    if inc:
+                        vals = {key:value for key,value in vals.items() if fnmatch.fnmatch(key, inc)}
+                    
+                    for key,val in vals.items():
+                        val = support_funcs.scalarize(val)
+                        d = {n:val}
+                        if name not in delta_dict:
+                            delta_dict[name] = {}
+                        if key not in delta_dict[name]:
+                            delta_dict[name][key] = {}
+                        delta_dict[name][key].update(d)
+                
+        for d_outer in delta_dict.values():
+            for d in d_outer.values():
+                num = (d["final"] - d["initial"])
+                den = abs(d["initial"])
+                if hasattr(num, "__len__") or den != 0:
+                    d["percent_change"] = num/den
+                else:
+                    d["percent_change"] = np.copysign(float('inf'), num)
+                    
+        # Make Summary Table
+        latex_tables = {}
+        header_dict = {" ":["Initial", "Final", "Rel. Change"]}
+        for (name, val) in delta_dict.items():
+            val_tab = {k:list(v.values()) for k,v in val.items()}
+            val_tab = {**header_dict, **val_tab}
+            t = tabulate(val_tab, headers="keys")
+            print(t)
+            
+            t_latex = tabulate(val_tab, headers="keys", tablefmt="latex_raw")
+            latex_tables[name] = t_latex
+                
+        return delta_dict, latex_tables
+            
+        
+        
     
 ### ARCHIVE ###
 def SimpleRecorder(prob, recorder = None, name='cases.sql'):
