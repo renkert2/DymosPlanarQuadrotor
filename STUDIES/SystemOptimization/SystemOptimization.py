@@ -32,7 +32,7 @@ prob.load_case(input_opt_final)
 
 #%%
 # Can also try trust-const algorithm
-prob.driver.options["maxiter"] = 500
+prob.driver.options["maxiter"] = 1000
 
 prob.run("sys_opt")
 om.n2(prob, outfile = "sys_opt_n2.html")

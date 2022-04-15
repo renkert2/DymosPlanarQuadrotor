@@ -1,0 +1,20 @@
+Tweaking the Transcription:
+- Radau:
+ --- 10: Solves in 57 FEvals; 2.939 seconds final time; Dynamics off but not as bad as I thought
+ --- 15: Solves in 129 FEvals; 2.84 seconds final time; Dynamics close but not quite
+ --- 20: Solves in 134 FEvals; 2.806 seconds final time; Accurate dynamics
+ --- 25: Solves in 193, converges to 2.779, Dynamics are spot on
+
+- Gauss Labotto:
+ --- Compressed = True ---
+ --- 10: Solves in 45 FEvals; final time of 2.873; Dynamics quite off
+ --- 15: Solves in 64 FEvals; Converges to 2.819; Dynamics off, x approx 7.5
+ --- 20: Solves in 93 FEvals; Converges to 2.796; dynamics off in x at end
+ --- 25: Solves in 119 Fevals; converges to 2.774; dynamics still a little off
+ --- 30: Solves in 128 Fevals; converges to 2.7745; dynamics still slightly off
+ --- 35: Solves in 127 Fevals; converges to 2.772; Dynamics look good!
+ --- Compressed = False --- 
+ --- 20: Solves in 118 FEvals; Converges to 2.797; Dynamics somewhat off
+ --- 25: Solves in 132 FEvals; Converges to 2.774; Dynamics a little off
+ --- 30: Solves in 159 Fevals; Converges to 2.775; Dynamics pretty close
+ --- 35: Solves in 155 Fevals; converges to 2.773; Dynamics pretty close

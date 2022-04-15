@@ -23,15 +23,18 @@ class Problem(om.Problem):
         
         self.planar_recorder = planar_recorder
         
-    def setup(self):           
-        r = self.planar_recorder
-        r.add_prob(self)
-        r.add_driver(self.driver)
+    def setup(self):
+        if self.planar_recorder:        
+            r = self.planar_recorder
+            r.add_prob(self)
+            r.add_driver(self.driver)
      
         super().setup()
 
         sp = self.traj.simprob()
-        r.add_sim_prob(sp)
+        
+        if self.planar_recorder:
+            r.add_sim_prob(sp)
         sp.setup()
         self.sim_prob = sp
         

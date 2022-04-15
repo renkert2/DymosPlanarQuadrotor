@@ -29,7 +29,7 @@ sim_cases = sim_reader.get_cases("problem")
 (d,t_latex) = reader.delta_table()
 
 #%% Trajectory Comparisons
-#graphics = plotting.timeseries_plots(sim_cases, title="System Optimization")
+graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases, title="System Optimization")
 
 
 #%% Optimization Variables

@@ -32,4 +32,4 @@ prob.init_vals()
 
 prob.run("input_opt")
 
-prob.cleanup()
+prob.cleanup_all()

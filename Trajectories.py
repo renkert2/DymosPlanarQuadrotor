@@ -81,8 +81,9 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
      # Superclass for specific optimal control trajectories that we want the vehicle to take.
      # We want all options, etc to be constant so that the trajectories are uniform across all problems
      
-     def __init__(self, tx=None, sim_args={"times_per_seg":20}):
-         self.tx = tx # Problem transcription         
+     def __init__(self, tx=None, sim_mode=False, sim_args={"times_per_seg":20}):
+         self.tx = tx # Problem transcription  
+         self.sim_mode = sim_mode
          phases = self.init_phases()
          super().__init__(phases)
          super().init_vars()
@@ -107,15 +108,15 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
         
 ### Trajectories ###
 class Step(PlanarTrajectory):
-    def __init__(self, **kwargs):
-        tx=dm.GaussLobatto(num_segments=20)
+    def __init__(self, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):
+        
         self.x_init=0
         self.y_init=0    
         
         self.x_des = 10
         self.y_des = 10
         
-        super().__init__(tx=tx)
+        super().__init__(tx=tx, **kwargs)
 
     def init_phases(self):
         def pos_margin(p, margin):
@@ -131,18 +132,34 @@ class Step(PlanarTrajectory):
         phase = ps.PlanarSystemDynamicPhase(transcription=self.tx)
         phase.init_vars()
         
-        # Set up States and Inputs as Optimization Variables
-        phase.set_time_options(fix_initial=True, initial_val=0, duration_bounds=(1, 20), duration_ref0=1, duration_ref=20)
+        if "solve_segments" in self.tx.options:
+            ss = self.tx.options["solve_segments"]
+            if ss != False:
+                if not self.sim_mode:
+                    raise Exception("sim_mode=True required to forward solve the model.")
+        elif isinstance(self.tx, dm.ExplicitShooting):
+            if not self.sim_mode:
+                raise Exception("sim_mode=True required for ExplicitShooting transcription")
         
-        phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=True, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
-        phase.set_state_options("PT_x2", fix_initial=True, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
-        phase.set_state_options("PT_x3", fix_initial=True, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
-        phase.set_state_options('BM_v_x', fix_initial=True, fix_final=True)
-        phase.set_state_options('BM_v_y', fix_initial=True, fix_final=True)
-        phase.set_state_options('BM_x', fix_initial=True, fix_final=True, lower=self.x_lb, ref0=self.x_lb, upper=self.x_ub, ref=self.x_ub)
-        phase.set_state_options('BM_y', fix_initial=True, fix_final=True, lower=self.y_lb, ref0=self.y_lb, upper=self.y_ub, ref=self.y_ub)
-        phase.set_state_options('BM_omega', fix_initial=True, fix_final=True)
-        phase.set_state_options('BM_theta', fix_initial=True, fix_final=True, lower=-np.pi/2, ref0=-np.pi/2, upper=np.pi/2, ref=np.pi/2)
+        if self.sim_mode:
+            fi=True
+            ff=False
+        else:
+            fi = True
+            ff = True
+        
+        # Set up States and Inputs as Optimization Variables
+        phase.set_time_options(fix_initial=fi, initial_val=0, duration_bounds=(1, 20), duration_ref0=1, duration_ref=20)
+        
+        phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=fi, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
+        phase.set_state_options("PT_x2", fix_initial=fi, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
+        phase.set_state_options("PT_x3", fix_initial=fi, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
+        phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff)
+        phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff)
+        phase.set_state_options('BM_x', fix_initial=fi, fix_final=ff, lower=self.x_lb, ref0=self.x_lb, upper=self.x_ub, ref=self.x_ub)
+        phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, lower=self.y_lb, ref0=self.y_lb, upper=self.y_ub, ref=self.y_ub)
+        phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff)
+        phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, lower=-np.pi/2, ref0=-np.pi/2, upper=np.pi/2, ref=np.pi/2)
         
         phase.set_control_options("PT_u1", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
         phase.set_control_options("PT_u2", lower=0, upper=1, opt=True, ref0=0.0, ref=1)

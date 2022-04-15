@@ -53,7 +53,7 @@ def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels
                 lines.append(l)
                 
                 if not s:
-                    axes[i].axvline(x=t_sim[-1], linestyle="--", linewidth=l.linewidth/2, color=l.color)
+                    axes[i].axvline(x=t_prob[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
             
             if labels:
                 axes[i].set_ylabel(labels[i])
@@ -75,8 +75,8 @@ def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels
     
     return fig, axes
 
-def timeseries_plots(sim_cases, title="Optimization", legend=["Initial", "Final"], show_plts=range(4)):    
-    shared_args = [None, sim_cases]
+def timeseries_plots(prob=None, sim=None, title="Optimization", legend=["Initial", "Final"], show_plts=range(4)):    
+    shared_args = [prob, sim]
     shared_kwargs = {"path":'traj.phase0.timeseries', "save":False, "legend":legend}
     
     v = [[] for i in range(4)]
