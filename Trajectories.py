@@ -91,7 +91,16 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
          self._sim_args = sim_args
      
      def init_phases(self):
-         pass
+        if "solve_segments" in self.tx.options:
+           ss = self.tx.options["solve_segments"]
+           if ss != False:
+               if not self.sim_mode:
+                   raise Exception("sim_mode=True required to forward solve the model.")
+        elif isinstance(self.tx, dm.ExplicitShooting):
+           if not self.sim_mode:
+               raise Exception("sim_mode=True required for ExplicitShooting transcription")
+        
+        ### Implement Rest of Code in Subclasses ### 
 
      def init_vals(self, prob):
          pass
@@ -119,6 +128,8 @@ class Step(PlanarTrajectory):
         super().__init__(tx=tx, **kwargs)
 
     def init_phases(self):
+        super().init_phases()
+        
         def pos_margin(p, margin):
             # Takes a list of positions and returns the min and the max with a padded boundary
             p_max = max(p)
@@ -131,15 +142,6 @@ class Step(PlanarTrajectory):
 
         phase = ps.PlanarSystemDynamicPhase(transcription=self.tx)
         phase.init_vars()
-        
-        if "solve_segments" in self.tx.options:
-            ss = self.tx.options["solve_segments"]
-            if ss != False:
-                if not self.sim_mode:
-                    raise Exception("sim_mode=True required to forward solve the model.")
-        elif isinstance(self.tx, dm.ExplicitShooting):
-            if not self.sim_mode:
-                raise Exception("sim_mode=True required for ExplicitShooting transcription")
         
         if self.sim_mode:
             fi=True
@@ -161,16 +163,19 @@ class Step(PlanarTrajectory):
         phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff)
         phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, lower=-np.pi/2, ref0=-np.pi/2, upper=np.pi/2, ref=np.pi/2)
         
-        phase.set_control_options("PT_u1", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
-        phase.set_control_options("PT_u2", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
+        opt_in = not self.sim_mode
+        phase.set_control_options("PT_u1", lower=0, upper=1, opt=opt_in, ref0=0.0, ref=1)
+        phase.set_control_options("PT_u2", lower=0, upper=1, opt=opt_in, ref0=0.0, ref=1)
         
-        phase.add_boundary_constraint('PT.x2_dot', loc='final', shape=(1,), equals=0) # Shape may need to change to (nn,)
-        phase.add_boundary_constraint('PT.x3_dot', loc='final', shape=(1,), equals=0)
-        phase.add_boundary_constraint('BM.v_y_dot', loc='final', shape=(1,), equals=0)
-        phase.add_boundary_constraint('BM.omega_dot', loc='final', shape=(1,), equals=0)
+        if not self.sim_mode:
+            phase.add_boundary_constraint('PT.x2_dot', loc='final', shape=(1,), equals=0) # Shape may need to change to (nn,)
+            phase.add_boundary_constraint('PT.x3_dot', loc='final', shape=(1,), equals=0)
+            phase.add_boundary_constraint('BM.v_y_dot', loc='final', shape=(1,), equals=0)
+            phase.add_boundary_constraint('BM.omega_dot', loc='final', shape=(1,), equals=0)
         
         # Minimize time at the end of the phase
         phase.add_objective('time', loc='final')
+        
         return phase
     
     def init_vals(self, prob, name="traj"):

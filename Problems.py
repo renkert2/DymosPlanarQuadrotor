@@ -9,8 +9,11 @@ import PlanarSystem as ps
 import dymos as dm
 import openmdao.api as om
 import numpy as np
+from tabulate import tabulate
 import Recorders
 import Trajectories
+import Param as P
+import SUPPORT_FUNCTIONS.support_funcs as funcs
 
 class Problem(om.Problem):
     def __init__(self, model = None, traj = None, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), **kwargs):
@@ -66,6 +69,85 @@ class Problem(om.Problem):
     def cleanup_all(self):
         self.cleanup()
         self.sim_prob.cleanup()
+        
+    def fdiff(self, of, wrt, step_size=0.01):
+        def to_paths(l):
+            return [f"params.{x.strID}" if isinstance(x, P.Param) else x for x in l]
+        of_paths = to_paths(of)
+        wrt_paths = to_paths(wrt)
+        
+        def to_latex(l):
+            return [x.latex() if hasattr(x, "latex") else x for x in l]
+        of_latex = to_latex(of)
+        wrt_latex = to_latex(wrt)
+        
+        # Modify dependency of params
+        # - of's must be independent
+        # - all surrogates downstream of the ofs must be be active
+        
+        def get(paths):
+            x = np.zeros(len(paths))
+            for (i,p) in enumerate(paths):
+                val = self.get_val(p)
+                if len(val) > 1:
+                    val = val[-1] # Assume final value
+                x[i] = funcs.scalarize(val)
+            return x
+        
+        self.run_driver() # Get updated objective with nominal params
+        
+        F0 = get(of_paths)
+        X0 = get(wrt_paths)
+        print(f"Nominal F: {F0}, Nominal X: {X0}")
+        
+        Delta = step_size*X0 # Step Sizes in Unscaled space
+        X = X0 + Delta
+        
+        grad_data = [] # list of (grad, grad_scaled) tuples
+        for i,wrt_p in enumerate(wrt_paths):
+            print(f"Stepping: {wrt_p}")
+            
+            print(f"New Value: {X[i]}; Nominal Value: {X0[i]}")
+            self.set_val(wrt_p, val=X[i])
+            
+            self.run_driver()
+            F = get(of_paths)
+            
+            delta_F = (F - F0) 
+            grad = delta_F/Delta[i]
+            grad_scaled = (X[i]*grad)/abs(F0)
+            
+            grad_data.append((grad, grad_scaled, F))
+            
+            print(f"Step Complete: delta_F={delta_F}, grad={grad}, grad_scaled={grad_scaled}")
+            
+            self.set_val(wrt_p, val=X0[i])
+        
+        # Latex Table Headers:
+        lt_headers = ["Gradient", "Scaled Gradient"]
+        # Process Vals:
+        out_dict = {} # Format: out_dict[of][wrt][unscaled,scaled]
+        latex_tables = {}
+        for i,of_i in enumerate(of):
+            D1 = {}
+
+            lt_vals = []
+            for j,wrt_j in enumerate(wrt):
+                D2 = {}
+                for k,s in enumerate(["unscaled", "scaled"]):
+                    D2[s] = grad_data[j][k][i]
+                D1[wrt_j] = D2
+                
+                # Record Vals for Latex # 
+                lt_vals.append([wrt_latex[j], D2["unscaled"], D2["scaled"]])
+
+            out_dict[of_i] = D1
+            
+            # Latex Tables
+            lt_string = tabulate(lt_vals, headers=lt_headers, tablefmt="latex_raw")
+            latex_tables[of_i] = lt_string
+        
+        return out_dict, latex_tables
     
 
 

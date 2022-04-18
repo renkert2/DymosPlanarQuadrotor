@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib as mpl
 import Param as P
+import warnings
 
 class Fit:
     def __init__(self, outputs = None, inputs = None):
@@ -367,6 +368,20 @@ class Surrogate:
             
             S[s.comp_name] = s
         return S
+    
+    @property
+    def inputs(self):
+        if self.fits:
+            return self.fits.inputs
+        else:
+            warnings.warn("Fits not yet defined")
+    
+    @property
+    def outputs(self):
+        if self.fits:
+            return self.fits.outputs
+        else:
+            warnings.warn("Fits not yet defined")
     
     def plot_boundary_3D(self, fig = None, ax=None):
         if not fig:

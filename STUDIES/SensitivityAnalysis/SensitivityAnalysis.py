@@ -18,6 +18,7 @@ import Problems as P
 import Recorders as R
 import Trajectories as T
 import PlanarSystem as ps
+import Constraints as C
 
 init.init_output(__file__)
 
@@ -28,14 +29,17 @@ input_opt_final = reader.get_case("input_opt_final")
 
 # Problem 1: No Solve Segments
 traj = T.Step()
-model = ps.PlanarSystemDesignModel(traj, opt_comps={"Battery":[], "PMSMMotor":[], "Propeller":[]})
+model = ps.PlanarSystemModel(traj)
 
 #rec = R.Recorder(name="sens_cases.sql")
 prob = P.Problem(model=model, traj = traj, planar_recorder=None)
 
 # Problem 2: Solve Segments
-traj_ss = T.Step(tx=dm.ExplicitShooting(num_segments=25, compressed=True, grid='gauss-lobatto', ))
-model_ss = ps.PlanarSystemDesignModel(traj_ss, opt_comps={"Battery":[], "PMSMMotor":[], "Propeller":[]})
+#traj_ss = T.Step(tx=dm.ExplicitShooting(num_segments=25, compressed=True, grid='gauss-lobatto'), sim_mode=True)
+traj_ss = T.Step(tx=dm.GaussLobatto(num_segments=25, compressed=True, solve_segments="forward"), sim_mode=True)
+#model_ss = ps.PlanarSystemModel(traj_ss)
+#cons = C.ConstraintSet()
+model_ss = ps.PlanarSystemModel(traj_ss)
 
 #rec_ss = R.Recorder(name="sens_cases_ss.sql")
 prob_ss = P.Problem(model = model_ss, traj = traj_ss, planar_recorder=None)
