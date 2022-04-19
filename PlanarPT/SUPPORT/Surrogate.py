@@ -11,6 +11,7 @@ from matplotlib import cm
 import matplotlib as mpl
 import Param as P
 import warnings
+import tabulate
 
 class Fit:
     def __init__(self, outputs = None, inputs = None):
@@ -296,18 +297,99 @@ def box_grid(box, N):
     (X, Y) = np.meshgrid(X_pnts, Y_pnts)
     return (X_pnts, Y_pnts, X,Y)
     
-
-
         
 class ComponentData:
-    def __init__(self):
-        pass
+    def __init__(self, component=None, make=None, model=None, sku=None, desc=None, data=P.ParamValSet()):
+        self.component = component
+        self.make = make
+        self.model = model
+        self.sku = sku
+        self.desc = desc
+        self.data = data
     
-    def load(source):
-        pass
+    def __str__(self):
+        return  str(self.__class__) + '\n'+ '\n'.join(('{} = {}'.format(item, self.__dict__[item]) for item in self.__dict__))
     
-    def setup(self):
-        pass
+class ComponentDataSet(set):
+    def __init__(self, arg={}):
+        for cd in arg:
+            if not isinstance(cd, ComponentData):
+                raise TypeError("All elements in component data set must be ComponentData object")
+        super().__init__(arg)
+        
+    def __getitem__(self, arg):
+        if isinstance(arg, int):
+            return self.sorted()[arg]
+        else:
+            found = []
+            for p in self:
+                if p.sku == arg:
+                    return p
+                if p.component == arg:
+                    found.append(p)
+            if len(found) == 1:
+                return found[0]
+            elif len(found) > 1:
+                return found
+            else:
+                raise KeyError("Parameter not found")
+    
+    def __add__(self, arg):
+        if isinstance(arg, type(self)):
+            # In place add
+            return self.union(arg)
+        elif isinstance(arg, ComponentData):
+            self.add(arg)
+            return self
+        else:
+            raise Exception("+ Operator only supported for ComponentDataSet and ComponentData")
+            
+    def union(self, arg):
+        cls = type(self)
+        if isinstance(arg, cls):
+            u_set = super().union(arg)
+            u_pset = cls(u_set)
+            return u_pset
+        else:
+            raise TypeError("Can only add other ComponentDataSets")
+            
+    def sorted(self, key=lambda p: (p.component, p.make, p.model), **kwargs):
+        return sorted(self, key=key, **kwargs)
+            
+    def __str__(self):
+        self_sorted = self.sorted()
+        tab_data = [(x.component, x.make, x.model, x.sku, x.desc) for x in self_sorted]
+        tab = tabulate.tabulate(tab_data, headers=["Component", "Make", "Model", "SKU", "Description"])
+        return str(self.__class__) + "\n" + str(tab)
+    
+    def load(self, source):
+        if isinstance(source, (list, tuple)):
+            cd_meta = source
+        else:
+            cd_meta = json.load(source)
+        
+        # Dictionary to convert from JSON names to object attributes
+        comp_dict_opt = {"Component":"component", "Make":"make", "Model":"model", "SKU":"sku", "Description":"desc", "Data":"data"}
+        comp_dict_opt_set = set(comp_dict_opt)
+
+        for cd_ in cd_meta:
+
+            # Make a new ComponentData with new ParamValSet.
+            # I think __init__ doesn't re-construct the default data = P.ParamValSet each time
+            
+            cd = ComponentData(data=P.ParamValSet())
+            self.add(cd) # Add new param to set
+            
+            comp_meta_keys = comp_dict_opt_set.intersection(set(cd_))
+            for key in comp_meta_keys:
+                cd_key = comp_dict_opt[key]
+                if key == "Data":
+                    # Update ComponentData's ParamValSet
+                    cd.data.load(cd_[key])
+                else:
+                    setattr(cd, cd_key, cd_[key])
+
+        return self
         
 class Surrogate:
     def __init__(self, comp_name=""):
@@ -359,11 +441,9 @@ class Surrogate:
                     b = Boundary.load(val, params)
                     val = b
                 elif key == "ComponentData":
-                    cd = ComponentData.load(val)
-                    val = cd
-                
-                    # TODO: Finish ComponentData Case
-                
+                    cd = ComponentDataSet()
+                    cd = cd.load(val)
+                    val = cd                
                 setattr(s, dict_opt[key], val)
             
             S[s.comp_name] = s

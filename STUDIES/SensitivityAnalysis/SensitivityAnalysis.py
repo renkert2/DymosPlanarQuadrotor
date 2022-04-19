@@ -49,7 +49,8 @@ probs = [prob, prob_ss]
 for p,n in zip(probs, ["sens_n2.html", "sens_n2_ss.html"]):
     p.setup()
     p.init_vals()
-    #om.n2(p, outfile=n)
+    p.final_setup()
+    om.n2(p, outfile=n)
 
 #%% Convergence
 # What exactly converges / is solved when we just run "run_model"?

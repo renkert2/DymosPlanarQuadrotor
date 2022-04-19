@@ -14,10 +14,7 @@ p = PS.PlanarSystemParams()
 s = PS.PlanarSystemSurrogates(p)
 s.setup()
 
-
-#%% Boundary Plots
-
-#s.plot_boundary_3D()
-
-#%% Setup()
-c = s["Propeller"].boundary
+#%% ComponentData
+cdb = s["Battery"].comp_data
+print(cdb)
+print(cdb[0])
