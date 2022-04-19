@@ -10,6 +10,7 @@ import SUPPORT_FUNCTIONS.init as init
 import openmdao.api as om
 import matplotlib.pyplot as plt
 
+#%%
 p = PS.PlanarSystemParams()
 s = PS.PlanarSystemSurrogates(p)
 s.setup()
@@ -18,3 +19,9 @@ s.setup()
 cdb = s["Battery"].comp_data
 print(cdb)
 print(cdb[0])
+
+#%%
+cdb.plot(["N_s", "Q"])
+
+#%%
+s.plot_boundary_2D()

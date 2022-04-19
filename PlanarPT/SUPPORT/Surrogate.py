@@ -390,7 +390,37 @@ class ComponentDataSet(set):
                     setattr(cd, cd_key, cd_[key])
 
         return self
+            
+    def plot(self, vals, ax=None, fig=None, annotate=True):
+        if not fig:
+            fig = plt.figure()
+        if not ax:
+            ax = plt.axes()
         
+        pnts = []
+        axes_labels = []
+        for cd in self:
+            pnt = []
+            for v in vals:
+                if isinstance(v, str):
+                    pv = cd.data[v]
+                else:
+                    pv = v.get_compatible(cd.data)
+                    
+                pnt.append(pv.val)
+                if len(axes_labels) < len(vals):
+                    axes_labels.append(pv.latex())
+            pnts.append(pnt)
+
+        ax.scatter(*zip(*pnts), facecolors='none', edgecolors='b', label="Component Data")
+        
+        if annotate:
+            ax.legend()
+            ax.set_xlabel(axes_labels[0])
+            ax.set_ylabel(axes_labels[1])            
+        
+        return (fig, ax)
+
 class Surrogate:
     def __init__(self, comp_name=""):
         self.comp_name = comp_name
@@ -477,4 +507,7 @@ class Surrogate:
     def plot_boundary_2D(self, fig = None, ax=None):
         (fig,ax) = self.boundary.plot2D(fig=fig,ax=ax)
         fig.suptitle(f"Surrogate: {self.comp_name}")
+        if self.comp_data:
+            self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False)
+            
         return (fig,ax)
