@@ -344,6 +344,14 @@ class ComponentDataSet(set):
         else:
             raise Exception("+ Operator only supported for ComponentDataSet and ComponentData")
             
+    @property
+    def data(self):
+        data = P.ParamValSet()
+        for c in self:
+            data.update(c.data)
+        
+        return data
+            
     def union(self, arg):
         cls = type(self)
         if isinstance(arg, cls):
@@ -390,6 +398,7 @@ class ComponentDataSet(set):
                     setattr(cd, cd_key, cd_[key])
 
         return self
+    
             
     def plot(self, vals, ax=None, fig=None, annotate=True):
         if not fig:

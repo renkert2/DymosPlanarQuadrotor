@@ -64,33 +64,33 @@ class PlanarSystemParams(P.ParamSet):
         self.update(pt_params)
 
         # Manually Define parameters required for Body Model
-        self.add(P.Param(name='rho', val=0.1, desc='Frame Density', strID="rho__Frame", parent="Frame"))
+        self.add(P.Param(name='rho', val=0.1, desc='Frame Density', strID="rho__Frame", parent="Frame", component="Frame"))
         self.add(P.Param(name='r', val=1, desc='Arm Length', strID="r__Frame", parent = "Frame"))
         
-        self.add(P.Param(name='Mass', desc='Frame Mass', strID="Mass__Frame", parent="Frame"))
+        self.add(P.Param(name='Mass', desc='Frame Mass', strID="Mass__Frame", parent="Frame", component="Frame"))
         self["Mass__Frame"].setDependency(om.ExecComp("Mass=2*r*rho"), {"r":self["r__Frame"], "rho":self["rho__Frame"]})
         self["Mass__Frame"].dep=True
                 
-        self.add(P.Param("Mass", desc="System Mass", strID="Mass__System", parent="System"))
+        self.add(P.Param("Mass", desc="System Mass", strID="Mass__System", parent="System", component="PlanarSystem"))
         c = om.AddSubtractComp(output_name="Mass", input_names=("m_f", "m_pt"))
         self["Mass__System"].setDependency(c, {"m_f":self["Mass__Frame"], "m_pt":self["Mass__PlanarPowerTrain"]})
         self["Mass__System"].dep=True
         
-        self.add(P.Param("I", desc="Inertia of Frame about Planar Quadrotor COM", strID="I__Frame", parent="Frame"))
+        self.add(P.Param("I", desc="Inertia of Frame about Planar Quadrotor COM", strID="I__Frame", parent="Frame", component="Frame"))
         self["I__Frame"].setDependency(om.ExecComp("I=(1/12)*m*(2*r)**2"), {"m":self["Mass__Frame"], "r":self["r__Frame"]})
         self["I__Frame"].dep=True
         
         # TODO: Add inertia of battery 
-        self.add(P.Param("I", desc="Inertia of PowerTrain about Planar Quadrotor COM", strID="I__PlanarPowerTrain", parent="PlanarPowerTrain"))
+        self.add(P.Param("I", desc="Inertia of PowerTrain about Planar Quadrotor COM", strID="I__PlanarPowerTrain", parent="PlanarPowerTrain", component="PlanarPowerTrain"))
         self["I__PlanarPowerTrain"].setDependency(om.ExecComp("I=2*(m_prop + m_motor)*r**2"), {"m_prop":self["Mass__Propeller"], "m_motor":self["Mass__Motor"], "r":self["r__Frame"]})
         self["I__PlanarPowerTrain"].dep=True
         
-        self.add(P.Param("I", desc="Total Inertia about Planar Quadrotor COM", strID="I__System", parent="System"))
+        self.add(P.Param("I", desc="Total Inertia about Planar Quadrotor COM", strID="I__System", parent="System", component="PlanarSystem"))
         c = om.AddSubtractComp(output_name="I", input_names=("I_f", "I_pt"))
         self["I__System"].setDependency(c, {"I_f":self["I__Frame"], "I_pt":self["I__PlanarPowerTrain"]})
         self["I__System"].dep=True
         
-        self.add(P.Param("HoverThrust", desc="Thrust Requried for Hover", strID="HoverThrust__System", parent="System"))
+        self.add(P.Param("HoverThrust", desc="Thrust Requried for Hover", strID="HoverThrust__System", parent="System", component="PlanarSystem"))
         self["HoverThrust"].setDependency(om.ExecComp(f"HoverThrust = {g}*m"), {"m":self["Mass__System"]})
         self["HoverThrust"].dep=True
         

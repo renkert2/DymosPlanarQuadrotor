@@ -8,5 +8,5 @@ recent_files = ['..\\..\\..\\.spyder-py3\\temp.py', 'CheckPartials.py']
 
 [main]
 version = 0.2.0
-recent_files = ['STUDIES\\SensitivityAnalysis\\SensitivityAnalysis_FiniteDifference.py', 'Trajectories.py', 'PlanarSystem.py', '..\\GraphTools\\OpenMDAO\\DynamicModel.py', 'Problems.py', 'Recorders.py', '..\\GraphTools\\OpenMDAO\\PARAMS\\Param.py']
+recent_files = ['..\\GraphTools\\OpenMDAO\\PARAMS\\Param.py', 'PlanarPT\\SUPPORT\\Surrogate.py', 'SUPPORT_FUNCTIONS\\support_funcs.py', 'PlanarPT\\SUPPORT\\TEST\\Surrogate_TEST.py', 'PlanarSystem.py']
 
