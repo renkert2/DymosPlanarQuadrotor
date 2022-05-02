@@ -29,7 +29,7 @@ class Fit:
     def setup(self):
         self.comps = {}
         for (i, out) in enumerate(self.outputs):
-            comp = om.MetaModelStructuredComp(method='scipy_cubic', extrapolate=True)
+            comp = P.ParamComp(om.MetaModelStructuredComp, method='scipy_cubic', extrapolate=True)
             
             for (j,ip) in enumerate(self.inputs):
                 comp.add_input(ip.strID, 1.0, training_data=np.array(self.X_vec[j]))
@@ -228,11 +228,15 @@ class Boundary:
         self.setup_comp()
     
     def attach_args(self):
+        # Only modify bounds if boundary is more restrictive
+        
         for (i,p) in enumerate(self.args):
             if self.lb:
-                p.lb = self.lb[i]
+                if (not p.lb) or (p.lb < self.lb[i]):
+                    p.lb = self.lb[i]
             if self.ub:
-                p.ub = self.ub[i]
+                if (not p.ub) or (p.ub > self.ub[i]):
+                    p.ub = self.ub[i]
             
         
     def add_to_system(self, sys, name="boundary"):
@@ -400,7 +404,7 @@ class ComponentDataSet(set):
         return self
     
             
-    def plot(self, vals, ax=None, fig=None, annotate=True):
+    def plot(self, vals, ax=None, fig=None, annotate=True, scatter_kwargs = {'facecolors':'none', "edgecolors":'b', "label":"Component Data"}):
         if not fig:
             fig = plt.figure()
         if not ax:
@@ -421,7 +425,7 @@ class ComponentDataSet(set):
                     axes_labels.append(pv.latex())
             pnts.append(pnt)
 
-        ax.scatter(*zip(*pnts), facecolors='none', edgecolors='b', label="Component Data")
+        ax.scatter(*zip(*pnts), **scatter_kwargs)
         
         if annotate:
             ax.legend()
