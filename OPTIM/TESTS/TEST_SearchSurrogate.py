@@ -30,7 +30,7 @@ with open(target_path, 'rb') as f:
 #%%
 ss = {}
 for (k,v) in s.surrogates.items():
-    ss[k] = Search.SearchSurrogate(v)
+    ss[k] = Search.ComponentSearcher(v)
     ss[k].set_target(target)
     
 #%% Filter Nearest
@@ -43,6 +43,16 @@ for _ss in ss.values():
     figs.append(fig)
     
 #%% Export
-files = ("batt_comp_discance", "motor_comp_distance", "prop_comp_distance")
-for f,fname in zip(figs, files):
-    my_plt.export(f, fname=fname)
+# files = ("batt_comp_discance", "motor_comp_distance", "prop_comp_distance")
+# for f,fname in zip(figs, files):
+#     my_plt.export(f, fname=fname)
+    
+#%% Configuration Searcher
+cs = Search.ConfigurationSearcher(ss)
+cs.run()
+
+#%% Plots
+fig, ax = cs.plotDistances()
+
+#%% Export
+my_plt.export(fig, fname="configuration_distance_plot")
