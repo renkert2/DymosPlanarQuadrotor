@@ -6,6 +6,7 @@ Created on Fri Apr  1 11:32:38 2022
 """
 import openmdao.api as om
 import openmdao.core.component as omcomp
+import numpy as np
 import SUPPORT_FUNCTIONS.support_funcs as SF
 import tabulate
 import Param as P
@@ -36,6 +37,27 @@ class Constraint:
     def ref0(self):
         return self._ref0
     
+    @property
+    def val(self):
+        raise Exception("val property not implemented in Constraint superclass")
+        pass
+    
+    def satisfied(self):
+        v = self.val
+        if hasattr(v, "__iter__"):
+            v_max = SF.iterapply(max, v)
+            v_min = SF.iterapply(min, v)
+        else:
+            v_max = v
+            v_min = v
+            
+        if self.lb and (v_min < self.lb):
+            return False
+        elif self.ub and (v_max > self.ub):
+            return False
+        else:
+            return True
+    
     def props(self):
         base_props = ["name", "active", "lb", "ub", "ref", "ref0"]
         
@@ -47,7 +69,8 @@ class Constraint:
             
            
 class ConstraintParam(Constraint):
-    # Constraint defined by a calculated Parameter in the model        
+    # Constraint defined by a calculated Parameter in the model    
+    # UNUTILIZED!!!    
 
     def set_bounds(self, lb=None, ub=None, param_group=None):
         for parg in [lb, ub]:
@@ -98,11 +121,18 @@ class ConstraintParam(Constraint):
         return prop_dict
     
 class TrajConstraint(Constraint):
-    def __init__(self, traj_convar=None, **kwargs):
+    def __init__(self, traj_convar=None, convar_output_path=None, **kwargs):
         Constraint.__init__(self,**kwargs)
         self._traj_convar = traj_convar # Name of trajectory variable to constrain
+        
+        if not convar_output_path:
+            convar_output_path = traj_convar
+        
+        self._convar_output_path = convar_output_path
+        self._traj = None
     
     def add_to_traj(self, traj):
+        self._traj = traj
         if self.active:
             convars = SF.iterize(self._traj_convar)
             for phase in traj._phases.values():
@@ -112,8 +142,22 @@ class TrajConstraint(Constraint):
     def props(self):
         prop_dict = super().props()
         prop_dict["traj_convar"] = self._traj_convar
+        prop_dict["convar_output_path"] = self._convar_output_path
         
         return prop_dict 
+    
+    @property
+    def val(self):
+        val=[]
+        convar_outs = SF.iterize(self._convar_output_path)
+        for outname in convar_outs:
+            # Get from all phases
+            _val = np.array([])
+            for phase in self._traj._phases.values():
+                v = phase.get_val(outname) 
+                _val = np.append(_val,v)
+        val.append(_val)
+        return val
               
 class ConstraintComp(Constraint, omcomp.Component):
     def __init__(self, **kwargs):
@@ -141,6 +185,14 @@ class ConstraintComp(Constraint, omcomp.Component):
             to_var = self._mdl_name + "." + c[1]
             sys.connect(from_var, to_var)
             
+    @property
+    def val(self):
+        convars = SF.iterize(self._convar)
+        vals = []
+        for v in convars:
+            vals.append(self.get_val(v))
+        return vals
+    
     def props(self):
         prop_dict = Constraint.props(self)
         
@@ -150,7 +202,9 @@ class ConstraintComp(Constraint, omcomp.Component):
         
         return prop_dict
     
-class TrajConstraintComp(TrajConstraint, ConstraintComp):
+    
+    
+class TrajConstraintComp(ConstraintComp, TrajConstraint):
     def __init__(self, **kwargs):
         TrajConstraint.__init__(self)
         ConstraintComp.__init__(self, **kwargs)
@@ -185,6 +239,10 @@ class TrajConstraintComp(TrajConstraint, ConstraintComp):
                 to_var = ".".join([self._mdl_name, c[1]])
                 sys.connect(from_var, to_var)  
                 
+    @property
+    def val(self):
+        return ConstraintComp.val.fget(self)
+                
     def props(self):
         prop_dict = TrajConstraint.props(self)
         prop_dict.update(ConstraintComp.props(self))
@@ -213,7 +271,7 @@ class ConstraintSet(set):
         for c in self:
             if c.name == arg:
                 return c
-        raise KeyError("Parameter not found")
+        raise KeyError("Constraint not found")
         
     def __str__(self):
         self_sorted = sorted(self, key=lambda c:c.name)
@@ -274,7 +332,7 @@ class BatteryCurrent(TrajConstraintComp, om.AddSubtractComp):
         
 class InverterCurrent(TrajConstraint):
     def __init__(self):
-        TrajConstraint.__init__(self, traj_convar=["PT.a3", "PT.a5"])
+        TrajConstraint.__init__(self, traj_convar=["PT.a3", "PT.a5"], convar_output_path=["timeseries.outputs:PT_a3", "timeseries.outputs:PT_a5"])
         self.name = "inverter_current"
         self._lb = None
         self._ub = 80 # Based off of a reasonably large inverter, suggested by Dr. Alleyne

@@ -16,6 +16,13 @@ def iterize(val):
     else:
         return (val,)
     
+def iterapply(func, val):
+    # Func is a function such that scalar = func(iterable), i.e. min, max, mean, etc...
+    for (i,v) in enumerate(val):
+        if hasattr(v, "__iter__"):
+            val[i] = iterapply(func, v)
+    return func(val)
+    
 def flatten(l, ltypes=(list, tuple)):
     # From: http://rightfootin.blogspot.com/2006/09/more-on-python-flatten.html
     ltype = type(l)

@@ -5,8 +5,11 @@ Created on Mon May  2 11:46:59 2022
 @author: renkert2
 """
 import numpy as np
-import Param as P
 import itertools
+import logging
+import os
+import openmdao.api as om
+import pickle
 
 import my_plt
 import matplotlib.pyplot as plt
@@ -14,16 +17,261 @@ import matplotlib
 
 import SUPPORT_FUNCTIONS.init
 import Surrogate
+import Param as P
 
-class Search:
-    def __init__(surrogates = None):
-        self.search_surrogates = None # SearchSurrogates, Dictionary
+class _SearchOutput:
+    def __init__(self, output_dir = "search_output"):
+        self.output_dir = output_dir
         
-        self.target = None # ParamValSet
+        self.problem_recorder_path = self.make_path("search_cases.sql")
+        self.iterations_path = self.make_path("search_iterations.pickle")
+        self.result_path = self.make_path("search_result.pickle")
+
+    def make_path(self, file):
+        return os.path.join(self.output_dir, file)
         
-        self.prob = None # OpenMDAO Problem used to evaluate feasibility and objectives
+class SearchRecorder(_SearchOutput):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        try:
+            os.mkdir(self.output_dir)
+        except FileExistsError:
+            logging.info(f"SearchRecorder directory {self.output_dir} already exists")
+        
+        problem_recorder = om.SqliteRecorder(self.problem_recorder_path, record_viewer_data=False)
+        self.problem_recorder = problem_recorder
+    
+        with open(self.iterations_path, 'wb') as f: # Create new file or overwrite existing
+            pass
+    
+        with open(self.result_path, 'wb') as f: # Create new file or overwrite existing
+            pass
+
+    
+    def add_prob(self, prob):
+        prob.add_recorder(self.problem_recorder)
+        prob.recording_options['record_desvars'] = True
+        prob.recording_options['record_responses'] = True
+        prob.recording_options['record_objectives'] = True
+        prob.recording_options['record_constraints'] = True
+        prob.recording_options['record_inputs'] = True
+        prob.recording_options['includes'] = ["*"]
+        
+        return prob
+    
+    def record_iteration(self,iter_data):
+        with open(self.iterations_path, 'ab') as f:
+            pickle.dump(iter_data,f)
+        
+    def record_result(self, searcher_data):
+        with open(self.result_path, 'wb') as f:
+            pickle.dump(searcher_data, f)
+    
+class SearchReader(_SearchOutput):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self._problem_cases = None
+        self._iterations = None
+        self._result = None
+        
+    @property
+    def result(self):
+        if not self._result:
+            with open(self.result_path, 'rb') as f:
+                self._result = pickle.load(f)
+        return self._result
+    
+    @property
+    def iterations(self):
+        if not self._iterations:
+            file = open(self.iterations_path, 'rb')
+            self._iterations = []
+            while True:
+                try:
+                    iteration = pickle.load(file)
+                    self._iterations.append(iteration)
+                except EOFError:
+                    break
+            file.close()
+        return self._iterations
+    
+    @property
+    def problem_cases(self):
+        if not self._problem_cases:
+            r = om.CaseReader(self.problem_recorder_path)
+            self._problem_cases = r.get_cases("problem")
+        return self._problem_cases
+
+    def make_path(self, file):
+        return os.path.join(self.output_dir, file)
+        
+            
+class SearchIteration:
+    def __init__(self, iteration=None):
+        self.iteration = iteration # Iteration Number
+        
+        self.config = None # Current Configuration
+        self.obj_val = None # Resulting Objective Function
+        self.func_evals = None # Function Evaluations Required
+        self.msg = None # Output Message
+        
+        self.opt_iter = None # Optimal iteration up to this point
+
+class SearchResult:
+    def __init__(self):
+        self.iterations = None
+        self.opt_iter = None
+        self.termination_msg = None
+        
+        self.base_case = None
+        self.config_searcher = None
+        
+class Searcher:
+    def __init__(self, config_searcher=None, prob=None, params=None, base_case=None, search_recorder=None):
+        self.config_searcher = config_searcher # SearchSurrogates, Dictionary 
+        self.prob = prob # OpenMDAO Problem used to evaluate feasibility and objectives
         # TODO: We may want to separate this out into multiple problems to reduce total overhead.  We could have separate problems for 1) evaluating configuration feasibility and configuration distance metric and 2) evaluating final dynamic objective
-                    
+        
+        self.params = params   
+        self.base_case = base_case # Case used to start evaluation of configuration
+        
+        self.search_recorder = search_recorder
+        
+        self._dry_run = False
+        self._dry_run_iterator = None
+        
+    def evaluate(self, config, base_case = None, case_name = None, iter_data=None):
+        mod_params = []
+        dep_cache = []
+        driver_disp_cache = self.prob.driver.options["disp"]
+        func_evals = 0
+        
+        if not iter_data:
+            iter_data = SearchIteration()
+        iter_data.config = config
+        
+        def cleanup():
+            for (i,p) in enumerate(mod_params):
+                p.dep = dep_cache[i]
+            self.prob.driver.options["disp"] = driver_disp_cache
+        
+        # Substitute config param vals into Model
+        logging.info(f"Evaluating Configuration: \n {str(config)}")
+        
+        self.prob.driver.options["disp"] = False
+        self.prob.final_setup()
+        if base_case:
+            self.prob.load_case(base_case)
+        
+        pvals = config.data
+        
+        for p in self.params:
+            pv = p.get_compatible(pvals)
+            if pv:
+                mod_params.append(p)
+                dep_cache.append(p.dep)
+                p.load_val(pv)
+                p.dep=False
+        
+        # Run Feasibility Model
+        self.prob.run_model()
+        func_evals += 1
+        
+        cons = self.prob.model.search_cons
+        for c in cons:
+            if not c.satisfied():
+                msg = f"Configuration Infeasible: constraint {c.name} violated"
+                logging.info(msg)
+                iter_data.msg = msg
+                cleanup()
+                return iter_data
+            
+        # Run Optimal Control Problem
+        if not self._dry_run:
+            failed = self.prob.run_driver()
+            func_evals += self.prob.driver.result['nfev']
+        else:
+            failed = False
+            func_evals = -1
+        
+        if case_name:
+            self.prob.record(case_name) # Record problem variables 
+        
+        if not failed:
+            # Get Objective
+            #TODO: Could also get this value from the driver results?
+            if not self._dry_run:
+                obj_val = self.prob.get_objective()
+            else:
+                obj_val = next(self._dry_run_iterator)
+            msg = f"Successfully Evaluated Configuration: objective = {obj_val}, function_evaluations = {func_evals}"
+            logging.info(msg)
+            
+        else:
+            msg = "Optimization Failed to Converge"
+            logging.warning(msg)
+            obj_val = None
+        
+        iter_data.obj_val = obj_val
+        iter_data.func_evals = func_evals
+        iter_data.msg = msg
+        
+        cleanup()
+        return iter_data
+    
+    def search(self, max_iter=None, max_stall_iter=None, func_threshold=None):
+        config_sets = self.config_searcher.sorted_sets
+        iterations = [] # List of SearchIteration objects
+        opt_iter = None # Current best SearchIteration object
+        terminate = False
+        stall_cntr = 0
+        for i,config in enumerate(config_sets):
+            iter_data = SearchIteration(iteration=i)
+            iter_data = self.evaluate(config, base_case = self.base_case, case_name = f"config_{i}", iter_data=iter_data)
+            
+            # Update optimal configuration
+            if i == 0:
+                opt_iter = iter_data
+            elif iter_data.obj_val and (iter_data.obj_val < opt_iter.obj_val):
+                opt_iter = iter_data
+                stall_cntr = 0
+            else:
+                stall_cntr += 1
+                
+            # Update and record iter_data
+            iter_data.opt_iter = opt_iter
+            iterations.append(iter_data)
+            if self.search_recorder:
+                self.search_recorder.record_iteration(iter_data)
+                
+            # Termination
+            if i >= max_iter:
+                terminate = True
+                term_msg = "Maximum Iterations Exceeded"
+            elif func_threshold and opt_iter.obj_val < func_threshold:
+                terminate = True
+                term_msg = "Function Threshold Reached"
+            elif max_stall_iter and stall_cntr >= max_stall_iter:
+                terminate = True
+                term_msg = f"Stalled at {stall_cntr} iterations"
+                
+            if terminate:
+                break
+
+        # Output Search Result
+        search_result = SearchResult()
+        #TODO: search_result.base_case = self.base_case
+        search_result.config_searcher = self.config_searcher
+        search_result.iterations = iterations
+        search_result.opt_iter = opt_iter
+        search_result.termination_msg = term_msg
+        
+        if self.search_recorder:
+            self.search_recorder.record_result(search_result)
+        return search_result
+            
 class ConfigurationSearcher:
     def __init__(self, component_searchers, configuration_template=None):
         self.component_searchers = component_searchers # Dictionary of component searchers, key's are the "name" of the searcher
@@ -33,7 +281,7 @@ class ConfigurationSearcher:
         # Entries correspond to keys of component_searchers
         if not configuration_template:
             configuration_template = list(component_searchers.keys())
-        self.configuration_template =configuration_template
+        self.configuration_template = configuration_template
         
         self._sorted_sets_distances = None
         
@@ -100,6 +348,14 @@ class ConfigurationSearcher:
         ax.set_ylabel("Distances")
         
         return (fig, ax)
+    
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["component_searchers"]
+        return state
+    
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 
 class ComponentSearcher:
     # ComponentData Wrapper Class for Discrete Search

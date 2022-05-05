@@ -65,7 +65,7 @@ class PlanarSystemParams(P.ParamSet):
 
         # Manually Define parameters required for Body Model
         self.add(P.Param(name='rho', val=0.1, desc='Frame Density', strID="rho__Frame", parent="Frame", component="Frame"))
-        self.add(P.Param(name='r', val=1, desc='Arm Length', strID="r__Frame", parent = "Frame"))
+        self.add(P.Param(name='r', val=1, desc='Arm Length', strID="r__Frame", parent = "Frame", component="Frame"))
         
         self.add(P.Param(name='Mass', desc='Frame Mass', strID="Mass__Frame", parent="Frame", component="Frame"))
         pc = P.ParamComp(om.ExecComp, "Mass=2*r*rho")
@@ -199,6 +199,32 @@ class PlanarSystemModel(P.ParamSystem):
     def setup_post(self):
         # Reserved for subclasses
         pass
+
+class PlanarSystemSearchModel(PlanarSystemModel):
+    # Adds additional components, design variables, and constraints requried for 
+    # plant optimization in the continuous domain. 
+    
+    def __init__(self, traj, search_cons = None, **kwargs):
+        super().__init__(traj, **kwargs)
+        if search_cons == None:
+            search_cons = C.ConstraintSet()
+            search_cons.add(C.ThrustRatio())
+        elif not isinstance(search_cons, C.ConstraintSet):
+            raise Exception("cons argument must be a constraint set")
+        
+        for c in search_cons:
+            c.active = False # Search constraints are not envforced within the OpenMDAO model
+        
+        self.search_cons = search_cons # Constraints specific to the search routine, not to the solver
+        self.cons.add(search_cons)
+    
+    def initialize(self):
+        super().initialize()
+    
+    def setup_post(self):
+        # Add the Static Model Subsystem
+        self.add_subsystem("static", pt.PlanarPTModelStatic())
+        self.set_input_defaults("static.u1", val=1.0)
     
 class PlanarSystemDesignModel(PlanarSystemModel):
     # Adds additional components, design variables, and constraints requried for 

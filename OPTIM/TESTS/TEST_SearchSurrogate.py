@@ -56,3 +56,11 @@ fig, ax = cs.plotDistances()
 
 #%% Export
 my_plt.export(fig, fname="configuration_distance_plot")
+
+#%% Pickle
+with open("TEST_ConfigurationSearcher.pickle", 'wb') as f:
+    pickle.dump(cs, f)
+    
+#%% Unpickle
+with open("TEST_ConfigurationSearcher.pickle", 'rb') as f:
+    cs2=pickle.load(f)
