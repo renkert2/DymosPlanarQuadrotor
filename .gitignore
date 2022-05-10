@@ -8,6 +8,7 @@
 *.html
 *.db
 *.png
+*.pickle
 
 **/__pychache__/
 __pycache__/
