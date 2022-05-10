@@ -4,12 +4,8 @@ Created on Mon May  2 15:00:51 2022
 
 @author: renkert2
 """
-
 import os
-import sys
 import openmdao.api as om
-import my_plt
-import matplotlib.pyplot as plt
 import pickle
 import logging
 import random
@@ -17,13 +13,9 @@ logging.basicConfig(level=logging.INFO)
 
 import SUPPORT_FUNCTIONS.init as init
 import PlanarSystem as PS
-import Surrogate as S
 import OPTIM.Search as Search
-import Param
 import Trajectories as T
-import Constraints as C
 import Problems as P
-import Recorders as R
 import OPTIM.Count as Count
 
 init.init_output(__file__)
@@ -66,20 +58,8 @@ counter = Count.Counter()
 
 searcher = Search.Searcher(config_searcher=config_searcher, prob=prob, params=model._params, search_recorder=rec, base_case=base_case, counter=counter)
 
-searcher._dry_run = True
-def random_generator():
-    while True:
-        yield random.random()
-rg = random_generator()
-searcher._dry_run_iterator = rg
-def random_feval_generator():
-    while True:
-        yield random.randint(0,200)
-rfg = random_feval_generator()
-searcher._dry_run_feval_iterator = rfg
-
-#%% Test 1: Searching up to 10 Configurations
-search_result = searcher.search(max_iter = 20)
+#%% Test 1: Searching up to 100 Configurations
+search_result = searcher.search(max_iter = 100)
 
 
 #%%

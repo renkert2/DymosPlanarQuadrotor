@@ -18,6 +18,7 @@ import matplotlib
 import SUPPORT_FUNCTIONS.init
 import Surrogate
 import Param as P
+import Recorders as R
 
 class _SearchOutput:
     def __init__(self, output_dir = "search_output"):
@@ -67,11 +68,14 @@ class SearchRecorder(_SearchOutput):
     def record_result(self, searcher_data):
         with open(self.result_path, 'wb') as f:
             pickle.dump(searcher_data, f)
+            
+        
     
 class SearchReader(_SearchOutput):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
+        self._case_reader = None
         self._problem_cases = None
         self._iterations = None
         self._result = None
@@ -98,11 +102,16 @@ class SearchReader(_SearchOutput):
         return self._iterations
     
     @property
-    def problem_cases(self):
-        if not self._problem_cases:
+    def case_reader(self):
+        if not self._case_reader:
             r = om.CaseReader(self.problem_recorder_path)
-            self._problem_cases = r.get_cases("problem")
-        return self._problem_cases
+            self._case_reader = r
+        return self._case_reader
+    
+    @property
+    def problem_cases(self):
+        pc = self.case_reader.get_cases("problem")
+        return pc
 
     def make_path(self, file):
         return os.path.join(self.output_dir, file)
@@ -116,20 +125,64 @@ class SearchIteration:
         self.obj_val = None # Resulting Objective Function
         self.func_evals = None # Function Evaluations Required
         self.msg = None # Output Message
+        self.case_name = None # Name of problem recorder cases associated with this iteration
         
         self.opt_iter = None # Optimal iteration up to this point
+    
+    def __str__(self):
+        out = []
+        out.append(f"Iteration: {self.iteration}")
+        out.append(f"Objective Function Value: {self.obj_val}")
+        out.append(f"Message: {self.msg}")
+        out.append(f"Configuration:\n{str(self.config)}")
+        return "\n".join(out) + "\n"
 
 class SearchResult:
     def __init__(self):
         self.iterations = None
         self.opt_iter = None
         self.termination_msg = None
+        self.counter_state = None
         
-        self.base_case = None
+        self.objective = None
+        self.base_case_data = None
         self.config_searcher = None
+    
+    def __str__(self):
+        out = "--- Search Result ---\n"
+        out += f"Termination: {self.termination_msg}\n"
+        out += f"Iterations: {len(self.iterations) -1}\n"
+        out += "Counter: \n"
+        cntr_str = "\t" + str(self.counter_state)
+        out += '\t'.join(cntr_str.splitlines(True))
+        out += "Optimal Iteration: \n"
+        iter_str = "\t" + str(self.opt_iter) + "\t"
+        out += '\t'.join(iter_str.splitlines(True))
+        out += "\n"
+        return out
+    
+    def plot(self, iter_slice=None):
+        (fig, axes) = plt.subplots(2,1)
+        iters = self.iterations
+        if not iter_slice:
+            iter_slice = slice(None,len(iters))
+        i = range(len(iters))[iter_slice]
+        self.config_searcher.plotDistances(fig=fig, ax=axes[1], iter_slice=iter_slice)
+
+        ax = axes[0]
+        
+        obj_fun_vals = [x.obj_val for x in iters]
+        ax.plot(i, obj_fun_vals, "-k", label="Config. Obj. Value")
+        
+        opt_iter = self.opt_iter
+        ax.plot(opt_iter.iteration, opt_iter.obj_val, '.r', label="Opt. Obj. Value")
+        
+        ax.legend()
+        
+        return (fig, axes)
         
 class Searcher:
-    def __init__(self, config_searcher=None, prob=None, params=None, base_case=None, search_recorder=None):
+    def __init__(self, config_searcher=None, prob=None, params=None, base_case=None, search_recorder=None, counter=None):
         self.config_searcher = config_searcher # SearchSurrogates, Dictionary 
         self.prob = prob # OpenMDAO Problem used to evaluate feasibility and objectives
         # TODO: We may want to separate this out into multiple problems to reduce total overhead.  We could have separate problems for 1) evaluating configuration feasibility and configuration distance metric and 2) evaluating final dynamic objective
@@ -138,9 +191,11 @@ class Searcher:
         self.base_case = base_case # Case used to start evaluation of configuration
         
         self.search_recorder = search_recorder
+        self.counter = counter
         
         self._dry_run = False
         self._dry_run_iterator = None
+        self._dry_run_feval_iterator = None
         
     def evaluate(self, config, base_case = None, case_name = None, iter_data=None):
         mod_params = []
@@ -161,7 +216,6 @@ class Searcher:
         logging.info(f"Evaluating Configuration: \n {str(config)}")
         
         self.prob.driver.options["disp"] = False
-        self.prob.final_setup()
         if base_case:
             self.prob.load_case(base_case)
         
@@ -179,40 +233,47 @@ class Searcher:
         self.prob.run_model()
         func_evals += 1
         
+        feasible=True
         cons = self.prob.model.search_cons
         for c in cons:
             if not c.satisfied():
                 msg = f"Configuration Infeasible: constraint {c.name} violated"
                 logging.info(msg)
-                iter_data.msg = msg
-                cleanup()
-                return iter_data
-            
-        # Run Optimal Control Problem
-        if not self._dry_run:
-            failed = self.prob.run_driver()
-            func_evals += self.prob.driver.result['nfev']
+                feasible=False
+                break
+
+        if feasible:
+            # Run Optimal Control Problem
+            if not self._dry_run:
+                failed = self.prob.run_driver()
+                func_evals += self.prob.driver.result['nfev']
+            else:
+                failed = False
+                func_evals += next(self._dry_run_feval_iterator)
+                        
+            if not failed:
+                # Get Objective
+                #TODO: Could also get this value from the driver results?
+                if not self._dry_run:
+                    obj_val = self.prob.get_objective()
+                else:
+                    obj_val = next(self._dry_run_iterator)
+                msg = f"Successfully Evaluated Configuration: objective = {obj_val}, function_evaluations = {func_evals}"
+                logging.info(msg)
+                
+            else:
+                msg = "Optimization Failed to Converge"
+                logging.warning(msg)
+                obj_val = None
         else:
-            failed = False
-            func_evals = -1
-        
+            obj_val = None
+                
+        if self.counter:
+            self.counter.increment(fevals=func_evals)
+            
         if case_name:
             self.prob.record(case_name) # Record problem variables 
-        
-        if not failed:
-            # Get Objective
-            #TODO: Could also get this value from the driver results?
-            if not self._dry_run:
-                obj_val = self.prob.get_objective()
-            else:
-                obj_val = next(self._dry_run_iterator)
-            msg = f"Successfully Evaluated Configuration: objective = {obj_val}, function_evaluations = {func_evals}"
-            logging.info(msg)
-            
-        else:
-            msg = "Optimization Failed to Converge"
-            logging.warning(msg)
-            obj_val = None
+            iter_data.case_name = case_name
         
         iter_data.obj_val = obj_val
         iter_data.func_evals = func_evals
@@ -227,9 +288,15 @@ class Searcher:
         opt_iter = None # Current best SearchIteration object
         terminate = False
         stall_cntr = 0
+        
+        if self.base_case:
+            self.prob.final_setup()
+            self.prob.load_case(self.base_case)
+            self.prob.record("base_case") # Record problem variables 
+            
         for i,config in enumerate(config_sets):
             iter_data = SearchIteration(iteration=i)
-            iter_data = self.evaluate(config, base_case = self.base_case, case_name = f"config_{i}", iter_data=iter_data)
+            iter_data = self.evaluate(config, base_case = self.base_case, case_name = f"iteration_{i}", iter_data=iter_data)
             
             # Update optimal configuration
             if i == 0:
@@ -262,14 +329,20 @@ class Searcher:
 
         # Output Search Result
         search_result = SearchResult()
-        #TODO: search_result.base_case = self.base_case
+        if self.base_case:
+            search_result.base_case_data = R.CaseData(self.base_case)
         search_result.config_searcher = self.config_searcher
         search_result.iterations = iterations
         search_result.opt_iter = opt_iter
         search_result.termination_msg = term_msg
+        search_result.objective = self.prob.model.get_objectives()
+        if self.counter:
+            search_result.counter_state = self.counter.state()
         
         if self.search_recorder:
             self.search_recorder.record_result(search_result)
+        
+        print(search_result)
         return search_result
             
 class ConfigurationSearcher:
@@ -294,7 +367,7 @@ class ConfigurationSearcher:
         return [[cd[1] for cd in sd[0]] for sd in self._sorted_sets_distances]
     
     @property
-    def confiuration_distances(self):
+    def configuration_distances(self):
         return [sd[1] for sd in self._sorted_sets_distances]
     
     def run(self):
@@ -330,18 +403,24 @@ class ConfigurationSearcher:
         
         return sorted_sets
     
-    def plotDistances(self, fig=None, ax=None, annotate=True):
+    def plotDistances(self, fig=None, ax=None, annotate=True, iter_slice=None):
         if not fig:
             fig = plt.figure()
         if not ax:
             ax = plt.axes()
-            
-        ax.plot(self.confiuration_distances, '-k', linewidth=2, label="$d_s$")
         
-        comp_distances = self.component_distances
+        if not iter_slice:
+            iter_slice = slice(None, None)
+            
+        indices = range(len(self.configuration_distances))[iter_slice]
+        cd = self.configuration_distances[iter_slice]
+        
+        ax.plot(indices, cd, '-k', linewidth=2, label="$d_s$")
+        
+        comp_distances = self.component_distances[iter_slice]
         for (i,name) in enumerate(self.configuration_template):
             d = [x[i] for x in comp_distances] # Get distance corresponding to individual component
-            ax.plot(d, linewidth=1, alpha=0.4, label=f"$d_c$: {name}")
+            ax.plot(indices, d, linewidth=1, alpha=0.4, label=f"$d_c$: {name}")
         
         ax.legend()
         ax.set_xlabel("Configuration")

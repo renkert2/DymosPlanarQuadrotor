@@ -173,8 +173,12 @@ class Reader(SqliteCaseReader):
                 
         return delta_dict, latex_tables
             
-        
-        
+class CaseData:
+    # Used to package Case into serializable object for pickling
+    def __init__(self, case):
+        opts = {"val":True, "units":True, "out_stream":None}
+        self.input_data = case.list_inputs(**opts)
+        self.output_data = case.list_outputs(**opts)       
     
 ### ARCHIVE ###
 def SimpleRecorder(prob, recorder = None, name='cases.sql'):
