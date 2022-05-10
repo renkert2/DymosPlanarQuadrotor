@@ -15,7 +15,7 @@ init.init_output(__file__)
 reader = search.SearchReader(output_dir = "search_output")
 
 #%% Read problem cases
-case_reader = reader._case_reader
+case_reader = reader.case_reader
 prob_cases = reader.problem_cases
 
 print(case_reader.list_cases())
