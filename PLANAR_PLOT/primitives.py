@@ -1,11 +1,5 @@
-"""
-Simple example showing some animated shapes
-"""
-import math
-import pyglet
-from pyglet import shapes
-from pyglet.gl import *
-
+import pyglet.shapes as shapes
+import pyglet.gl as gl
 
 class MultiLine(shapes._ShapeBase):
     def __init__(self, *coordinates, color=(255, 255, 255), width=1, batch=None, group=None):
@@ -19,7 +13,7 @@ class MultiLine(shapes._ShapeBase):
         self._batch = batch or shapes.Batch()
         self._group = shapes._ShapeGroup(shapes.GL_SRC_ALPHA, shapes.GL_ONE_MINUS_SRC_ALPHA, group)
 
-        self._vertex_list = self._batch.add(self._num_verts, GL_LINES, self._group, 'v2f', 'c4B')
+        self._vertex_list = self._batch.add(self._num_verts, gl.GL_LINES, self._group, 'v2f', 'c4B')
         self._update_position()
         self._update_color()
     
@@ -78,37 +72,29 @@ class MultiLine(shapes._ShapeBase):
         #w_cache = (pyglet.gl.GLint*1)()
         #pyglet.gl.glGetIntegerv("GL_LINE_WIDTH", w_cache)
         w_cache = 1
-        pyglet.gl.glLineWidth(self._width)
-        self._vertex_list.draw(GL_LINES)
-        pyglet.gl.glLineWidth(w_cache)
-
-class ShapesDemo(pyglet.window.Window):
-    def __init__(self, width, height, **kwargs):
-        super().__init__(width, height, "Shapes", **kwargs)
-        self.time = 0
-        self.batch = pyglet.graphics.Batch()
-
-        coordinates = [(0,0), (400,100), (200,200)]
-        self.polygon = MultiLine(*coordinates, color=(255, 255, 255), batch=self.batch, width=5)
-        self.polygon.append((500,400))
-
-        self.line = shapes.Line(0, 0, 720, 480, width=4, color=(200, 20, 20), batch=self.batch)
-
-        self.arc = shapes.Arc(width/2,height/2,200, color=(0,255,0), angle=math.pi, batch=self.batch)
-
-    def on_draw(self):
-        """Clear the screen and draw shapes"""
-        #self.clear()
-        #self.batch.draw()
-        self.line.draw()
-        self.polygon.draw()
-        self.arc.draw()
-        self.line.draw()
-
+        gl.glLineWidth(self._width)
+        self._vertex_list.draw(gl.GL_LINES)
+        gl.glLineWidth(w_cache)
 
 if __name__ == "__main__":
-    config = Config(sample_buffers=1, samples=4, depth_size=16, double_buffer=True)                                                                                      
-    glEnable(GL_LINE_SMOOTH)                                                    
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-    demo = ShapesDemo(720, 480, config=config)
+    import components
+    import pyglet
+
+    window = components.Window(width=720, height=480, caption="Primitives")
+
+    coordinates = [(0,0), (400,100), (200,200)]
+    polygon = MultiLine(*coordinates, color=(255, 255, 255), width=5)
+    polygon.append((500,400))
+
+    line = shapes.Line(0, 0, 720, 480, width=4, color=(200, 20, 20))
+    arc = shapes.Arc(720/2,480/2,200, color=(0,255,0), angle=3.14)
+
+    @window.event
+    def on_draw():
+        window.clear()
+
+        polygon.draw()
+        line.draw()
+        arc.draw()
+    
     pyglet.app.run()
