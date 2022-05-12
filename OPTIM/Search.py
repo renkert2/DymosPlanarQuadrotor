@@ -84,7 +84,8 @@ class SearchReader(_SearchOutput):
     def result(self):
         if not self._result:
             with open(self.result_path, 'rb') as f:
-                self._result = pickle.load(f)
+                r = pickle.load(f)
+            self._result = r
         return self._result
     
     @property
@@ -104,7 +105,7 @@ class SearchReader(_SearchOutput):
     @property
     def case_reader(self):
         if not self._case_reader:
-            r = om.CaseReader(self.problem_recorder_path)
+            r = R.Reader(self.problem_recorder_path)
             self._case_reader = r
         return self._case_reader
     
@@ -177,10 +178,15 @@ class SearchResult:
         opt_iter = self.opt_iter
         ax.plot(opt_iter.iteration, opt_iter.obj_val, '.r', label="Opt. Obj. Value")
         
+        ax.set_ylabel("Obj. Value")
         ax.legend()
         
         return (fig, axes)
-        
+    
+    def plotDesignSpace(self):
+        out = self.config_searcher.plotDesignSpace(self.opt_iter.config, config_name="Opt. Config")        
+        return out
+    
 class Searcher:
     def __init__(self, config_searcher=None, prob=None, params=None, base_case=None, search_recorder=None, counter=None):
         self.config_searcher = config_searcher # SearchSurrogates, Dictionary 
@@ -428,13 +434,42 @@ class ConfigurationSearcher:
         
         return (fig, ax)
     
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state["component_searchers"]
-        return state
+    def plotDesignSpace(self, config_data, config_name=None):
+        comp_searchers = self.component_searchers
+        
+        if not isinstance(config_data, P.ParamValSet):
+            config_data = config_data.data # Get corresponding parameter values
+        
+        figs = []
+        for k,cs in comp_searchers.items():
+            (fig, ax) = cs.plotCompDistances()
+            handles, labels = ax.get_legend_handles_labels()
+            print(labels)
+            
+            vals = [p.get_compatible(config_data).val for p in cs.boundary.args]
+            
+            mkropts = {"marker":"o", "markersize":10, "markerfacecolor":"forestgreen", "markeredgecolor":"0.8", "linestyle":"None"}
+            if config_name:
+                mkropts["label"] = config_name
+        
+            c_mkr, = ax.plot(*vals, **mkropts)
+            
+            if config_name:
+                handles.append(c_mkr)
+                ax.legend(handles=handles)
+
+            figs.append(fig)
+            
+        return figs
     
-    def __setstate__(self, state):
-        self.__dict__.update(state)
+    #TODO: Add component_searchers back to ConfigurationSearcher state, Fix component_searcher so it can be pickled. Want to be able to save/load the boundaries. 
+    # def __getstate__(self):
+    #     state = self.__dict__.copy()
+    #     del state["component_searchers"]
+    #     return state
+    
+    # def __setstate__(self, state):
+    #     self.__dict__.update(state)
 
 class ComponentSearcher:
     # ComponentData Wrapper Class for Discrete Search
@@ -514,14 +549,14 @@ class ComponentSearcher:
                 d = d**falloff_order
             distances.append(d)
         
-        self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False, scatter_kwargs={"label":"Component Distance", "c":distances, "edgecolors":"0.8", "cmap":"Blues_r"})          
+        self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False, scatter_kwargs={"label":"Components", "c":distances, "edgecolors":"0.8", "cmap":"Blues_r"})          
         
         for child in ax.get_children():
             if isinstance(child, matplotlib.collections.PathCollection):
                 handles.append(child)
         
         # Add plot of Target:
-        mkropts = {"marker":"o", "markersize":15, "markerfacecolor":"none", "markeredgewidth":2, "color":"k"}
+        mkropts = {"marker":"o", "markersize":10, "markerfacecolor":"none", "markeredgewidth":2, "linestyle":"None"}
         trgt_pnt = []
         for p in self.boundary.args:
             pv = p.get_compatible(self.target)

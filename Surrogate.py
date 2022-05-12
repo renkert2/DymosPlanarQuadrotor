@@ -374,6 +374,12 @@ class ComponentDataSet(set):
         tab = tabulate.tabulate(tab_data, headers=["Component", "Make", "Model", "SKU", "Description"])
         return str(self.__class__) + "\n" + str(tab)
     
+    def latex(self):
+        self_sorted = self.sorted()
+        tab_data = [(x.component, x.make, x.model, x.sku, x.desc) for x in self_sorted]
+        tab = tabulate.tabulate(tab_data, headers=["Component", "Make", "Model", "SKU", "Description"], tablefmt="latex_raw")
+        return str(tab)
+    
     def load(self, source):
         if isinstance(source, (list, tuple)):
             cd_meta = source
