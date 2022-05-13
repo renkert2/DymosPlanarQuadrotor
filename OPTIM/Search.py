@@ -5,15 +5,18 @@ Created on Mon May  2 11:46:59 2022
 @author: renkert2
 """
 import numpy as np
+import numbers
 import itertools
 import logging
 import os
 import openmdao.api as om
 import pickle
+import tabulate
 
 import my_plt
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.colors import LinearSegmentedColormap
 
 import SUPPORT_FUNCTIONS.init
 import Surrogate
@@ -148,6 +151,10 @@ class SearchResult:
         self.objective = None
         self.base_case_data = None
         self.config_searcher = None
+        
+    @property
+    def sorted_iterations(self):
+        return sorted(self.iterations, key=lambda x: (x.obj_val is None, x.obj_val))
     
     def __str__(self):
         out = "--- Search Result ---\n"
@@ -183,9 +190,50 @@ class SearchResult:
         
         return (fig, axes)
     
+    def showTopComps(self, max_comps = 10):
+        iters_sorted = self.sorted_iterations
+        
+        sorted_configs = [i.config for i in iters_sorted[:max_comps]]
+        splitter_vals = [x.component for x in sorted_configs[0]]
+        unique_splitters = set(splitter_vals)
+        
+        splitted_cds = {}
+        for s in unique_splitters:
+            elems = [x[s] for x in sorted_configs]
+            splitted_cds[s] = elems
+            tab_data = [(x.component, x.make, x.model, x.sku, x.desc) for x in elems]
+            tab = tabulate.tabulate(tab_data, headers=["Component", "Make", "Model", "SKU", "Description"])
+            print(tab)
+            
+        return splitted_cds
+    
     def plotDesignSpace(self):
         out = self.config_searcher.plotDesignSpace(self.opt_iter.config, config_name="Opt. Config")        
         return out
+    
+    def plotCompHeatmat(self, stat_func=np.mean, stat_func_label="Mean Obj. Value"):
+        cmap = LinearSegmentedColormap.from_list('gr', ['g', 'w', 'r'], N=256)
+        def comp_stat_func(comp):
+            obj_vals = []   
+            for i,search_iter in enumerate(self.iterations):
+                if search_iter.config.approx_contains(comp):
+                    #logging.info(f"{comp.desc} found in iteration {i}")
+                    val = search_iter.obj_val
+                    if val:
+                        obj_vals.append(val)
+            if obj_vals:
+                sf_val = stat_func(obj_vals)
+                logging.info(f"{comp.desc}: StatFuncVal = {sf_val}")
+                return sf_val
+            else:
+                return None
+        
+        figs = []
+        for cn,cs in self.config_searcher.component_searchers.items():
+            (fig, ax) = cs.plotCompDistances(ax=None, fig=None, dist_func=comp_stat_func, falloff_order = None, scatter_label=stat_func_label, scatter_edgecolors="0.8", scatter_cmap=cmap)
+            figs.append(fig)
+            
+        return figs
     
 class Searcher:
     def __init__(self, config_searcher=None, prob=None, params=None, base_case=None, search_recorder=None, counter=None):
@@ -536,7 +584,10 @@ class ComponentSearcher:
         self.sorted_comps = [x[0] for x in cd_dist]
         return cd_dist
     
-    def plotCompDistances(self, ax=None, fig=None, falloff_order = 1/10):
+    def plotCompDistances(self, ax=None, fig=None, dist_func=None, falloff_order = 1/10, scatter_label="Components", scatter_edgecolors="0.8", scatter_cmap="Blues_r"):
+        if not dist_func:
+            dist_func = self.component_distance
+        
         (fig,ax) = self.boundary.plot2D(fig=fig,ax=ax)
         fig.suptitle(f"Component: {self.comp_name}")
         
@@ -544,12 +595,12 @@ class ComponentSearcher:
         
         distances = []
         for c in self.comp_data:
-            d = self.component_distance(c)
-            if d:
+            d = dist_func(c)
+            if falloff_order and d:
                 d = d**falloff_order
             distances.append(d)
         
-        self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False, scatter_kwargs={"label":"Components", "c":distances, "edgecolors":"0.8", "cmap":"Blues_r"})          
+        self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False, scatter_kwargs={"c":distances, "label":scatter_label, "edgecolors":scatter_edgecolors, "cmap":scatter_cmap})          
         
         for child in ax.get_children():
             if isinstance(child, matplotlib.collections.PathCollection):

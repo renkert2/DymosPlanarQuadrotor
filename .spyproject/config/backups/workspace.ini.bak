@@ -8,5 +8,5 @@ recent_files = ['..\\..\\..\\.spyder-py3\\temp.py', 'CheckPartials.py']
 
 [main]
 version = 0.2.0
-recent_files = []
+recent_files = ['OPTIM\\Search.py', 'STUDIES\\DiscreteSearch\\DiscreteSearch_MinimumMissionTime_05112022\\DiscreteSearch_Analysis.py', 'Recorders.py', 'Surrogate.py', 'STUDIES\\SystemOptimization\\SystemOptimization_Analysis.py', 'SUPPORT_FUNCTIONS\\plotting.py']
 

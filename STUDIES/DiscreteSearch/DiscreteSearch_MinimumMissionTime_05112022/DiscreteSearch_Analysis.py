@@ -11,30 +11,33 @@ import openmdao.api as om
 import SUPPORT_FUNCTIONS.init as init
 import OPTIM.Search as search
 import matplotlib.pyplot as plt
+import numpy as np
 
 import PlanarSystem as PS
 
+import logging
+logging.basicConfig(level=logging.INFO)
 
 init.init_output(__file__)
 reader = search.SearchReader(output_dir = "search_output")
 
-#%% Read problem cases
-case_reader = reader.case_reader
-prob_cases = reader.problem_cases
+# #%% Read problem cases
+# case_reader = reader.case_reader
+# prob_cases = reader.problem_cases
 
 #%% Read Search Result
 result = reader.result
 print(result)
 
-#%%
-fig, ax = result.plot()
-# import my_plt
-# my_plt.export(fig, fname="discrete_search_result_05112022")
+# #%%
+# fig, ax = result.plot()
+# # import my_plt
+# # my_plt.export(fig, fname="discrete_search_result_05112022")
 
-#%% Function Evaluations at Optimal Config
-opt_iters = result.iterations[:57]
-total_fevals = sum([x.func_evals for x in opt_iters])
-print(f"Func Evals to find Optimal Configuration: {total_fevals}")
+# #%% Function Evaluations at Optimal Config
+# opt_iters = result.iterations[:57]
+# total_fevals = sum([x.func_evals for x in opt_iters])
+# print(f"Func Evals to find Optimal Configuration: {total_fevals}")
 
 #%% Reattach component searchers, need to fix
 p = PS.PlanarSystemParams()
@@ -52,12 +55,29 @@ for (k,v) in s.surrogates.items():
 
 result.config_searcher.component_searchers = comp_searchers
 
-#%%
-figs = result.plotDesignSpace()
-# names = ["batt_design_space_search", "motor_design_space_search", "prop_design_space_search"]
-# import my_plt
-# for (f,n) in zip(figs,names):
-#     my_plt.export(f, fname=n)
+# #%%
+# figs = result.plotDesignSpace()
+# # names = ["batt_design_space_search", "motor_design_space_search", "prop_design_space_search"]
+# # import my_plt
+# # for (f,n) in zip(figs,names):
+# #     my_plt.export(f, fname=n)
 
-#%% Plot Design Space of First Iteration
-figs = result.config_searcher.plotDesignSpace(result.iterations[0].config, config_name="Closest Config.")
+# #%% Plot Design Space of First Iteration
+# figs = result.config_searcher.plotDesignSpace(result.iterations[0].config, config_name="Closest Config.")
+
+#%% Plot Heatmaps of Mean Obj. Value
+figs = result.plotCompHeatmat(stat_func=np.mean, stat_func_label="Mean Obj. Value")
+names = ["batt_design_space_meanval", "motor_design_space_meanval", "prop_design_space_meanval"]
+import my_plt
+for (f,n) in zip(figs,names):
+    my_plt.export(f, fname=n)
+
+#%% Plot Heatmaps ob Min Obj. Value
+figs = result.plotCompHeatmat(stat_func=np.min, stat_func_label="Min Obj. Value")
+names = ["batt_design_space_minval", "motor_design_space_minval", "prop_design_space_minval"]
+import my_plt
+for (f,n) in zip(figs,names):
+    my_plt.export(f, fname=n)
+    
+#%%
+result.showTopComps()

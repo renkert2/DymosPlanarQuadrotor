@@ -314,6 +314,13 @@ class ComponentData:
     def __str__(self):
         return  str(self.__class__) + '\n'+ '\n'.join(('{} = {}'.format(item, self.__dict__[item]) for item in self.__dict__))
     
+    def approx_eq(self, o):
+        test_fields = ["component", "make", "model", "sku"]
+        for f in test_fields:
+            if getattr(self, f) != getattr(o, f):
+                return False
+        return True
+    
 class ComponentDataSet(set):
     def __init__(self, arg={}):
         for cd in arg:
@@ -347,7 +354,13 @@ class ComponentDataSet(set):
             return self
         else:
             raise Exception("+ Operator only supported for ComponentDataSet and ComponentData")
-            
+    
+    def approx_contains(self, o):
+        for c in self:
+            if c.approx_eq(o):
+                return True
+        return False
+    
     @property
     def data(self):
         data = P.ParamValSet()
@@ -380,6 +393,17 @@ class ComponentDataSet(set):
         tab = tabulate.tabulate(tab_data, headers=["Component", "Make", "Model", "SKU", "Description"], tablefmt="latex_raw")
         return str(tab)
     
+    def splitBy(self, splitter="component"):
+        splitter_vals = [getattr(x, splitter) for x in self]
+        unique_splitters = set(splitter_vals)
+        
+        splitted_cds = {}
+        for s in unique_splitters:
+            elems = [x for x in self if getattr(x, splitter) == s]
+            splitted_cds[s] = ComponentDataSet(elems)
+        
+        return splitted_cds
+        
     def load(self, source):
         if isinstance(source, (list, tuple)):
             cd_meta = source
