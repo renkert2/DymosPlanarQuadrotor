@@ -6,6 +6,7 @@ Created on Fri Jan 21 09:58:24 2022
 """
 import os
 from SUPPORT_FUNCTIONS.slugify import slugify
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from . import init
@@ -131,6 +132,12 @@ def iterplots(case_reader, vars, labels=[], title="", save=False, **kwargs):
     
 def boundaryiterplots(b, reader):
     (fig, ax) = b.plot_boundary_2D()
+    
+    # Change scatterplot color
+    scp = ax.findobj(match = matplotlib.collections.PathCollection)[0]
+    scp.set_edgecolor('0.8')
+    
+    
     fig.suptitle(f"Design Space: {b.comp_name}")
     opt_vars = [f"params.{p.strID}" for p in b.boundary.args]
     (iters, vals) = reader.get_itervals(opt_vars)

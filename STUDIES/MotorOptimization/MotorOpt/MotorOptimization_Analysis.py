@@ -28,13 +28,13 @@ sim_cases = sim_reader.get_cases("problem")
 (d,t_latex) = reader.delta_table()
 
 #%% Trajectory Comparisons
-graphics = plotting.timeseries_plots(sim_cases, title="Motor Optimization")
+# graphics = plotting.timeseries_plots(sim_cases, title="Motor Optimization")
 
 
 #%% Optimization Variables
-opt_vars=["params.kV__Motor", "params.Rm__Motor"]
-(fig, ax) = plotting.iterplots(reader, opt_vars, labels=["$kV$ (RPM/V)", "$Rm$ ($\Omega$)"], title="Motor Optimization: Design Variables", save=False)
-my_plt.export(fig, fname="motor_opt_des_var_iters", directory=os.getcwd())
+# opt_vars=["params.kV__Motor", "params.Rm__Motor"]
+# (fig, ax) = plotting.iterplots(reader, opt_vars, labels=["$kV$ (RPM/V)", "$Rm$ ($\Omega$)"], title="Motor Optimization: Design Variables", save=False)
+# my_plt.export(fig, fname="motor_opt_des_var_iters", directory=os.getcwd())
 
 #%% Boundary Plots
 import PlanarSystem as PS
@@ -62,8 +62,15 @@ leg_hndls = ax.get_legend().legendHandles
 ax.legend()
 
 #%%
-my_plt.export(fig, fname="motor_opt_designspace", directory=os.getcwd())
+# my_plt.export(fig, fname="motor_opt_designspace", directory=os.getcwd())
+
+#%%
+fig.set_size_inches(3,3)
+figlegend = plt.figure(figsize=(3,2))
+figlegend.legend(*ax.get_legend_handles_labels())
+ax.get_legend().remove()
 
 
-
+my_plt.export(fig,  fname="motor_opt_designspace", directory=os.getcwd())
+my_plt.export(figlegend,  fname="motor_opt_designspace_lgnd", directory=os.getcwd())
 

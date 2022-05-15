@@ -5,22 +5,26 @@ Created on Thu Nov 18 08:36:58 2021
 @author: renkert2
 """
 
-import openmdao.api as om
 import SUPPORT_FUNCTIONS.init as init
-import ProblemTemplates as PT
+import Problems as P
+import Trajectories as T
+import PlanarSystem as ps
 import Recorders as R
 import numpy as np
 
 init.init_output(__file__)
 
-prob = PT.StepProblem()
+traj = T.Step()
+model = ps.PlanarSystemModel(traj)
+
+prob = P.Problem(model=model, traj = traj, planar_recorder=None)
 
 prob.setup()
 prob.init_vals()
 
 print("Running Model")
 prob.run_model()
-om.n2(prob)
+#om.n2(prob)
 
 #%% Capacity Sweep
 vals = np.linspace(1000, 6000, num=20)

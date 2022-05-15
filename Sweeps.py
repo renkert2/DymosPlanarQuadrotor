@@ -16,14 +16,16 @@ def simple_sweep(prob, sweep_param, vals):
         print(f"Solving optimization for {sweep_param} = {val}")
         prob.run_model()
         # Check Thrust Ratio for Feasibility
-        tr = prob.get_val("thrust_ratio.TR")
+        tr = prob.get_val("constraint__thrust_ratio.TR")
         print(f"Thrust Ratio: {tr}")
-        if tr <= 1:
+        if tr <= 1 or tr >= 10:
             print("Infeasible Thrust Ratio")
-            
         else:
-            sucess = prob.run_driver(case_prefix=f"{sweep_param}_{val}")
-            prob.record(f"{sweep_param}_{val}")
+            failed = prob.run_driver(case_prefix=f"{sweep_param}_{val}")
+            if not failed:
+                prob.record(f"{sweep_param}_{val}")
+            else:
+                print("Driver Failed")
     prob.cleanup()
     
 def plot_sweeps(cases, sweep_param, out_paths):

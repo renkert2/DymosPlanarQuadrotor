@@ -29,14 +29,14 @@ sim_cases = sim_reader.get_cases("problem")
 (d,t_latex) = reader.delta_table()
 
 #%% Trajectory Comparisons
-graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases, title="System Optimization")
+#graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases, title="System Optimization")
 
 
 #%% Optimization Variables
-opt_vars=["params.N_s__Battery", "params.Q__Battery", "params.kV__Motor", "params.Rm__Motor", "params.D__Propeller", "params.P__Propeller"]
-(fig, ax) = plotting.iterplots(reader, opt_vars, labels=["$N_s$", "$Q$ (mAh)", "$kV$ (RPM/V)", "$Rm$ ($\Omega$)", "$D$ (m)", "$P$ (m)"], title="System Optimization: Design Variables", save=False)
+# opt_vars=["params.N_s__Battery", "params.Q__Battery", "params.kV__Motor", "params.Rm__Motor", "params.D__Propeller", "params.P__Propeller"]
+# (fig, ax) = plotting.iterplots(reader, opt_vars, labels=["$N_s$", "$Q$ (mAh)", "$kV$ (RPM/V)", "$Rm$ ($\Omega$)", "$D$ (m)", "$P$ (m)"], title="System Optimization: Design Variables", save=False)
 
-my_plt.export(fig, fname="sys_opt_des_var_iters", directory=os.getcwd())
+# my_plt.export(fig, fname="sys_opt_des_var_iters", directory=os.getcwd())
 #%% Boundary Plots
 import PlanarSystem as PS
 import Param
@@ -57,12 +57,20 @@ for c in comps:
     l, = ax.plot(*prev_pnts, markeredgecolor="blue",  label="Endurance", **mkropts)
     ax.legend()
     
-    my_plt.export(fig, fname=f"sys_opt_designspace_{c}", directory=os.getcwd())
+    fig.set_size_inches(3,3)
+    figlegend = plt.figure(figsize=(3,2))
+    figlegend.legend(*ax.get_legend_handles_labels())
+    ax.get_legend().remove()
+
+
+    my_plt.export(fig,  fname=f"sys_opt_designspace_{c}", directory=os.getcwd())
+    my_plt.export(figlegend,  fname=f"sys_opt_designspace_lgnd_{c}", directory=os.getcwd())
 
 #%%
 
 
 #%% Comparison to Other Optimizations
+plt.close('all')
 # Case Paths:
 reader_names = [x+"_opt_cases_sim.sql" for x in ["batt", "motor", "prop"]]
 
