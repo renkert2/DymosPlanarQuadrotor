@@ -43,9 +43,10 @@ for _ss in ss.values():
     figs.append(fig)
     
 #%% Export
-# files = ("batt_comp_discance", "motor_comp_distance", "prop_comp_distance")
-# for f,fname in zip(figs, files):
-#     my_plt.export(f, fname=fname)
+import weekly_reports
+files = ("batt_comp_distance", "motor_comp_distance", "prop_comp_distance")
+for f,fname in zip(figs, files):
+    my_plt.export(f, fname=fname, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05042022"))
     
 #%% Configuration Searcher
 cs = Search.ConfigurationSearcher(ss)
@@ -55,7 +56,7 @@ cs.run()
 fig, ax = cs.plotDistances()
 
 #%% Export
-my_plt.export(fig, fname="configuration_distance_plot")
+my_plt.export(fig, fname="configuration_distance_plot", directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05042022"))
 
 #%% Pickle
 with open("TEST_ConfigurationSearcher.pickle", 'wb') as f:

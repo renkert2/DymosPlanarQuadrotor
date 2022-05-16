@@ -180,10 +180,10 @@ class SearchResult:
         ax = axes[0]
         
         obj_fun_vals = [x.obj_val for x in iters]
-        ax.plot(i, obj_fun_vals, "-k", label="Config. Obj. Value")
+        ax.plot(i, obj_fun_vals, "-k", linewidth=1.5, label="Config. Obj. Value")
         
         opt_iter = self.opt_iter
-        ax.plot(opt_iter.iteration, opt_iter.obj_val, '.r', label="Opt. Obj. Value")
+        ax.plot(opt_iter.iteration, opt_iter.obj_val, '.r', markersize=10, label="Opt. Obj. Value")
         
         ax.set_ylabel("Obj. Value")
         ax.legend()

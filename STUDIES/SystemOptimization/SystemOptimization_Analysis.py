@@ -82,7 +82,7 @@ readers = [om.CaseReader(os.path.join(x[0], x[1])) for x in zip(reader_paths, re
 other_cases = [x.get_cases("problem")[1] for x in readers] # Final Solution
 
 legends = ["Initial", "Opt Battery", "Opt Motor", "Opt Propeller", "Opt System"]
-graphics = plotting.timeseries_plots([sim_cases[0], *other_cases, sim_cases[1]], title="System Optimization", legend = legends)
+graphics = plotting.timeseries_plots(sim=[sim_cases[0], *other_cases, sim_cases[1]], title="System Optimization", legend = legends)
 
 pltnames = ["Body States", "Powertrain States", "Inverter Currents", "Inverter Inputs"]
 pltslugs = [slug.slugify(x) for x in pltnames]
