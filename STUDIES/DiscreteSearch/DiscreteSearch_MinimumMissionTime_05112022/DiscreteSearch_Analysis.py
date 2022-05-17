@@ -27,7 +27,10 @@ print(result)
 
 #%%
 case_reader = reader.case_reader
-case_reader.delta_table(init_case_name="base_case", final_case_name=result.opt_iter.case_name)Z
+case_reader.delta_table(init_case_name="base_case", final_case_name=result.opt_iter.case_name)
+
+base_case = case_reader.get_case("base_case")
+final_case = case_reader.get_case(result.opt_iter.case_name)
 
 #%%
 fig, ax = result.plot()

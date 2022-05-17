@@ -554,7 +554,3 @@ class Surrogate:
             self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False)
             
         return (fig,ax)
-    
-    class IndexedSurrogate(Surrogate):
-        pass
-        # Maybe?
