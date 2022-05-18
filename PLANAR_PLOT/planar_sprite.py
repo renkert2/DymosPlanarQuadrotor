@@ -1,8 +1,9 @@
 import pyglet
 from scipy import interpolate
 import numpy as np
+import os
 
-SPRITE_IMG_PATH = "./ASSETS/DRONE_FLAT_1.png"
+SPRITE_IMG_PATH = os.path.join(os.path.dirname(__file__), "./ASSETS/DRONE_FLAT_1.png")
 SPRITE_IMG = pyglet.image.load(SPRITE_IMG_PATH)
 SPRITE_IMG.anchor_x = 1106
 SPRITE_IMG.anchor_y = SPRITE_IMG.height - 526
