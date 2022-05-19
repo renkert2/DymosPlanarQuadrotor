@@ -465,7 +465,7 @@ class Searcher:
                 self.search_recorder.record_iteration(iter_data)
             
             if iter_data.obj_val:
-                return -iter_data.obj_val
+                return -float(iter_data.obj_val)
             else:
                 #return np.nan
                 return -100
