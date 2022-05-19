@@ -140,6 +140,13 @@ class SearchIteration:
         out.append(f"Message: {self.msg}")
         out.append(f"Configuration:\n{str(self.config)}")
         return "\n".join(out) + "\n"
+    
+class SearchIteration_GA(SearchIteration):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self.solution = None
+        self.solution_idx = None
 
 class SearchResult:
     def __init__(self):
@@ -234,6 +241,18 @@ class SearchResult:
             figs.append(fig)
             
         return figs
+    
+class SearchResult_GA:
+    def __init__(self):
+        self.iterations = None
+        self.opt_iter = None
+        self.termination_msg = None
+        self.counter_state = None
+        
+        self.objective = None
+        self.base_case_data = None
+        self.component_data = None
+        self.gene_space = None
     
 class Searcher:
     def __init__(self, config_searcher=None, prob=None, params=None, base_case=None, search_recorder=None, counter=None):
@@ -398,7 +417,124 @@ class Searcher:
         
         print(search_result)
         return search_result
+    
+    def search_GA(self, max_generations=None, max_stall_iter=None, func_threshold=None):
+        import pygad
+        
+        comp_searchers = self.config_searcher.component_searchers
+        comp_data = []
+        gene_space = []
+        for k,cs in comp_searchers.items():
+            cd = cs.sorted_comps
+            comp_data.append(cd)
+            gene_space.append(range(len(cd)))
             
+                
+        if self.base_case:
+            self.prob.final_setup()
+            self.prob.load_case(self.base_case)
+            self.prob.record("base_case") # Record problem variables 
+        
+        iterations = []
+        self._iter_counter = -1
+        
+        def fitness_function(solution, solution_idx):
+            # solution: 1D Vector representing a single solution
+            # solution_idx: Solution index within the population (?)
+            # This function will be MAXIMIZED
+
+            self._iter_counter += 1
+            
+            # Create config from the component searchers
+            config = Surrogate.ComponentDataSet()
+            for (i,comp_index) in enumerate(solution):
+                cd = comp_data[i]
+                comp = cd[comp_index]
+                config.add(comp)
+            
+            
+            # EValuate the configuration
+            iter_data = SearchIteration_GA(iteration=self._iter_counter)
+            iter_data.solution = solution
+            iter_data.solution_idx = solution_idx
+            
+            iter_data = self.evaluate(config, base_case = self.base_case, case_name = f"iteration_{self._iter_counter}", iter_data=iter_data)
+            
+            iterations.append(iter_data)
+            if self.search_recorder:
+                self.search_recorder.record_iteration(iter_data)
+            
+            if iter_data.obj_val:
+                return -iter_data.obj_val
+            else:
+                #return np.nan
+                return -100
+            
+        def callback_gen(ga_instance):
+            print("Generation : ", ga_instance.generations_completed)
+            print("Fitness of the best solution :", ga_instance.best_solution()[1])
+            
+        stop_criteria = []
+        if func_threshold:
+            stop_criteria.append(f"reach_{func_threshold}")
+        
+        if max_stall_iter:
+            stop_criteria.append(f"saturate_{max_stall_iter}")
+
+        ga_instance = pygad.GA(
+                                   num_generations=max_generations,
+                                   num_parents_mating=2,
+                                   sol_per_pop=3,
+                                   
+                                   num_genes=len(comp_data),
+                                   gene_space=gene_space,
+                                   gene_type=int,
+                                   
+                               
+                                   fitness_func=fitness_function,
+                                   callback_generation=callback_gen,
+                                   
+                                   stop_criteria=stop_criteria,
+
+                                   save_solutions=True
+                               )
+        
+        ga_instance.run()
+        solution, solution_fitness, solution_idx = ga_instance.best_solution()
+        
+        logging.info(f"Solution: {solution}, Solution Fitness: {solution_fitness}")
+        
+        opt_iter = None
+        for i in iterations:
+            sol_match = i.solution == solution
+            if sol_match.all():
+                opt_iter = i
+                break
+
+        search_result = SearchResult_GA()
+        search_result.iterations = iterations
+        if self.base_case:
+            search_result.base_case_data = R.CaseData(self.base_case)
+        search_result.component_data = comp_data
+        search_result.gene_space = gene_space
+        search_result.opt_iter = opt_iter
+        search_result.objective = self.prob.model.get_objectives()
+        if self.counter:
+            search_result.counter_state = self.counter.state()
+            
+        ga_instance.fitness_func = None
+        ga_instance.callback_generation = None
+        ga_instance.on_generation = None
+        search_result.ga_instance = ga_instance
+        
+        if self.search_recorder:
+            self.search_recorder.record_result(search_result)
+        
+            
+        return search_result
+            
+        
+
 class ConfigurationSearcher:
     def __init__(self, component_searchers, configuration_template=None):
         self.component_searchers = component_searchers # Dictionary of component searchers, key's are the "name" of the searcher
