@@ -7,19 +7,88 @@ import primitives
 import cv2
 import io
 import numpy as np
+from enum import Enum
+
+class _Environment:
+    def __init__(self, axes=axes.Axes(), ax_scale=0.7, width=900, height=900, caption="Planar Plot", batch=pyglet.shapes.Batch()):
+        self.window = None
+        
+        self.axes = axes
+        self.ax_scale = ax_scale
+        
+        self.width = width
+        self.height = height
+        self.caption = caption
+
+        self._batch = batch
+
+    def set_window(self, window):
+        self.window = window
+        self.init_graphics()
+
+    def set_axes(self):
+        self.axes._batch = self._batch
+
+        scale_fact = self.ax_scale
+        self.axes.width_img = scale_fact*self.window.width
+        self.axes.height_img = scale_fact*self.window.height
+        self.axes.center_at(self.window.width/2,self.window.height/2)
+        self.axes.init_shapes()
+    
+    def init_graphics(self):
+        self.set_axes()
+
+    def draw(self):
+        self._batch.draw()
+
+class STEP(_Environment):
+    def __init__(self):
+        ax = axes.Axes(xlim=[0,10], ylim=[0,10])
+        super().__init__(axes = ax,
+                            ax_scale=0.7,
+                            width=900,
+                            height=900,
+                            caption="Planar Plot: Step")
+
+class MISSION_1(_Environment):
+    def __init__(self):
+        ax = axes.Axes(xlim=[0,21], ylim=[0,12])
+        super().__init__(axes = ax,
+                            ax_scale=0.85,
+                            width=1300,
+                            height=900,
+                            caption="Planar Plot: Mission 1")
+
+        self.waypoint_coords = [(0,0), (15,2), (10,2), (10,10)]
+        self.waypoints_coords_win = None
+        self.waypoints = None
+
+        self.boundary_line_verts = [
+            ((5,0), (5,5)),
+            ((5,7), (5,10)),
+            ((5,10), (9,10)),
+            ((11,10), (20,10)),
+            ((20,10), (20,0))
+        ]
+        self.boundary_lines = []
+    
+    def init_graphics(self):
+        super().init_graphics()
+
+        self.waypoints_coords_win = [self.axes._ax_to_window(x) for x in self.waypoint_coords]
+        self.waypoints = primitives.Waypoints(coordinates = self.waypoints_coords_win, batch = self._batch, labels="index")
+
+        self.boundary_lines = []
+        for lverts in self.boundary_line_verts:
+            lverts_win = [self.axes._ax_to_window(x) for x in lverts]
+            line = pyglet.shapes.Line(*lverts_win[0], *lverts_win[1], width=5, color=(255, 0, 0), batch=self._batch)
+            self.boundary_lines.append(line)
 
 class PlanarPlot(components.Window):
-    def __init__(self, frame_rate = 60, playback_speed = 1, write=False, auto_close=True):
-        super().__init__(width=900, height=900, caption="Planar Plot")
-
-        self.axes = axes.Axes()
-        self.axes.xlim = [0,10]
-        self.axes.ylim = [0,10]
-        scale_fact = 0.7
-        self.axes.width_img = scale_fact*self.width
-        self.axes.height_img = scale_fact*self.height
-        self.axes.center_at(self.width/2,self.height/2)
-        self.axes.init_shapes()
+    def __init__(self, env = STEP(), frame_rate = 60, playback_speed = 1, write=False, auto_close=True):
+        super().__init__(height=env.height, width = env.width, caption = env.caption)
+        self.env = env
+        env.set_window(self)
 
         self.sprites = [] # List of PlanarSprites
 
@@ -48,7 +117,7 @@ class PlanarPlot(components.Window):
 
     def on_draw(self):
         self.clear()
-        self.axes.draw()
+        self.env.draw()
         for sprite in self.sprites:
             sprite.draw()
 
@@ -64,7 +133,7 @@ class PlanarPlot(components.Window):
             self.close()
         
     def add_sprite(self, sprite):
-        sprite.axes = self.axes
+        sprite.set_axes(self.env.axes)
         sprite.set_pose(self.time)
         self.sprites.append(sprite)
         self.duration = max(self.duration, sprite.time_bounds[1]/self.playback_speed)
@@ -88,7 +157,7 @@ if __name__ == "__main__":
     case_init = reader.get_cases('problem')[0]
     case_final = reader.get_cases("problem")[-1]
 
-    pp = PlanarPlot(auto_close=True, frame_rate=60, playback_speed=0.1, write=False)
+    pp = PlanarPlot(env=MISSION_1(), auto_close=True, frame_rate=60, playback_speed=0.1, write=False)
     
     sprite = planar_sprite.PlanarSprite(trace=primitives.MultiLine(color=(255, 0, 0), width=2))
     sprite.set_traj(case_init)

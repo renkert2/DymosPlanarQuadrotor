@@ -1,5 +1,53 @@
 import pyglet.shapes as shapes
 import pyglet.gl as gl
+import pyglet
+
+class Waypoint:
+    def __init__(self, coordinate=None, label=None, batch = shapes.Batch()):
+        self._batch = batch
+
+        self._background = pyglet.graphics.OrderedGroup(0)
+        self._forground = pyglet.graphics.OrderedGroup(1)
+        
+        self._coordinate = coordinate
+        self._label_txt = label
+
+        self._circle = None
+        self._label = None
+    
+    def init_graphics(self):
+        self._circle = shapes.Circle(*self._coordinate, radius=20, color=(0,191,255), batch=self._batch, group=self._background)
+        self._label = pyglet.text.Label(x=self._coordinate[0], y=self._coordinate[1], text=self._label_txt, font_name="Times New Roman", bold=True, font_size=20, anchor_x='center', anchor_y='center', batch=self._batch, group=self._forground)
+
+    def draw(self):
+        self._batch.draw()
+
+class Waypoints:
+    def __init__(self, coordinates = [], batch = shapes.Batch(), labels="index"):
+        self._batch = batch
+
+        self._coordinates = coordinates
+        self._waypoints = []
+
+        self.labels=labels
+
+        self.init_graphics()
+    
+    def init_graphics(self):
+        if self.labels == "index":
+            labels = range(len(self._coordinates))
+        else:
+            labels = self.labels
+
+        self._waypoints = []
+        for (coord, label) in zip(self._coordinates, labels):
+            wp = Waypoint(coordinate=coord, label=str(label), batch=self._batch)
+            wp.init_graphics()
+            self._waypoints.append(wp)
+
+    def draw(self):
+        self._batch.draw()
+
 
 class MultiLine:
     def __init__(self, color=(255, 255, 255), width=1, batch=None):
@@ -20,7 +68,6 @@ class MultiLine:
     
     def draw(self):
         self._batch.draw()
-
 
 class MultiLineGL(shapes._ShapeBase):
     def __init__(self, coordinates = [], color=(255, 255, 255), width=1, batch=None, group=None):
@@ -106,25 +153,28 @@ if __name__ == "__main__":
     import pyglet
 
     window = components.Window(width=720, height=480, caption="Primitives")
+    batch = shapes.Batch()
 
     coordinates = [(0,0), (400,100), (200,200)]
-    polygon = MultiLine(color=(0, 255, 0), width=2)
+    polygon = MultiLine(color=(0, 255, 0), width=2, batch=batch)
     for c in coordinates:
         polygon.append(c)
 
     coordinates_2 = [(10,10), (410,110), (210,210)]
-    polygon_2 = MultiLine(color=(255, 0, 0), width=2)
+    polygon_2 = MultiLine(color=(255, 0, 0), width=2, batch=batch)
     for c in coordinates_2:
         polygon_2.append(c)
 
     polygon.append((100,100))
     polygon_2.append((110,110))
 
+    wpt_coords = [(100*i, 50*i) for i in range(5)]
+    waypoints = Waypoints(coordinates=wpt_coords, batch=batch)
+
     @window.event
     def on_draw():
         window.clear()
+        batch.draw()
 
-        polygon.draw()
-        polygon_2.draw()
     
     pyglet.app.run()

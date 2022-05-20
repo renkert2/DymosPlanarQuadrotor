@@ -12,11 +12,14 @@ import numpy as np
 from . import init
 import my_plt # loads style, provides export method
 
-def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels=[], legend=[], title="", save=False, axes=None, fig=None, simplot_kwargs={}, probplot_kwargs={}):
+def subplots(prob=None, sim=None, path=['traj.phase0.timeseries'], vars=[], labels=[], legend=[], title="", save=False, axes=None, fig=None, simplot_kwargs={}, probplot_kwargs={}):
     if axes is None:
         fig, axes = plt.subplots(len(vars), 1)
     if not hasattr(axes, "__len__"):
         axes = (axes,)
+        
+    if not isinstance(path, (list, tuple)):
+        path = [path]
         
     if prob:
         if not hasattr(prob, "__len__"):
@@ -34,27 +37,42 @@ def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels
             prob = [None]*len(sim)
         else:
             if not len(sim) == len(prob):
-                raise Exception("Prob and Sim Args must be the same length")         
+                raise Exception("Prob and Sim Args must be the same length")    
+                
+    def _get_val(prob, paths, return_arrays=False):
+        val_arrays = []
+        for p in paths:
+            val = prob.get_val(p)
+            val_arrays.append(val)
+        
+        val_cat = np.concatenate(val_arrays)
+        if return_arrays:
+            return (val_cat, val_arrays)
+        else:
+            return val_cat 
     
     for (j, (p,s)) in enumerate(zip(prob, sim)):
         if s:
-            t_sim = s.get_val(f'{path}.time')
+            t_sim, t_sim_arr = _get_val(s,[f'{p}.time' for p in path], return_arrays=True)
         if p:
-            t_prob = p.get_val(f'{path}.time')
+            t_prob, t_prob_arr = _get_val(p,[f'{p}.time' for p in path], return_arrays=True)
             
         for i, var in enumerate(vars):
             lines = []
             if s:
-                l, = axes[i].plot(t_sim, s.get_val(f'{path}.{var}'), '-', **simplot_kwargs)
+                l, = axes[i].plot(t_sim, _get_val(s, [f'{p}.{var}' for p in path]), '-', **simplot_kwargs)
                 lines.append(l)
                 
-                axes[i].axvline(x=t_sim[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
+                for arr in t_sim_arr:
+                    axes[i].axvline(x=arr[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
+            
             if p:
-                l, = axes[i].plot(t_prob, p.get_val(f'{path}.{var}'), 'o', **probplot_kwargs)
+                l, = axes[i].plot(t_prob, _get_val(p, [f'{p}.{var}' for p in path]), 'o', **probplot_kwargs)
                 lines.append(l)
                 
                 if not s:
-                    axes[i].axvline(x=t_prob[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
+                    for arr in t_prob_arr:
+                        axes[i].axvline(x=arr[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
             
             if labels:
                 axes[i].set_ylabel(labels[i])
@@ -76,9 +94,14 @@ def subplots(prob=None, sim=None, path='traj.phase0.timeseries', vars=[], labels
     
     return fig, axes
 
-def timeseries_plots(prob=None, sim=None, title="Optimization", legend=["Initial", "Final"], show_plts=range(4)):    
+def timeseries_plots(prob=None, sim=None, phases=['phase0'], title="Optimization", legend=["Initial", "Final"], show_plts=range(4)):    
     shared_args = [prob, sim]
-    shared_kwargs = {"path":'traj.phase0.timeseries', "save":False, "legend":legend}
+    
+    if not isinstance(phases, (list, tuple)):
+        phases = [phases]
+    
+    paths = [f'traj.{p}.timeseries' for p in phases]
+    shared_kwargs = {"path":paths, "save":False, "legend":legend}
     
     v = [[] for i in range(4)]
     v[0] = [f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']]

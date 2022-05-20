@@ -135,8 +135,10 @@ class TrajConstraint(Constraint):
         self._traj = traj
         if self.active:
             convars = SF.iterize(self._traj_convar)
-            for phase in traj._phases.values():
+            for (phase_name, phase) in traj._phases.items():
                 for v in convars:
+                    if callable(v):
+                        v = v(phase_name)
                     phase.add_path_constraint(name=v, lower=self.lb, upper=self.ub, ref=self.ref, ref0=self.ref0)
     
     def props(self):

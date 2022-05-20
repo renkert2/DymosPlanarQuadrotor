@@ -5,15 +5,15 @@ import numpy as np
 import components
 
 class Axes:
-    def __init__(self):
-        self.xlim = [0,10]
-        self.ylim = [0,10]
+    def __init__(self, xlim=[0,10], ylim=[0,10], width_img=720, height_img=480, origin_img=(0,0), batch=pyglet.graphics.Batch()):
+        self.xlim = xlim
+        self.ylim = ylim
 
-        self.width_img = 720 # Pixels
-        self.height_img = 480 # Pixels
-        self.origin_img = (0,0) # Origin of Axis in Window Coordinates
+        self.width_img = width_img # Pixels
+        self.height_img = height_img # Pixels
+        self.origin_img = origin_img # Origin of Axis in Window Coordinates
 
-        self.batch = pyglet.graphics.Batch()
+        self._batch = batch
 
     def init_shapes(self):
         line_width = 5
@@ -22,13 +22,13 @@ class Axes:
         corners["NW"] = s2w((1,0))
         corners["SE"] = s2w((0,1))
         corners["NE"] = s2w((1,1))
-        self.x_line = shapes.Line(*self.origin_img, *corners["NW"], width=line_width, batch=self.batch)
-        self.y_line = shapes.Line(*self.origin_img, *corners["SE"], width=line_width, batch=self.batch)
-        self.origin_rect = shapes.Rectangle(*self.origin_img, line_width, line_width, batch=self.batch)
+        self.x_line = shapes.Line(*self.origin_img, *corners["NW"], width=line_width, batch=self._batch)
+        self.y_line = shapes.Line(*self.origin_img, *corners["SE"], width=line_width, batch=self._batch)
+        self.origin_rect = shapes.Rectangle(*self.origin_img, line_width, line_width, batch=self._batch)
         self.origin_rect.anchor_x = line_width/2
         self.origin_rect.anchor_y = line_width/2
 
-        text_opts = {"font_name":"CMU Serif", "font_size":20, "bold":True, "italic":True, "anchor_x":'center', "anchor_y":'center', "batch":self.batch}
+        text_opts = {"font_name":"CMU Serif", "font_size":20, "bold":True, "italic":True, "anchor_x":'center', "anchor_y":'center', "batch":self._batch}
         label_margin = 2*text_opts["font_size"]/2
         x_label_pos = s2w((0.5,0))
         self.x_label = pyglet.text.Label(text="x", x=x_label_pos[0], y=x_label_pos[1] - label_margin, **text_opts)
@@ -36,7 +36,7 @@ class Axes:
         self.y_label = pyglet.text.Label(text="y", x=y_label_pos[0] - label_margin, y=y_label_pos[1], **text_opts)
 
     def draw(self):
-        self.batch.draw()
+        self._batch.draw()
 
     def update(self):
         pass

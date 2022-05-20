@@ -101,6 +101,10 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
                raise Exception("sim_mode=True required for ExplicitShooting transcription")
         
         ### Implement Rest of Code in Subclasses ### 
+        # Returns phases to be added to trajectory
+        
+        phases = []
+        return phases
 
      def init_vals(self, prob):
          pass
@@ -109,11 +113,13 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
          return SimProblem(self, **self._sim_args)
      
      def refine(self, prob, refine_method = "hp", refine_iteration_limit = 0, **phase_kwargs):
-         for phase in self._phases.values():
-             phase.set_refine_options(refine=True, **phase_kwargs)
-         failed = _refine_iter(prob, refine_iteration_limit, refine_method)
+         raise Exception("Not Implented")
+         #TODO
+         # for phase in self._phases.values():
+         #     phase.set_refine_options(refine=True, **phase_kwargs)
+         # failed = _refine_iter(prob, refine_iteration_limit, refine_method)
          
-         return prob.model.traj
+         # return prob.model.traj
         
 ### Trajectories ###
 class Step(PlanarTrajectory):
@@ -197,5 +203,154 @@ class Step(PlanarTrajectory):
         prob.set_val(f'{name}.phase0.states:BM_y', phase.interp('BM_y', ys=[0, 10]))
         prob.set_val(f'{name}.phase0.states:BM_omega', phase.interp('BM_omega', ys=[0, 0]))
         prob.set_val(f'{name}.phase0.states:BM_theta', phase.interp('BM_theta', ys=[0, 0]))
+        
+class Mission_1(PlanarTrajectory):
+    def __init__(self, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):
+        
+        self.waypoints = ((0,0), (5,(5,7)), (15,2), (10,2), ((9,11),10))
+        
+        self.C1_bounds = self.waypoints[1][1]
+        self.C2_bounds = self.waypoints[4][0]
+        
+        self.duration_vals = None
+        self.initial_vals = None
+                        
+        super().__init__(tx=tx, **kwargs)
+                
+        
+    def init_phases(self):
+        super().init_phases()
+        
+        # Phase Dependent Parameters
+        duration_bounds = [ # Duration bounds for each phase
+            (0.5,10),
+            (0.5,10),
+            (0.1,10),
+            (0.5,10)
+            ]
+        duration_vals = [np.mean(x) for x in duration_bounds]
+        self.duration_vals = duration_vals
+        
+        initial_bounds = [(0,0)]
+        ib_l = 0
+        ib_u = 0
+        for db in duration_bounds[:-1]:
+            ib_l += db[0]
+            ib_u += db[1]
+            initial_bounds.append((ib_l, ib_u))
+        initial_vals = [np.mean(x) for x in initial_bounds]
+        self.initial_vals = initial_vals
+        
+        x_bounds = [
+            (-1,5),
+            (5,20),
+            (5,20),
+            (5,20)
+            ]
+        
+        y_bounds = [
+            (0,10),
+            (0,10),
+            (0,10),
+            (0,15)
+            ]
+        
+        fi_x = [True, True, True, True]
+        ff_x = [False, False, False, False]
+        
+        fi_y = [True, False, True, True]
+        ff_y = [False,False, False, True]
+        
+        phases = []
+        phase_range = range(4)
+        for i in phase_range:
+            phase = ps.PlanarSystemDynamicPhase(transcription=self.tx)
+            phase.init_vars()
+            
+            # Set up phase Time
+            if i == 0:
+                fi = True
+            else:
+                fi = False
+            phase.set_time_options(fix_initial=fi, 
+                                   initial_val = initial_vals[i],
+                                   initial_bounds = initial_bounds[i],
+                                   initial_ref0 = initial_bounds[i][0],
+                                   initial_ref = initial_bounds[i][1],
+                                   
+                                   duration_val = duration_vals[i],
+                                   duration_bounds=duration_bounds[i], 
+                                   duration_ref0=duration_bounds[i][0], 
+                                   duration_ref=duration_bounds[i][1],
+                                   )
+                    
+            # Setup Inputs
+            phase.set_control_options("PT_u1", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
+            phase.set_control_options("PT_u2", lower=0, upper=1, opt=True, ref0=0.0, ref=1)
+            
+            # Setup phase Powertrain States
+            if i == 0:
+                fi = True
+            else:
+                fi = False
+            phase.set_state_options("PT_x1", fix_initial=fi, val=1, lower=0, upper=1,  ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
+            phase.set_state_options("PT_x2", fix_initial=fi, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
+            phase.set_state_options("PT_x3", fix_initial=fi, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
+            
+            # Setup Body States
+            if i == 0:
+                fi = True
+            else:
+                fi = False
+            ff = False
+            phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff)
+            phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff)
+            phase.set_state_options('BM_x', fix_initial=fi_x[i], fix_final=ff_x[i], lower=x_bounds[i][0], ref0=x_bounds[i][0], upper=x_bounds[i][1], ref=x_bounds[i][1])
+            phase.set_state_options('BM_y', fix_initial=fi_y[i], fix_final=ff_y[i], lower=y_bounds[i][0], ref0=y_bounds[i][0], upper=y_bounds[i][1], ref=y_bounds[i][1])
+            phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff)
+            phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, lower=-np.pi/2, ref0=-np.pi/2, upper=np.pi/2, ref=np.pi/2)
+            
+            
+            # Setup Constraints
+            if i == 0:
+                bnd = self.C1_bounds
+                phase.add_boundary_constraint("BM_y", loc='final',lower=bnd[0],upper=bnd[1],ref0=bnd[0],ref=bnd[1])
+            elif i == 3:
+                bnd = self.C2_bounds
+                phase.add_boundary_constraint("BM_x", loc='final',lower=bnd[0],upper=bnd[1],ref0=bnd[0],ref=bnd[1])
+                
+
+            # Minimize time at the end of the phase
+            if i == phase_range[-1]:
+                phase.add_objective('time', loc='final')
+                
+            phases.append(phase)
+        return phases
+    
+    def init_vals(self, prob, name="traj"):
+        # Set Initial Values
+        for (i, (pn, p)) in enumerate(self._phases.items()):
+            prob.set_val(f'{name}.{pn}.t_initial', self.initial_vals[i])
+            prob.set_val(f'{name}.{pn}.t_duration', self.duration_vals[i])
+            
+            prob.set_val(f'{name}.{pn}.controls:PT_u1', 0.5)
+            prob.set_val(f'{name}.{pn}.controls:PT_u2', 0.5)
+            
+            prob.set_val(f'{name}.{pn}.states:PT_x1', 1.0)
+            prob.set_val(f'{name}.{pn}.states:PT_x2', 1000)
+            prob.set_val(f'{name}.{pn}.states:PT_x3', 1000)
+                        
+            reduce_waypoints = lambda wp : [np.mean(x) if hasattr(x, "__len__") else x for x in wp]
+            pnt_1 = reduce_waypoints(self.waypoints[i])
+            pnt_2 = reduce_waypoints(self.waypoints[i+1])
+            
+            prob.set_val(f'{name}.{pn}.states:BM_x', p.interp('BM_x', ys=[pnt_1[0], pnt_2[0]]))
+            prob.set_val(f'{name}.{pn}.states:BM_y', p.interp('BM_y', ys=[pnt_1[1], pnt_2[1]]))
+            
+            prob.set_val(f'{name}.{pn}.states:BM_v_x', 0)
+            prob.set_val(f'{name}.{pn}.states:BM_v_y', 0)
+            
+            prob.set_val(f'{name}.{pn}.states:BM_omega', 0)
+            prob.set_val(f'{name}.{pn}.states:BM_theta', 0)
         
          
