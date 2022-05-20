@@ -13,6 +13,9 @@ import OPTIM.Search as search
 import matplotlib.pyplot as plt
 import numpy as np
 
+import my_plt
+import weekly_reports
+
 import PlanarSystem as PS
 
 import logging
@@ -23,8 +26,27 @@ reader = search.SearchReader(output_dir = "search_output")
 
 #%% Read Search Result
 result = reader.result
-print(result)
+ga_instance = result.ga_instance
 
+ga_instance.plot_result()
+ax = plt.gca()
+ax.set_ylim(-3.5,-2)
+
+wdir = weekly_reports.find_dir("05252022")[-1]
+f = plt.gcf()
+my_plt.export(f, fname="ga_fitness_vs_generation", directory=wdir)
+
+#%%
+ga_instance.plot_new_solution_rate()
+
+#%%
+best_fitness = max(ga_instance.best_solutions_fitness)
+for i in result.iterations:
+    if i.obj_val and abs(float(i.obj_val)) == abs(best_fitness):
+        best_iter = i
+        
+        break
+    
 #%%
 case_reader = reader.case_reader
 case_reader.delta_table(init_case_name="base_case", final_case_name=result.opt_iter.case_name)
@@ -34,8 +56,6 @@ final_case = case_reader.get_case(result.opt_iter.case_name)
 
 #%%
 fig, ax = result.plot()
-import my_plt
-import weekly_reports
 my_plt.export(fig, fname="discrete_search_result_05112022", directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
 
 # #%% Function Evaluations at Optimal Config
