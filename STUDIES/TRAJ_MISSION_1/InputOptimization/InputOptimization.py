@@ -21,8 +21,7 @@ import Trajectories as T
 import PlanarSystem as ps
 init.init_output(__file__)
 
-
-warm_start = True
+warm_start = False
 
 traj = T.Mission_1()
 cons = C.ConstraintSet() # Create an empty constraint set

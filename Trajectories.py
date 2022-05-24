@@ -207,10 +207,7 @@ class Step(PlanarTrajectory):
 class Mission_1(PlanarTrajectory):
     def __init__(self, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):
         
-        self.waypoints = ((0,0), (5,(5,7)), (15,2), (10,2), ((9,11),10))
-        
-        self.C1_bounds = self.waypoints[1][1]
-        self.C2_bounds = self.waypoints[4][0]
+        self.waypoints = ((0,0), (5,(5,7)), (15,2), (10,2), ((9,11),10), (10,12))
         
         self.duration_vals = None
         self.initial_vals = None
@@ -226,7 +223,8 @@ class Mission_1(PlanarTrajectory):
             (0.5,10),
             (0.5,10),
             (0.1,10),
-            (0.5,10)
+            (0.5,10),
+            (0.01, 10)
             ]
         duration_vals = [np.mean(x) for x in duration_bounds]
         self.duration_vals = duration_vals
@@ -245,6 +243,7 @@ class Mission_1(PlanarTrajectory):
             (-1,5),
             (5,20),
             (5,20),
+            (5,20),
             (5,20)
             ]
         
@@ -252,17 +251,24 @@ class Mission_1(PlanarTrajectory):
             (0,10),
             (0,10),
             (0,10),
-            (0,15)
+            (0,15),
+            (10,15)
             ]
         
-        fi_x = [True, True, True, True]
-        ff_x = [False, False, False, False]
+        # Fixed x-position states
+        fi_x = [True, True, True, True, False]
+        ff_x = [False, False, False, False, True]
         
-        fi_y = [True, False, True, True]
-        ff_y = [False,False, False, True]
+        # Fixed y-position states
+        fi_y = [True, False, True, True, True]
+        ff_y = [False,False, False, False, True]
+        
+        # Fixed stationary (zero velocity) states
+        fi_all = [True, False, True, False, False]
+        ff_all = [False, False, False, False, True]
         
         phases = []
-        phase_range = range(4)
+        phase_range = range(len(self.waypoints) - 1)
         for i in phase_range:
             phase = ps.PlanarSystemDynamicPhase(transcription=self.tx)
             phase.init_vars()
@@ -298,25 +304,19 @@ class Mission_1(PlanarTrajectory):
             phase.set_state_options("PT_x3", fix_initial=fi, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
             
             # Setup Body States
-            if i == 0:
-                fi = True
-            else:
-                fi = False
-            ff = False
-            phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff)
-            phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff)
+            phase.set_state_options('BM_v_x', fix_initial=fi_all[i], fix_final=ff_all[i])
+            phase.set_state_options('BM_v_y', fix_initial=fi_all[i], fix_final=ff_all[i])
             phase.set_state_options('BM_x', fix_initial=fi_x[i], fix_final=ff_x[i], lower=x_bounds[i][0], ref0=x_bounds[i][0], upper=x_bounds[i][1], ref=x_bounds[i][1])
             phase.set_state_options('BM_y', fix_initial=fi_y[i], fix_final=ff_y[i], lower=y_bounds[i][0], ref0=y_bounds[i][0], upper=y_bounds[i][1], ref=y_bounds[i][1])
-            phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff)
-            phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, lower=-np.pi/2, ref0=-np.pi/2, upper=np.pi/2, ref=np.pi/2)
-            
+            phase.set_state_options('BM_omega', fix_initial=fi_all[i], fix_final=ff_all[i])
+            phase.set_state_options('BM_theta', fix_initial=fi_all[i], fix_final=ff_all[i], lower=-np.pi/2, ref0=-np.pi/2, upper=np.pi/2, ref=np.pi/2)
             
             # Setup Constraints
             if i == 0:
-                bnd = self.C1_bounds
+                bnd = self.waypoints[i+1][1]
                 phase.add_boundary_constraint("BM_y", loc='final',lower=bnd[0],upper=bnd[1],ref0=bnd[0],ref=bnd[1])
             elif i == 3:
-                bnd = self.C2_bounds
+                bnd = self.waypoints[i+1][0]
                 phase.add_boundary_constraint("BM_x", loc='final',lower=bnd[0],upper=bnd[1],ref0=bnd[0],ref=bnd[1])
                 
 
