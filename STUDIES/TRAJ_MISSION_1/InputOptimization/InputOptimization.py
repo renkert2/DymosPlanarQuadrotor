@@ -36,7 +36,7 @@ if warm_start:
 #%%
 rec = R.Recorder(name="input_opt_cases.sql")
 prob = P.Problem(model=model, traj = traj, planar_recorder=rec)
-prob.driver.options["maxiter"] = 5000
+prob.driver.options["maxiter"] = 750
 
 prob.setup()
 prob.init_vals()

@@ -172,6 +172,22 @@ class Reader(SqliteCaseReader):
             latex_tables[name] = t_latex
                 
         return delta_dict, latex_tables
+    
+    @staticmethod
+    def get_val_multiphase(case, path_format_string, phases=["phase0"]):        
+        if all(isinstance(x, int) for x in phases): # Phases specified as integers
+            phases = [f"phase{i}" for i in phases]
+        elif not all(isinstance(x, str) for x in phases):
+            raise Exception("phases must be specified as integers or strings")
+
+        paths = [path_format_string.format(x) for x in phases]
+        val_arrays = []
+        for p in paths:
+            val = case.get_val(p).flatten()
+            val_arrays.append(val)
+    
+        val_cat = np.concatenate(val_arrays)
+        return val_cat
             
 class CaseData:
     # Used to package Case into serializable object for pickling

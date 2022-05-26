@@ -33,7 +33,7 @@ env = planar_plot.MISSION_1()
 pp = planar_plot.PlanarPlot(env=env, auto_close=False, frame_rate=60, playback_speed=1, write=False)
 
 sprite = planar_sprite.PlanarSprite(trace=primitives.MultiLine(color=(0, 0, 255), width=2))
-sprite.set_traj(final_case, phases=[f"phase{i}" for i in range(4)])
+sprite.set_traj(final_case, phases=[f"phase{i}" for i in range(5)])
 pp.add_sprite(sprite)
 
 pyglet.app.run()

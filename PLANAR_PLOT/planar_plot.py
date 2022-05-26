@@ -59,7 +59,7 @@ class MISSION_1(_Environment):
                             height=900,
                             caption="Planar Plot: Mission 1")
 
-        self.waypoint_coords = [(0,0), (15,2), (10,2), (10,10)]
+        self.waypoint_coords = [(0,0), (5,6), (15,2), (10,2), (10,10), (10,12)]
         self.waypoints_coords_win = None
         self.waypoints = None
 
@@ -77,6 +77,9 @@ class MISSION_1(_Environment):
 
         self.waypoints_coords_win = [self.axes._ax_to_window(x) for x in self.waypoint_coords]
         self.waypoints = primitives.Waypoints(coordinates = self.waypoints_coords_win, batch = self._batch, labels="index")
+        for i in [2,5]:
+            wp = self.waypoints._waypoints[i]
+            wp._circle.color = primitives.Waypoint.STOP_COLOR
 
         self.boundary_lines = []
         for lverts in self.boundary_line_verts:

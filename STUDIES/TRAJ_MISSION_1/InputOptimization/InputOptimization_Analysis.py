@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*--
 """
 Created on Wed Apr  6 15:10:11 2022
 
@@ -28,11 +28,12 @@ print(reader.list_cases())
 print(sim_reader.list_cases())
 
 #%% Trajectory Plots
-graphics = plotting.timeseries_plots(sim=[sim_cases[1]], phases=[f"phase{i}" for i in range(4)], title="Input Optimization", legend=None)
+graphics = plotting.timeseries_plots(sim=[sim_cases[1]], phases=[f"phase{i}" for i in range(5)], title="Input Optimization", legend=None)
+#graphics = plotting.timeseries_plots(prob=[cases[0], cases[-1]], phases=[f"phase{i}" for i in range(4)], title="Input Optimization", legend=None)
 
 #%% Export
 import weekly_reports
-wdir = weekly_reports.find_dir("05252022")[-1]
+wdir = weekly_reports.find_dir("06012022")[-1]
 figs = [x[0] for x in graphics]
 fnames = [f"mission1_{x}" for x in ["body_states", "powertrain_states", "inverter_currents", "inverter_inputs"]]
 

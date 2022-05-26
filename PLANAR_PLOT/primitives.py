@@ -3,6 +3,9 @@ import pyglet.gl as gl
 import pyglet
 
 class Waypoint:
+    DEFAULT_COLOR = (0,191,255)
+    STOP_COLOR = (178, 34, 34)
+
     def __init__(self, coordinate=None, label=None, batch = shapes.Batch()):
         self._batch = batch
 
@@ -13,11 +16,15 @@ class Waypoint:
         self._label_txt = label
 
         self._circle = None
+        self.fill_color = Waypoint.DEFAULT_COLOR
+        self.radius = 20
+
         self._label = None
+        self.font_size = 20
     
     def init_graphics(self):
-        self._circle = shapes.Circle(*self._coordinate, radius=20, color=(0,191,255), batch=self._batch, group=self._background)
-        self._label = pyglet.text.Label(x=self._coordinate[0], y=self._coordinate[1], text=self._label_txt, font_name="Times New Roman", bold=True, font_size=20, anchor_x='center', anchor_y='center', batch=self._batch, group=self._forground)
+        self._circle = shapes.Circle(*self._coordinate, radius=self.radius, color=self.fill_color, batch=self._batch, group=self._background)
+        self._label = pyglet.text.Label(x=self._coordinate[0], y=self._coordinate[1], text=self._label_txt, font_name="Times New Roman", bold=True, font_size=self.font_size, anchor_x='center', anchor_y='center', batch=self._batch, group=self._forground)
 
     def draw(self):
         self._batch.draw()

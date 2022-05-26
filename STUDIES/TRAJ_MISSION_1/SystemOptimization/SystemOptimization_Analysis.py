@@ -1,0 +1,147 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Apr  6 15:10:11 2022
+
+@author: renkert2
+"""
+
+import openmdao.api as om
+import SUPPORT_FUNCTIONS.plotting as plotting
+import my_plt
+import matplotlib.pyplot as plt
+import SUPPORT_FUNCTIONS.init as init
+import SUPPORT_FUNCTIONS.slugify as slug
+import os
+import Recorders as R
+
+init.init_output(__file__)
+
+import weekly_reports
+wdir = weekly_reports.find_dir("06012022")[-1]
+
+name = "sys_opt_cases"
+sim_name= name+"_sim"
+
+reader = R.Reader(name+".sql")
+cases = reader.get_cases("problem")
+
+sim_reader = om.CaseReader(sim_name+".sql")
+sim_cases = sim_reader.get_cases("problem")
+
+#%%
+(d,t_latex) = reader.delta_table()
+
+#%% Trajectory Comparisons
+#graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases, title="System Optimization")
+
+
+#%% Optimization Variables
+# opt_vars=["params.N_s__Battery", "params.Q__Battery", "params.kV__Motor", "params.Rm__Motor", "params.D__Propeller", "params.P__Propeller"]
+# (fig, ax) = plotting.iterplots(reader, opt_vars, labels=["$N_s$", "$Q$ (mAh)", "$kV$ (RPM/V)", "$Rm$ ($\Omega$)", "$D$ (m)", "$P$ (m)"], title="System Optimization: Design Variables", save=False)
+
+# my_plt.export(fig, fname="sys_opt_des_var_iters", directory=os.getcwd())
+#%% Boundary Plots
+import PlanarSystem as PS
+import Param
+pp = PS.PlanarSystemParams()
+ps = PS.PlanarSystemSurrogates(pp)
+ps.setup()
+
+prev_sol = Param.ParamValSet()
+with open(os.path.join(init.HOME_PATH, "STUDIES", "FlightTimePerPrice", "continuous_solution.json")) as source:
+    prev_sol.load(source)
+
+comps = ["Battery", "PMSMMotor", "Propeller"]
+figs = []
+for c in comps:
+    s = ps[c]
+    (fig, ax, mkropts) = plotting.boundaryiterplots(s, reader)
+    
+    prev_pnts = [prev_sol[x].val for x in [x.name for x in s.boundary.args]]
+    l, = ax.plot(*prev_pnts, markeredgecolor="blue",  label="Endurance", **mkropts)
+    ax.legend()
+    
+    figs.append(fig)
+
+#%%
+
+for fig,c in zip(figs,comps):
+    my_plt.export(fig,  fname=f"sys_opt_designspace_{c}", directory=wdir)
+
+#%%
+
+
+#%% Comparison to Other Optimizations
+plt.close('all')
+
+
+legends = ["Initial", "Opt System"]
+graphics = plotting.timeseries_plots(sim=[sim_cases[0], sim_cases[1]], title="System Optimization", legend = legends, phases=[f'phase{i}' for i in range(5)])
+
+pltnames = ["Body States", "Powertrain States", "Inverter Currents", "Inverter Inputs"]
+pltslugs = [slug.slugify(x) for x in pltnames]
+    
+#%%
+for i,g in enumerate(graphics):
+    fig = g[0]
+    my_plt.export(fig, fname=f"sys_opt_trajectories_{pltslugs[i]}", directory=wdir)
+    
+#%% Analyze Braking in Optimal Design
+get_wrapper = lambda path: reader.get_val_multiphase(cases[1], path, phases=range(5))
+t = get_wrapper("traj.{}.timeseries.time")
+
+# Check
+# plt.figure(1)
+# x = get_wrapper("traj.{}.timeseries.states:BM_x")
+# y = get_wrapper("traj.{}.timeseries.states:BM_y")
+# plt.plot(t,x,t,y)
+
+# Rotor Speeds
+# plt.figure(2)
+# omega_1 = get_wrapper("traj.{}.timeseries.states:PT_x2")
+# omega_2 = get_wrapper("traj.{}.timeseries.states:PT_x3")
+
+# plt.plot(t,omega_1,t,omega_2)
+
+# Currents
+i_1 = get_wrapper("traj.{}.timeseries.outputs:PT_a3")
+i_2 = get_wrapper("traj.{}.timeseries.outputs:PT_a5")
+i_bus = get_wrapper("traj.{}.timeseries.outputs:PT_a2")
+i_bus_max = cases[1].get_val("params.MaxDischarge__Battery")
+i_motor_1 = get_wrapper("traj.{}.timeseries.outputs:PT_a7")
+i_motor_2 = get_wrapper("traj.{}.timeseries.outputs:PT_a8")
+
+# Voltages
+v_bus = get_wrapper("traj.{}.timeseries.outputs:PT_a1")
+v_1 = get_wrapper("traj.{}.timeseries.outputs:PT_a4")
+v_2 = get_wrapper("traj.{}.timeseries.outputs:PT_a6")
+
+# Power
+P_bus = i_bus*v_bus
+P_inv_1 = i_motor_1 * v_1
+P_inv_2 = i_motor_2 * v_2 
+
+# Thrusts
+T_1 = get_wrapper("traj.{}.timeseries.outputs:PT_y1")
+T_2 = get_wrapper("traj.{}.timeseries.outputs:PT_y3")
+
+# plt.figure(3)
+# plt.plot(t,i_1,t,T_1)
+# plt.axhline(y=80, linestyle='--', color='r')
+
+plt.figure()
+plt.plot(t,i_bus)
+plt.axhline(y=i_bus_max, linestyle="--", color='r')
+
+# plt.figure(4)
+# plt.plot(t,i_bus, t, i_1 + i_2)
+# plt.legend(["Bus", "Inverter Sum"])
+
+# plt.figure()
+# plt.plot(t, P_bus, t, P_inv_1 + P_inv_2)
+# plt.legend(["Bus Power", "Inverter Power (Sum)"])
+
+
+
+
+
