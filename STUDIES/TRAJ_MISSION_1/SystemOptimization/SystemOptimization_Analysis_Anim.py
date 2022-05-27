@@ -15,6 +15,7 @@ import numpy as np
 import pyglet
 
 import PlanarSystem as PS
+import Recorders as R
 import PLANAR_PLOT.planar_plot as planar_plot
 import PLANAR_PLOT.planar_sprite as planar_sprite
 import PLANAR_PLOT.primitives as primitives
@@ -23,27 +24,26 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 init.init_output(__file__)
-reader = search.SearchReader(output_dir = "search_output")
 
-#%% Read Search Result
-result = reader.result
-print(result)
+import weekly_reports
+wdir = weekly_reports.find_dir("06012022")[-1]
 
-#%%
-case_reader = reader.case_reader
+name = "sys_opt_cases"
+sim_name= name+"_sim"
 
-base_case = case_reader.get_case("base_case")
-final_case = case_reader.get_case(result.opt_iter.case_name)
+reader = R.Reader(name+".sql")
+cases = reader.get_cases("problem")
+base_case = cases[0]
+final_case = cases[1]
 
-
-pp = planar_plot.PlanarPlot(auto_close=False, frame_rate=60, playback_speed=0.25, write=False)
+pp = planar_plot.PlanarPlot(env=planar_plot.MISSION_1(), auto_close=False, frame_rate=30, playback_speed=1, write=False)
 
 sprite = planar_sprite.PlanarSprite(trace=primitives.MultiLine(color=(255, 0, 0), width=2))
-sprite.set_traj(base_case)
+sprite.set_traj(base_case, phases=[f"phase{i}" for i in range(5)])
 pp.add_sprite(sprite)
 
 sprite = planar_sprite.PlanarSprite(trace=primitives.MultiLine(color=(0, 255, 0), width=2))
-sprite.set_traj(final_case)
+sprite.set_traj(final_case, phases=[f"phase{i}" for i in range(5)])
 pp.add_sprite(sprite)
 
 pyglet.app.run()

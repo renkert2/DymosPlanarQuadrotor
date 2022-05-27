@@ -88,7 +88,7 @@ class MISSION_1(_Environment):
             self.boundary_lines.append(line)
 
 class PlanarPlot(components.Window):
-    def __init__(self, env = STEP(), frame_rate = 60, playback_speed = 1, write=False, auto_close=True):
+    def __init__(self, env = STEP(), frame_rate = 60, playback_speed = 1, update_rate = 1, write=False, auto_close=True):
         super().__init__(height=env.height, width = env.width, caption = env.caption)
         self.env = env
         env.set_window(self)
@@ -104,34 +104,46 @@ class PlanarPlot(components.Window):
         self.frame_rate = frame_rate
 
         if write:
+            self.write = True
             self.video_writer = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), self.frame_rate, (self.width,self.height))
+            #self.video_writer = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','S','V','C'), self.frame_rate,(self.width,self.height))
+            self.frame_buffer = io.BytesIO()
+            self.update_rate = update_rate
         else:
+            self.write = False
             self.video_writer=None
 
     def write_frame(self):
-        if self.video_writer:
-            #buf = io.BytesIO()
-            #pyglet.image.get_buffer_manager().get_color_buffer().save(filename="frame.png", file=buf)
-            pyglet.image.get_buffer_manager().get_color_buffer().save(filename="frame.png")
-            
-            #img_frame = cv2.imdecode(np.frombuffer(buf.read(), np.uint8), cv2.IMREAD_COLOR)
-            img_frame = cv2.imread("frame.png", cv2.IMREAD_COLOR)
-            self.video_writer.write(img_frame)
+        buf = self.frame_buffer
+        buf.seek(0)
+        pyglet.image.get_buffer_manager().get_color_buffer().save(filename="hint.png", file=buf)
+        #pyglet.image.get_buffer_manager().get_color_buffer().save(filename="frame.png")
+        
+        buf.seek(0)
+        img_frame = cv2.imdecode(np.frombuffer(buf.read(), np.uint8), cv2.IMREAD_COLOR)
+        #img_frame = cv2.imread("frame.png", cv2.IMREAD_COLOR)
+        self.video_writer.write(img_frame)
 
     def on_draw(self):
         self.clear()
         self.env.draw()
         for sprite in self.sprites:
             sprite.draw()
-
-        self.write_frame()
     
     def update(self, delta_t):
+        if self.write:
+            print(f"Current rate: {1/delta_t:.4}")
+        delta_t *= self.playback_speed
+        if self.write:
+            delta_t *= self.update_rate/self.frame_rate
         self.time += delta_t
+
         for sprite in self.sprites:
-            sprite.set_pose(self.time*self.playback_speed)
+            sprite.set_pose(self.time)
         
-        self.write_frame()
+        if self.write:
+            self.write_frame()
+        
         if self.auto_close and self.time > (self.duration)*self.duration_padding:
             self.close()
         
@@ -139,18 +151,22 @@ class PlanarPlot(components.Window):
         sprite.set_axes(self.env.axes)
         sprite.set_pose(self.time)
         self.sprites.append(sprite)
-        self.duration = max(self.duration, sprite.time_bounds[1]/self.playback_speed)
+        self.duration = max(self.duration, sprite.time_bounds[1])
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.SPACE:
-            pyglet.clock.schedule_interval(self.update, 1/self.frame_rate)
+            if self.write:
+                rate = self.update_rate
+            else:
+                rate = self.frame_rate
+            pyglet.clock.schedule_interval(self.update, 1/rate)
         
         if symbol == pyglet.window.key.R:
             self.time = 0
 
     def close(self):
         print("Exiting via close")
-        if self.video_writer:
+        if self.write:
             self.video_writer.release()
         super().close()
 
@@ -160,7 +176,7 @@ if __name__ == "__main__":
     case_init = reader.get_cases('problem')[0]
     case_final = reader.get_cases("problem")[-1]
 
-    pp = PlanarPlot(env=MISSION_1(), auto_close=True, frame_rate=60, playback_speed=0.1, write=False)
+    pp = PlanarPlot(env=MISSION_1(), auto_close=True, frame_rate=10, playback_speed=1, update_rate=0.5, write=False)
     
     sprite = planar_sprite.PlanarSprite(trace=primitives.MultiLine(color=(255, 0, 0), width=2))
     sprite.set_traj(case_init)
