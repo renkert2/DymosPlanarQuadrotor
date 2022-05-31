@@ -88,7 +88,7 @@ class MISSION_1(_Environment):
             self.boundary_lines.append(line)
 
 class PlanarPlot(components.Window):
-    def __init__(self, env = STEP(), frame_rate = 60, playback_speed = 1, update_rate = 1, write=False, auto_close=True):
+    def __init__(self, env = STEP(), frame_rate = 60, playback_speed = 1, update_rate = 1, write=False, auto_close=True, outfile_name="planar_plot.avi"):
         super().__init__(height=env.height, width = env.width, caption = env.caption)
         self.env = env
         env.set_window(self)
@@ -105,8 +105,7 @@ class PlanarPlot(components.Window):
 
         if write:
             self.write = True
-            self.video_writer = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), self.frame_rate, (self.width,self.height))
-            #self.video_writer = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','S','V','C'), self.frame_rate,(self.width,self.height))
+            self.video_writer = cv2.VideoWriter(outfile_name,cv2.VideoWriter_fourcc('M','J','P','G'), self.frame_rate, (self.width,self.height))
             self.frame_buffer = io.BytesIO()
             self.update_rate = update_rate
         else:
