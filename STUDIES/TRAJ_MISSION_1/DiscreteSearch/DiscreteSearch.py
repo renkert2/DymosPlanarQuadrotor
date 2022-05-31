@@ -31,6 +31,7 @@ cons = C.ConstraintSet() # Create an empty constraint set
 cons.add(C.InverterCurrent())
 model = PS.PlanarSystemSearchModel(traj, cons=cons)
 prob = P.Problem(model=model, traj=traj, planar_recorder=None, record_driver=False)
+prob.driver.options["maxiter"] = 750 # More complicated trajectory hits default iteration limit, need to increase
 rec.add_prob(prob)
 
 prob.setup()
