@@ -63,7 +63,7 @@ counter = Count.Counter()
 searcher = Search.Searcher(config_searcher=config_searcher, prob=prob, params=model._params, search_recorder=rec, base_case=base_case, counter=counter)
 
 #%% Test 1: Searching up to 100 Configurations
-search_result = searcher.search(max_iter = 1)
+search_result = searcher.search(max_iter = 100)
 
 
 #%%
