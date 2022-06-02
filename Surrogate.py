@@ -8,6 +8,7 @@ import my_plt
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from matplotlib import colors
 import matplotlib as mpl
 import Param as P
 import warnings
@@ -256,13 +257,16 @@ class Boundary:
         if not ax:
             ax = plt.axes(projection='3d')
         
-        ax.plot_surface(self.grid_X, self.grid_Y, self.grid_D, alpha=0.5, cmap = cm.coolwarm)
+        # Define Colormap
+        divnorm = colors.TwoSlopeNorm(vmin=np.min(self.grid_D), vcenter=0, vmax=np.max(self.grid_D))
+        
+        ax.plot_surface(self.grid_X, self.grid_Y, self.grid_D, alpha=0.5, cmap = cm.coolwarm, norm=divnorm)
         
         x,y = self.polygon.exterior.xy
-        ax.plot(x,y)
+        ax.plot(x,y, linestyle='--', linewidth=1, color="r")
         
         x,y = self.polygon_smooth.exterior.xy
-        ax.plot(x,y)
+        ax.plot(x,y, linestyle='-', linewidth=2, color="r")
         
 
         ax.set_xlabel(self.args[0].latex())
@@ -544,6 +548,9 @@ class Surrogate:
             
         (fig,ax) = self.boundary.plot3D(fig=fig,ax=ax)
         fig.suptitle(f"Surrogate: {self.comp_name}")
+        if self.comp_data:
+            skwargs = {'facecolors':'none', "edgecolors":'gray', "label":"Component Data"}
+            self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False, scatter_kwargs=skwargs)
         
         return (fig, ax)
 
