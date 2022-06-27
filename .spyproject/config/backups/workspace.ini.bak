@@ -8,5 +8,5 @@ recent_files = ['..\\..\\..\\.spyder-py3\\temp.py', 'CheckPartials.py']
 
 [main]
 version = 0.2.0
-recent_files = ['STUDIES\\TRAJ_STEP\\InputOptimization\\InputOptimization.py', 'STUDIES\\TRAJ_MISSION_1\\DiscreteSearch\\DiscreteSearch.py']
+recent_files = ['STUDIES\\TRAJ_STEP\\InputOptimization\\InputOptimization.py', 'STUDIES\\TRAJ_MISSION_1\\DiscreteSearch\\DiscreteSearch.py', 'PlanarBody\\PlanarBodyModels.py', 'PlanarPT\\SUPPORT\\@Boundary\\Boundary.m', 'Surrogate.py']
 

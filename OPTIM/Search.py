@@ -35,7 +35,7 @@ class _SearchOutput:
         return os.path.join(self.output_dir, file)
         
 class SearchRecorder(_SearchOutput):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, append_mode = False, **kwargs):
         super().__init__(*args, **kwargs)
         
         try:
@@ -46,11 +46,12 @@ class SearchRecorder(_SearchOutput):
         problem_recorder = om.SqliteRecorder(self.problem_recorder_path, record_viewer_data=False)
         self.problem_recorder = problem_recorder
     
-        with open(self.iterations_path, 'wb') as f: # Create new file or overwrite existing
-            pass
-    
-        with open(self.result_path, 'wb') as f: # Create new file or overwrite existing
-            pass
+        if not append_mode:
+            with open(self.iterations_path, 'wb') as f: # Create new file or overwrite existing
+                pass
+        
+            with open(self.result_path, 'wb') as f: # Create new file or overwrite existing
+                pass
 
     
     def add_prob(self, prob):
@@ -270,6 +271,55 @@ class Searcher:
         self._dry_run_iterator = None
         self._dry_run_feval_iterator = None
         
+        self._recover = False
+        self._recover_case_reader = None
+        self._recover_iters = None
+        
+    # def recover(self, case_reader, iters):
+    #     #TODO: This isnt working right
+    #     self._recover = True
+    #     self._recover_case_reader = case_reader
+    #     self._recover_iters = iters
+        
+    #     self.search(max_iter = iters[-1].iteration)
+    
+    def restore_result(self, search_recorder):
+        # Output Search Result
+        search_result = SearchResult()
+        if self.base_case:
+            search_result.base_case_data = R.CaseData(self.base_case)
+        search_result.config_searcher = self.config_searcher
+        search_result.config_searcher.component_searchers = None
+        
+        iters = search_recorder.iterations
+        
+        opt_obj_val = np.inf
+        if self.counter:
+            self.counter.reset()
+            
+        for i in iters:
+            if self.counter:
+                self.counter.increment(fevals=i.func_evals)
+            if i.obj_val < opt_obj_val:
+                opt_iter = i
+                opt_obj_val = i.obj_val
+            
+        
+        search_result.iterations = iters
+        search_result.opt_iter = opt_iter
+        search_result.termination_msg = "Recovered from Search Recorder"
+        search_result.objective = self.prob.model.get_objectives()
+        if self.counter:
+            search_result.counter_state = self.counter.state()
+        
+        if self.search_recorder:
+            self.search_recorder.record_result(search_result)
+        
+        print(search_result)
+        return search_result
+        
+        
+        
     def evaluate(self, config, base_case = None, case_name = None, iter_data=None):
         mod_params = []
         dep_cache = []
@@ -317,12 +367,33 @@ class Searcher:
 
         if feasible:
             # Run Optimal Control Problem
-            if not self._dry_run:
-                failed = self.prob.run_driver()
-                func_evals += self.prob.driver.result['nfev']
-            else:
+            if self._dry_run:
                 failed = False
                 func_evals += next(self._dry_run_feval_iterator)
+            
+            elif self._recover:
+                recovery_iter = None
+                for ri in self._recover_iters:
+                    if ri.iteration == iter_data.iteration:
+                        recovery_iter = ri
+                        break
+                if recovery_iter:
+                    # TODO: Check that the configurations and objectives match
+                    
+                    logging.info(f"Found recovery iteration {recovery_iter.iteration}")
+                    
+                    if recovery_iter.obj_val:
+                        failed = False
+                        case = self._recover_case_reader.get_case(recovery_iter.case_name)
+                        self.prob.load_case(case)
+                    else:
+                        failed = True
+                    func_evals = recovery_iter.func_evals
+                    
+            else:
+                failed = self.prob.run_driver()
+                func_evals += self.prob.driver.result['nfev']
+
                         
             if not failed:
                 # Get Objective

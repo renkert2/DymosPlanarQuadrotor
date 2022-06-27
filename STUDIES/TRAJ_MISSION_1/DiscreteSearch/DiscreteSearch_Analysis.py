@@ -23,7 +23,25 @@ reader = search.SearchReader(output_dir = "search_output")
 
 #%% Read Search Result
 result = reader.result
+
 print(result)
+
+#%% Reattach component searchers, need to fix
+p = PS.PlanarSystemParams()
+s = PS.PlanarSystemSurrogates(p)
+s.setup()
+
+target_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_MISSION_1", "SystemOptimization", "Output", "pv_opt.pickle")
+with open(target_path, 'rb') as f:
+    target = pickle.load(f)
+
+comp_searchers = {}
+for (k,v) in s.surrogates.items():
+    comp_searchers[k] = search.ComponentSearcher(v)
+    comp_searchers[k].set_target(target)
+
+result.config_searcher.component_searchers = comp_searchers
+
 
 #%%
 case_reader = reader.case_reader
@@ -36,35 +54,21 @@ final_case = case_reader.get_case(result.opt_iter.case_name)
 fig, ax = result.plot()
 import my_plt
 import weekly_reports
-my_plt.export(fig, fname="discrete_search_result_05112022", directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
+my_plt.export(fig, fname="discrete_search_result", directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_06292022"))
 
-# #%% Function Evaluations at Optimal Config
-# opt_iters = result.iterations[:57]
-# total_fevals = sum([x.func_evals for x in opt_iters])
-# print(f"Func Evals to find Optimal Configuration: {total_fevals}")
+#%% Function Evaluations at Optimal Config
+opt_iters = result.iterations[:70]
+total_fevals = sum([x.func_evals for x in opt_iters])
+print(f"Func Evals to find Optimal Configuration: {total_fevals}")
 
-#%% Reattach component searchers, need to fix
-p = PS.PlanarSystemParams()
-s = PS.PlanarSystemSurrogates(p)
-s.setup()
 
-target_path = os.path.join(init.HOME_PATH, "STUDIES", "SystemOptimization", "Output", "pv_opt.pickle")
-with open(target_path, 'rb') as f:
-    target = pickle.load(f)
-
-comp_searchers = {}
-for (k,v) in s.surrogates.items():
-    comp_searchers[k] = search.ComponentSearcher(v)
-    comp_searchers[k].set_target(target)
-
-result.config_searcher.component_searchers = comp_searchers
 
 #%%
 figs = result.plotDesignSpace()
 names = ["batt_design_space_search", "motor_design_space_search", "prop_design_space_search"]
 import my_plt
 for (f,n) in zip(figs,names):
-    my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
+    my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_06292022"))
 
 #%% Plot Design Space of First Iteration
 figs = result.config_searcher.plotDesignSpace(result.iterations[0].config, config_name="Closest Config.")
@@ -74,14 +78,14 @@ figs = result.plotCompHeatmat(stat_func=np.mean, stat_func_label="Mean Obj. Valu
 names = ["batt_design_space_meanval", "motor_design_space_meanval", "prop_design_space_meanval"]
 import my_plt
 for (f,n) in zip(figs,names):
-    my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
+    my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_06292022"))
 
 #%% Plot Heatmaps ob Min Obj. Value
 figs = result.plotCompHeatmat(stat_func=np.min, stat_func_label="Min Obj. Value")
 names = ["batt_design_space_minval", "motor_design_space_minval", "prop_design_space_minval"]
 import my_plt
 for (f,n) in zip(figs,names):
-    my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
+    my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_06292022"))
     
 #%%
 result.showTopComps()
