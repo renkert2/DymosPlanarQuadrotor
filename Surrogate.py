@@ -561,3 +561,26 @@ class Surrogate:
             self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False)
             
         return (fig,ax)
+    
+    def plotFitDelta(self, ax=None, fig=None, falloff_order = 1/10, scatter_label="Components", scatter_edgecolors="0.8", scatter_cmap="Blues_r"):        
+        (fig,ax) = self.boundary.plot2D(fig=fig,ax=ax)
+        fig.suptitle(f"Component: {self.comp_name}")
+        
+        handles = []
+        
+        deltas = []
+        for c in self.comp_data:
+            d = delta_func(c)
+            if falloff_order and d:
+                d = d**falloff_order
+            distances.append(d)
+        
+        self.comp_data.plot(self.boundary.args, ax=ax, fig=fig, annotate=False, scatter_kwargs={"c":distances, "label":scatter_label, "edgecolors":scatter_edgecolors, "cmap":scatter_cmap})          
+        
+        for child in ax.get_children():
+            if isinstance(child, matplotlib.collections.PathCollection):
+                handles.append(child)
+        
+        ax.legend(handles=handles)
+        
+        return (fig, ax)
