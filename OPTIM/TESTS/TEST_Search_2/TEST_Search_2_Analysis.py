@@ -38,3 +38,5 @@ print(result)
 
 #%%
 result.plot()
+#%%
+result.plotDesignSpace()

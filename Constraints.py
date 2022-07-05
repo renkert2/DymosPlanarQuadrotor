@@ -204,54 +204,94 @@ class ConstraintComp(Constraint, omcomp.Component):
         
         return prop_dict
     
-    
-    
-class TrajConstraintComp(ConstraintComp, TrajConstraint):
+class TrajConstraintGroup(TrajConstraint, om.Group):
     def __init__(self, **kwargs):
-        TrajConstraint.__init__(self)
-        ConstraintComp.__init__(self, **kwargs)
+        TrajConstraint.__init__(self, **kwargs)
+        om.Group.__init__(self)
+        
+        self._mdl_name = None # Name of the group in the system
+        self._connections = None # Contains tuples with from,to connections for each component in the group
+        self._params = None # String IDs of required parameters
+        self._convar = None # Variable within each component to constrain
+        
         self._traj_path = "traj"
         self._traj_phases = []
         self._traj_name_prefix = "timeseries"
         self._traj_connections = None # Contains tuples with from,to connections in the trajectory. From must be in traj.
+        self._comp_class = None # Class of component to be constructed for each phase
+        self._comp_class_args = [] # Arguments passed to _comp_class constructor
+        self._comp_class_kwargs = dict() # KW Arguments passed to _comp_class constructor
+        self._comps = dict() # dictionary of name:component pairs
 
         self._grid_nn = []
         
     def add_to_system(self, sys, traj):
         self._mdl_name = "traj_constraint__" + self.name
-        sys.add_subsystem(self._mdl_name, self, params=self._params)
-
         self._traj_phases = list(traj._phases.keys())
         
-        self._traj_timeseries_size = []
         for phase in self._traj_phases:
+            # Get Transcription Data
             tx = traj._phases[phase].options["transcription"]
             nn = tx.grid_data.num_nodes
             self._grid_nn.append(nn)
-        
-        if self._connections: # Check if there are any normal, non-trajectory connections
-            ConstraintComp.add_connections(self, sys)
-        
+            
+            # Define Components
+            c = self._comp_class(*self._comp_class_args, **self._comp_class_kwargs)
+            name = f"comp_{phase}"
+            self._comps[name] = c
+            self.add_subsystem(name, c)
+            
+        # Add group to the system
+        sys.add_subsystem(self._mdl_name, self, params=self._params)
         self.add_traj_connections(sys)
 
     def add_traj_connections(self, sys):
-        for c in self._traj_connections:
-            for p in self._traj_phases:
-                from_var = ".".join([self._traj_path, p, self._traj_name_prefix, c[0]])
-                to_var = ".".join([self._mdl_name, c[1]])
+        for conn in self._traj_connections:
+            comp_names = self._comps.keys()
+            for p,cn in zip(self._traj_phases, comp_names):
+                from_var = ".".join([self._traj_path, p, self._traj_name_prefix, conn[0]])
+                to_var = ".".join([self._mdl_name, cn, conn[1]])
                 sys.connect(from_var, to_var)  
                 
     @property
     def val(self):
-        return ConstraintComp.val.fget(self)
+        raise Exception("Val not yet excepted")
+        convars = SF.iterize(self._convar)
+        vals = []
+        for v in convars:
+            vals.append(self.get_val(v))
+
+        return vals.fget(self)
                 
     def props(self):
         prop_dict = TrajConstraint.props(self)
-        prop_dict.update(ConstraintComp.props(self))
+        
+        base_props = ["_mdl_name", "_connections", "_params", "_convar"]
+        for p in base_props:
+            prop_dict[p] = getattr(self, p)
         
         prop_dict["traj_connections"] = self._traj_connections
         
         return prop_dict
+    
+    def setup(self):
+        comps = self._comps.values()
+        
+        for c,p in zip(comps, self._traj_phases):
+            self.setup_comp(c,p)
+        
+        if self.active:
+            convars = SF.iterize(self._convar)
+            for v in convars:
+                for c in comps:
+                    c.add_constraint(v, lower=self.lb, upper=self.ub, ref0=self.ref0, ref=self.ref)
+                
+        om.Group.setup(self)
+            
+    def setup_comp(self, c, p):
+        raise Exception("setup_comp must be implemented in subclasses")
+            
+    
     
 class ConstraintSet(set):
     def __init__(self, arg=set()):
@@ -318,19 +358,33 @@ class ThrustRatio(ConstraintComp, om.ExplicitComponent):
 #     def set_bounds(self, pg):
 #         ConstraintParam.set_bounds(self, lb=None, ub=pg._params["MaxDischarge__Battery"], param_group=pg)
     
-class BatteryCurrent(TrajConstraintComp, om.AddSubtractComp):
+# class BatteryCurrent(TrajConstraintComp, om.AddSubtractComp):
+#     def __init__(self):
+#         # TODO: This will eventually need to accomodate all the phases in a trajectory
+#         om.AddSubtractComp.__init__(self)
+#         TrajConstraintComp.__init__(self, name="battery_current", ub=0, ref=100)
+#         self._params = tuple()
+#         self._traj_connections = (("outputs:PT_a2", "i__Battery"),("parameters:MaxDischarge__Battery", "MaxDischarge__Battery"))
+#         self._convar = "con"
+        
+#     def setup(self):
+#         self.add_equation('con', input_names = ['i__Battery', 'MaxDischarge__Battery'], scaling_factors=[1,-1], vec_size = self._grid_nn[0], desc="Battery Current Constraint")
+#         om.AddSubtractComp.setup(self)
+#         TrajConstraintComp.setup(self)
+        
+class BatteryCurrent(TrajConstraintGroup):
     def __init__(self):
         # TODO: This will eventually need to accomodate all the phases in a trajectory
-        om.AddSubtractComp.__init__(self)
-        TrajConstraintComp.__init__(self, name="battery_current", ub=0, ref=100)
+        TrajConstraintGroup.__init__(self, name="battery_current", ub=0, ref=100)
         self._params = tuple()
         self._traj_connections = (("outputs:PT_a2", "i__Battery"),("parameters:MaxDischarge__Battery", "MaxDischarge__Battery"))
         self._convar = "con"
+        self._comp_class = om.AddSubtractComp
         
-    def setup(self):
-        self.add_equation('con', input_names = ['i__Battery', 'MaxDischarge__Battery'], scaling_factors=[1,-1], vec_size = self._grid_nn[0], desc="Battery Current Constraint")
-        om.AddSubtractComp.setup(self)
-        TrajConstraintComp.setup(self)
+    def setup_comp(self, comp, phase_name):
+        # Function specified in subclasses, used to setup each copy of _comp_class in TrajConstraintGroup.setup()
+        comp.add_equation('con', input_names = ['i__Battery', 'MaxDischarge__Battery'], scaling_factors=[1,-1], vec_size = self._grid_nn[0], desc="Battery Current Constraint")
+        # comp.setup()
         
 class InverterCurrent(TrajConstraint):
     def __init__(self):

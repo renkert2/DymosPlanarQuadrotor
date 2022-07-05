@@ -34,6 +34,9 @@ sim_cases = sim_reader.get_cases("problem")
 #%% Trajectory Comparisons
 #graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases, title="System Optimization")
 
+# CHeck Battery Current Constraint
+graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases,  phases=[f"phase{i}" for i in range(5)], title="System Optimization", show_plts=[1])
+
 
 #%% Optimization Variables
 # opt_vars=["params.N_s__Battery", "params.Q__Battery", "params.kV__Motor", "params.Rm__Motor", "params.D__Propeller", "params.P__Propeller"]

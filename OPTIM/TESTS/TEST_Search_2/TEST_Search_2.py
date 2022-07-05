@@ -33,7 +33,7 @@ rec = Search.SearchRecorder()
 # Creates recorder for problem internally
 
 #%% Setup Problem
-traj = T.Step()
+traj = T.Mission_1()
 
 model = PS.PlanarSystemSearchModel(traj)
 prob = P.Problem(model=model, traj=traj, planar_recorder=None, record_driver=False)
@@ -47,7 +47,7 @@ p = model._params
 s = PS.PlanarSystemSurrogates(p)
 s.setup()
 
-target_path = os.path.join(init.HOME_PATH, "STUDIES", "SystemOptimization", "Output", "pv_opt.pickle")
+target_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_MISSION_1", "SystemOptimization", "Output", "pv_opt.pickle")
 with open(target_path, 'rb') as f:
     target = pickle.load(f)
 
@@ -60,7 +60,8 @@ config_searcher = Search.ConfigurationSearcher(comp_searchers)
 config_searcher.run()
 
 #%% Setup Searcher
-reader = om.CaseReader(os.path.join(init.INPUT_OPT_PATH, "input_opt_cases.sql"))
+
+reader = om.CaseReader(os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_MISSION_1", "InputOptimization", "Output", "input_opt_cases.sql"))
 base_case = reader.get_case("input_opt_final")
 counter = Count.Counter()
 
@@ -79,7 +80,7 @@ rfg = random_feval_generator()
 searcher._dry_run_feval_iterator = rfg
 
 #%% Test 1: Searching up to 10 Configurations
-search_result = searcher.search(max_iter = 20)
+search_result = searcher.search(max_iter = 5)
 
 
 #%%

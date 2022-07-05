@@ -186,7 +186,7 @@ class PlanarSystemModel(P.ParamSystem):
         for c in self.cons:
             if isinstance(c, C.ConstraintParam):
                 c.set_bounds(self._param_group)
-            if isinstance(c, C.TrajConstraintComp): 
+            if isinstance(c, C.TrajConstraintGroup): 
                 c.add_to_system(self, self._traj)
             elif isinstance(c, C.ConstraintComp):
                 c.add_to_system(self)

@@ -54,7 +54,7 @@ final_case = case_reader.get_case(result.opt_iter.case_name)
 fig, ax = result.plot()
 import my_plt
 import weekly_reports
-my_plt.export(fig, fname="discrete_search_result", directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_06292022"))
+#my_plt.export(fig, fname="discrete_search_result", directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_06292022"))
 
 #%% Function Evaluations at Optimal Config
 opt_iters = result.iterations[:70]
@@ -89,3 +89,7 @@ for (f,n) in zip(figs,names):
     
 #%%
 result.showTopComps()
+
+#%%
+import SUPPORT_FUNCTIONS.plotting as plotting
+graphics = plotting.timeseries_plots(sim=[final_case], phases=[f"phase{i}" for i in range(5)], title="Discrete Search Result Optimization", legend=None, show_plts=[1])
