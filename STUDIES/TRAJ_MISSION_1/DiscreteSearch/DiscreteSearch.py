@@ -27,7 +27,7 @@ rec = Search.SearchRecorder()
 #%% Setup Problem
 traj = T.Mission_1()
 cons = C.ConstraintSet() # Create an empty constraint set
-#TODO: cons.add(C.BatteryCurrent()) for multiple phases
+cons.add(C.BatteryCurrent()) # for multiple phases
 cons.add(C.InverterCurrent())
 model = PS.PlanarSystemSearchModel(traj, cons=cons)
 prob = P.Problem(model=model, traj=traj, planar_recorder=None, record_driver=False)

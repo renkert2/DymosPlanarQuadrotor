@@ -25,7 +25,7 @@ warm_start = False
 
 traj = T.Mission_1()
 cons = C.ConstraintSet() # Create an empty constraint set
-#TODO: cons.add(C.BatteryCurrent()) for multiple phases
+cons.add(C.BatteryCurrent()) # for multiple phases
 cons.add(C.InverterCurrent())
 model = ps.PlanarSystemModel(traj, cons=cons)
 

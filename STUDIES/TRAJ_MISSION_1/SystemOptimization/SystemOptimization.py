@@ -22,7 +22,7 @@ init.init_output(__file__)
 
 traj = T.Mission_1()
 cons = C.ConstraintSet() # Create an empty constraint set
-#TODO: cons.add(C.BatteryCurrent()) for multiple phases
+cons.add(C.BatteryCurrent()) # for multiple phases
 cons.add(C.InverterCurrent())
 model = ps.PlanarSystemDesignModel(traj, opt_comps={"Battery":[], "PMSMMotor":[], "Propeller":[]}, cons=cons)
 rec = R.Recorder(name="sys_opt_cases.sql")
