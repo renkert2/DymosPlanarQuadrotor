@@ -123,7 +123,7 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
         
 ### Trajectories ###
 class Step(PlanarTrajectory):
-    def __init__(self, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):
+    def __init__(self, tx=dm.GaussLobatto(num_segments=10, compressed=True), **kwargs):
         
         self.x_init=0
         self.y_init=0    

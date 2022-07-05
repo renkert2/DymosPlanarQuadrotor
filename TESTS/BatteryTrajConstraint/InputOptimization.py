@@ -23,7 +23,7 @@ import OPTIM.Search as search
 init.init_output(__file__)
 
 
-traj = T.Mission_1(tx=dm.GaussLobatto(num_segments=10, compressed=True))
+traj = T.Mission_1(tx=dm.GaussLobatto(num_segments=5, compressed=True))
 cons = C.ConstraintSet() # Create an empty constraint set
 cons.add(C.BatteryCurrent())
 cons.add(C.InverterCurrent())
