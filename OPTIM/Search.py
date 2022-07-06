@@ -216,8 +216,8 @@ class SearchResult:
         return splitted_cds
     
     def plotDesignSpace(self):
-        out = self.config_searcher.plotDesignSpace(self.opt_iter.config, config_name="Opt. Config")        
-        return out
+        out, mkropts = self.config_searcher.plotDesignSpace(self.opt_iter.config, config_name="Opt. Config")        
+        return out, mkropts
     
     def plotCompHeatmat(self, stat_func=np.mean, stat_func_label="Mean Obj. Value"):
         cmap = LinearSegmentedColormap.from_list('gr', ['g', 'w', 'r'], N=256)
@@ -715,7 +715,7 @@ class ConfigurationSearcher:
 
             figs.append(fig)
             
-        return figs
+        return figs, mkropts
     
     #TODO: Add component_searchers back to ConfigurationSearcher state, Fix component_searcher so it can be pickled. Want to be able to save/load the boundaries. 
     # def __getstate__(self):

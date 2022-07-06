@@ -123,7 +123,7 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
         
 ### Trajectories ###
 class Step(PlanarTrajectory):
-    def __init__(self, tx=dm.GaussLobatto(num_segments=10, compressed=True), **kwargs):
+    def __init__(self, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):
         
         self.x_init=0
         self.y_init=0    
@@ -205,7 +205,7 @@ class Step(PlanarTrajectory):
         prob.set_val(f'{name}.phase0.states:BM_theta', phase.interp('BM_theta', ys=[0, 0]))
         
 class Mission_1(PlanarTrajectory):
-    def __init__(self, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):
+    def __init__(self, tx=dm.GaussLobatto(num_segments=10, compressed=True), **kwargs):
         
         self.waypoints = ((0,0), (5,(5,7)), (15,2), (10,2), ((9,11),10), (10,12))
         
