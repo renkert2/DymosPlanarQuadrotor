@@ -83,7 +83,7 @@ def subplots(prob=None, sim=None, path=['traj.phase0.timeseries'], vars=[], labe
     if legend:
         axes[0].legend() 
     
-    axes[-1].set_xlabel('time (s)')
+    axes[-1].set_xlabel('Time (s)')
     plt.tight_layout()
     
     if title:
@@ -110,8 +110,8 @@ def timeseries_plots(prob=None, sim=None, phases=['phase0'], title="Optimization
     v[3] = [f"controls:{x}" for x in  ['PT_u1', 'PT_u2']]
     
     l = [[] for i in range(4)]
-    l[0] = ['$x$', '$y$', r'$\theta$']
-    l[1] = ["SOC", "Bus Voltage", "Battery Current (A)"]
+    l[0] = ['$x$ (m)', '$y$ (m)', r'$\theta$ (rad)']
+    l[1] = ["Battery SOC", "Bus Voltage (V)", "Bus Current (A)"]
     l[2] = ["Inverter 1 Current (A)", "Inverter 2 Current (A)"]
     l[3] =  ["Inverter 1 Input", "Inverter 2 Input"]
     

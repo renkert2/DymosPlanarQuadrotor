@@ -1,0 +1,122 @@
+[
+       {
+         "Name": "Price",
+         "Value": 5.06,
+         "Unit": "USD",
+         "Component": "Propeller"
+       },
+       {
+         "Name": "Mass",
+         "Value": 0.030050470000000003,
+         "Unit": "kg",
+         "Component": "Propeller"
+       },
+       {
+         "Name": "D",
+         "Value": 0.3302,
+         "Unit": "m",
+         "Component": "Propeller"
+       },
+       {
+         "Name": "P",
+         "Value": 0.1016,
+         "Unit": "m",
+         "Component": "Propeller"
+       },
+       {
+         "Name": "k_P",
+         "Value": 0.02,
+         "Unit": "none",
+         "Component": "Propeller"
+       },
+       {
+         "Name": "k_T",
+         "Value": 0.07,
+         "Unit": "none",
+         "Component": "Propeller"
+       },
+       {
+         "Name": "N_p",
+         "Value": 1,
+         "Unit": "unit",
+         "Component": "Battery"
+       },
+       {
+         "Name": "N_s",
+         "Value": 6,
+         "Unit": "unit",
+         "Component": "Battery"
+       },
+       {
+         "Name": "Q",
+         "Value": 6000,
+         "Unit": "mAh",
+         "Component": "Battery"
+       },
+       {
+         "Name": "R_s",
+         "Value": 0.0021666667,
+         "Unit": "Ohm",
+         "Component": "Battery"
+       },
+       {
+         "Name": "C",
+         "Value": 75,
+         "Unit": "A/Ah",
+         "Component": "Battery"
+       },
+       {
+         "Name": "Mass",
+         "Value": 1.14,
+         "Unit": "kg",
+         "Component": "Battery"
+       },
+       {
+         "Name": "Price",
+         "Value": 129.99,
+         "Unit": "USD",
+         "Component": "Battery"
+       },
+       {
+         "Name": "Price",
+         "Value": 74.95,
+         "Unit": "USD",
+         "Component": "PMSMMotor"
+       },
+       {
+         "Name": "Mass",
+         "Value": 0.095,
+         "Unit": "kg",
+         "Component": "PMSMMotor"
+       },
+       {
+         "Name": "D",
+         "Value": 0.0355,
+         "Unit": "m",
+         "Component": "PMSMMotor"
+       },
+       {
+         "Name": "kV",
+         "Value": 515,
+         "Unit": "rpm/V",
+         "Component": "PMSMMotor"
+       },
+       {
+         "Name": "Rm",
+         "Value": 0.13,
+         "Unit": "Ohm",
+         "Component": "PMSMMotor"
+       },
+       {
+         "Name": "Io",
+         "Value": 0.3,
+         "Unit": "A",
+         "Component": "PMSMMotor"
+       },
+       {
+         "Name": "I_max",
+         "Value": 24,
+         "Unit": "A",
+         "Component": "PMSMMotor"
+       }
+]
