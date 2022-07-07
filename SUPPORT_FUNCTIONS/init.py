@@ -18,11 +18,11 @@ INPUT_OPT_PATH = os.path.join(HOME_PATH, "STUDIES", "InputOptimization", "Output
 if INPUT_OPT_PATH not in sys.path:
     sys.path.append(INPUT_OPT_PATH)
 
-def init_output(filepath, suppress_warnings=True):
+def init_output(filepath, dirname="Output", suppress_warnings=True):
     os.chdir(os.path.dirname(filepath))
-    if not os.path.isdir("Output"):
-        os.mkdir("Output")
-    os.chdir("Output")
+    if not os.path.isdir(dirname):
+        os.mkdir(dirname)
+    os.chdir(dirname)
     
     if suppress_warnings:
         warnings.filterwarnings('ignore', category=om.UnitsWarning)

@@ -18,14 +18,16 @@ import Problems as P
 import OPTIM.Count as Count
 import Constraints as C
 
-init.init_output(__file__)
+import Dymos as dm
+
+init.init_output(__file__, dirname="Output_10")
 
 #%% Setup Search Recorder
 rec = Search.SearchRecorder()
 # Creates recorder for problem internally
 
 #%% Setup Problem
-traj = T.Mission_1()
+traj = T.Mission_1(tx=dm.GaussLobatto(num_segments=10, compressed=True))
 cons = C.ConstraintSet() # Create an empty constraint set
 cons.add(C.BatteryCurrent()) # for multiple phases
 cons.add(C.InverterCurrent())
@@ -42,7 +44,7 @@ p = model._params
 s = PS.PlanarSystemSurrogates(p)
 s.setup()
 
-target_path = os.path.join(os.path.dirname(__file__), "..", "SystemOptimization", "Output", "pv_opt.pickle")
+target_path = os.path.join(os.path.dirname(__file__), "..", "SystemOptimization", "Output_10", "pv_opt.pickle")
 with open(target_path, 'rb') as f:
     target = pickle.load(f)
 
@@ -55,7 +57,7 @@ config_searcher = Search.ConfigurationSearcher(comp_searchers)
 config_searcher.run()
 
 #%% Setup Searcher
-input_opt_path = os.path.join(os.path.dirname(__file__), "..", "InputOptimization", "Output")
+input_opt_path = os.path.join(os.path.dirname(__file__), "..", "InputOptimization", "Output_10")
 reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 base_case = reader.get_case("input_opt_final")
 counter = Count.Counter()

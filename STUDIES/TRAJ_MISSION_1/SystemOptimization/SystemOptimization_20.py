@@ -18,9 +18,9 @@ import Trajectories as T
 import PlanarSystem as ps
 import Constraints as C
 
-init.init_output(__file__)
+init.init_output(__file__, dirname="Output_20")
 
-traj = T.Mission_1()
+traj = T.Mission_1(tx=dm.GaussLobatto(num_segments=20, compressed=True))
 cons = C.ConstraintSet() # Create an empty constraint set
 cons.add(C.BatteryCurrent()) # for multiple phases
 cons.add(C.InverterCurrent())
@@ -31,7 +31,7 @@ prob.setup()
 prob.init_vals()
 
 #%% Initialize from Input Optimization
-input_opt_path = os.path.join(os.path.dirname(__file__), "..", "InputOptimization", "Output")
+input_opt_path = os.path.join(os.path.dirname(__file__), "..", "InputOptimization", "Output_20")
 reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 input_opt_final = reader.get_case("input_opt_final")
 prob.load_case(input_opt_final)
