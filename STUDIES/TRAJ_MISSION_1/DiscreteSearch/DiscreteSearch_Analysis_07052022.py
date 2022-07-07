@@ -54,6 +54,12 @@ print(dt_latex)
 base_case = case_reader.get_case("base_case")
 final_case = case_reader.get_case(result.opt_iter.case_name)
 
+
+input_opt_reader = om.CaseReader(os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_MISSION_1", "InputOptimization", "Output_07052022", "input_opt_cases.sql"))
+input_opt_case = input_opt_reader.get_case("input_opt_final")
+
+sys_opt_reader = om.CaseReader(os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_MISSION_1", "SystemOptimization", "Output_07052022", "sys_opt_cases.sql"))
+sys_opt_initial = sys_opt_reader.get_case("sys_opt_initial")
 #%%
 pv = result.opt_iter.config.data
 for param in p:
@@ -63,6 +69,29 @@ for param in p:
         final_val = pv_.val
         rel_change = (final_val - init_val)/init_val
         print(f"{param.strID}: Initial={init_val}, Final={final_val}, change={rel_change}")
+
+#%% Thrust Ratio
+trdat = []
+for case in [sys_opt_initial, final_case]:
+    dat = {}
+    dat["tmax"] = case.get_val("constraint__thrust_ratio.TMax")
+    dat["tr"] = case.get_val("constraint__thrust_ratio.TR")
+    dat["mass"] = case.get_val("params.Mass__System")
+    
+    print("TMax: ", dat["tmax"], "Mass: ", dat["mass"], "TR: ", dat["tr"])
+
+#%% Rotational Inertia
+trdat = []
+for case in [sys_opt_initial, final_case]:
+    dat = {}
+    dat["Is"] = case.get_val("params.I__System")
+    dat["Jr"] = case.get_val("params.J_r__MotorProp")
+    dat["J_motor"] = case.get_val("params.J__Motor")
+    dat["J_prop"] = case.get_val("params.J__Propeller")
+    dat["mass_motor"] = case.get_val("params.Mass__Motor")
+    dat["mass_prop"] = case.get_val("params.Mass__Propeller")
+    
+    print(dat)
 
 #%%
 fig, ax = result.plot()

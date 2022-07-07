@@ -32,10 +32,10 @@ sim_cases = sim_reader.get_cases("problem")
 (d,t_latex) = reader.delta_table()
 
 #%% Trajectory Comparisons
-#graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases, title="System Optimization")
+graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases, phases=[f"phase{i}" for i in range(5)], title="System Optimization")
 
 # CHeck Battery Current Constraint
-graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases,  phases=[f"phase{i}" for i in range(5)], title="System Optimization", show_plts=[1])
+#graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases,  phases=[f"phase{i}" for i in range(5)], title="System Optimization", show_plts=[1])
 
 
 #%% Optimization Variables
