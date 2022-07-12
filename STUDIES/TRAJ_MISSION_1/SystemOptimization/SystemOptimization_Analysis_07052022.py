@@ -14,7 +14,7 @@ import SUPPORT_FUNCTIONS.slugify as slug
 import os
 import Recorders as R
 
-init.init_output(__file__)
+init.init_output(__file__, dirname="Output_07052022")
 
 export_dir = r"C:\Users\renkert2\Box\ARG_Student_Reports\Philip Renkert\THESIS\Case Study\MinimumTime\ContinuousDomain\SystemOptimization"
 
@@ -72,7 +72,7 @@ for c,l in zip(comps, labels):
     bnd.set_label("Constraint")
 
     if c == "Propeller":
-        ax.axvline(0.356, color='r', label="Constraint")
+        ax.axvline(0.356, color='r')
         ax.legend(loc="lower right")
     elif c == "Battery":
         ax.legend(loc="upper left")
