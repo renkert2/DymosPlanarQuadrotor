@@ -6,6 +6,7 @@ Created on Mon May  2 15:00:51 2022
 """
 import os
 import openmdao.api as om
+import dymos as dm
 import pickle
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -17,8 +18,6 @@ import Trajectories as T
 import Problems as P
 import OPTIM.Count as Count
 import Constraints as C
-
-import Dymos as dm
 
 init.init_output(__file__, dirname="Output_20")
 
