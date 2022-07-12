@@ -14,10 +14,7 @@ import SUPPORT_FUNCTIONS.slugify as slug
 import os
 import Recorders as R
 
-init.init_output(__file__)
-
-import weekly_reports
-wdir = weekly_reports.find_dir("06012022")[-1]
+init.init_output(__file__, dirname="Output_20")
 
 name = "sys_opt_cases"
 sim_name= name+"_sim"
@@ -28,6 +25,16 @@ cases = reader.get_cases("problem")
 sim_reader = om.CaseReader(sim_name+".sql")
 sim_cases = sim_reader.get_cases("problem")
 
+#%% Node Study
+case = cases[-1]
+
+path_list = ['traj.phases.phase0.collocation_constraint.defects:BM_x', 'traj.phases.phase0.indep_states.states:BM_x', 'traj.phases.phase0.interleave_comp.all_values:states:BM_x', 'traj.phases.phase0.state_interp.state_col:BM_x', 'traj.phases.phase0.timeseries.states:BM_x']
+for p in path_list:
+    print(p, len(case.get_val(p)))
+
+control_list = ['traj.phases.phase0.timeseries.controls:PT_u1','traj.phases.phase0.control_group.indep_controls.controls:PT_u1','traj.phases.phase0.control_group.control_interp_comp.control_values:PT_u1','traj.phases.phase0.continuity_comp.defect_controls:PT_u1']
+for p in control_list:
+    print(p, len(case.get_val(p)))
 #%%
 (d,t_latex) = reader.delta_table()
 
