@@ -18,7 +18,7 @@ import PlanarSystem as PS
 import logging
 logging.basicConfig(level=logging.INFO)
 
-init.init_output(__file__)
+init.init_output(__file__, dirname="Output_10")
 reader = search.SearchReader(output_dir = "search_output")
 
 #%% Read Search Result
@@ -93,3 +93,7 @@ result.showTopComps()
 #%%
 import SUPPORT_FUNCTIONS.plotting as plotting
 graphics = plotting.timeseries_plots(sim=[final_case], phases=[f"phase{i}" for i in range(5)], title="Discrete Search Result Optimization", legend=None, show_plts=[1])
+
+#%% Evaluate Failed Case
+failed_case = case_reader.get_case('iteration_98')
+graphics = plotting.timeseries_plots(sim=[failed_case], phases=[f"phase{i}" for i in range(5)], title="Discrete Search Result Optimization", legend=None)

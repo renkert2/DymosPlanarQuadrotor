@@ -60,18 +60,21 @@ class Recorder:
         self.driver = driver
         return driver
     
-    def add_sim_prob(self, sim_prob):        
-        sim_prob.add_recorder(rec=self.sim_recorder)
-        # can modify options here if we want with sim_prob.recording_options
-        self.sim_prob = sim_prob
+    def add_sim_prob(self, sim_prob):    
+        if self.sim_recorder:
+            sim_prob.add_recorder(rec=self.sim_recorder)
+            # can modify options here if we want with sim_prob.recording_options
+            self.sim_prob = sim_prob
+        else:
+            raise Exception("No Sim Recorder")
         
     def record_results(self):
         results = {}
-        results["prob_recorder"] = self.recorder._filepath
-        results["sim_recorder"] = self.sim_recorder._filepath
         results["name"] = self.name
-        
-                
+        results["prob_recorder"] = self.recorder._filepath
+        if self.sim_recorder:
+            results["sim_recorder"] = self.sim_recorder._filepath
+
         driver_results = dict(self.driver.result)
         for key in ["x", "jac"]:
             del driver_results[key]
@@ -79,13 +82,11 @@ class Recorder:
             if hasattr(v, "tolist"): # Convert numpy arrays to json
                 driver_results[k] = v.tolist()
         
-        
         results["driver"] = driver_results
         
         cons = self.prob.model.cons
         results["cons"] = [con.props() for con in cons]
         
-            
         def param_props(param):
             propnames = ["strID", "val", "dep", "opt", "x0", "lb", "ub"]
             d = {}

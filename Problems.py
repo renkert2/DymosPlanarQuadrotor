@@ -16,12 +16,14 @@ import Param as P
 import SUPPORT_FUNCTIONS.support_funcs as funcs
 
 class Problem(om.Problem):
-    def __init__(self, model = None, traj = None, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), record_driver=True, **kwargs):
+    def __init__(self, model = None, traj = None, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), record_driver=True, sim=True, **kwargs):
         super().__init__(model=model, **kwargs)
         self.planar_model = model
         self.driver = driver
         
         self.traj = traj
+        
+        self.sim_flag = sim
         self.sim_prob = None
         
         self.record_driver = record_driver # Ugly AF
@@ -36,24 +38,29 @@ class Problem(om.Problem):
      
         super().setup()
 
-        sp = self.traj.simprob()
-        
-        if self.planar_recorder:
-            r.add_sim_prob(sp)
-        sp.setup()
-        self.sim_prob = sp
+        if self.sim_flag:
+            sp = self.traj.simprob()
+            
+            if self.planar_recorder:
+                r.add_sim_prob(sp)
+            sp.setup()
+            self.sim_prob = sp
         
     def init_vals(self):
         self.traj.init_vals(self)
     
     def run(self, desc="problem"):
         self.run_model(reset_iter_counts=True)
-        self.sim_prob.simulate()
+        
+        if self.sim_flag:
+            self.sim_prob.simulate()
         
         self.record_all(f"{desc}_initial")
         
         self.run_driver(reset_iter_counts=True)
-        self.sim_prob.simulate()
+        
+        if self.sim_flag:
+            self.sim_prob.simulate()
         
         self.record_all(f"{desc}_final")
         self.planar_recorder.record_results()
