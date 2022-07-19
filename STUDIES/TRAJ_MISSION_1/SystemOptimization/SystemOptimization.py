@@ -18,7 +18,7 @@ import Trajectories as T
 import PlanarSystem as ps
 import Constraints as C
 
-init.init_output(__file__, dirname="Output_10")
+init.init_output(__file__, dirname="Output")
 
 traj = T.Mission_1(tx=dm.GaussLobatto(num_segments=10, compressed=True))
 cons = C.ConstraintSet() # Create an empty constraint set

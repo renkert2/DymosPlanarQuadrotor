@@ -15,21 +15,22 @@ import fnmatch
 from SUPPORT_FUNCTIONS import support_funcs
 
 class Recorder:
-    def __init__(self, recorder = None, sim_recorder=None, name='cases.sql'):
+    def __init__(self, recorder = None, sim_recorder=None, name='cases.sql', record_sim=True, record_driver=True):
         name, ext = os.path.splitext(name)
+        self.name = name
+        self.prob = None
         
+        self.record_driver = record_driver
+        self.driver = None
         if not recorder:
             recorder = om.SqliteRecorder(name+ext, record_viewer_data=False)
         self.recorder = recorder
-        
-        if not sim_recorder:
+
+        self.record_sim = record_sim
+        self.sim_prob = None
+        if not sim_recorder and record_sim:
             sim_recorder = om.SqliteRecorder(name+"_sim"+ext, record_viewer_data=False)
         self.sim_recorder = sim_recorder
-        
-        self.name = name
-        self.prob = None
-        self.driver = None
-        self.sim_prob = None
         
     def add_prob(self, prob):
         prob.add_recorder(self.recorder)
@@ -48,27 +49,31 @@ class Recorder:
         return prob
     
     def add_driver(self, driver):
-        driver.add_recorder(self.recorder)
-        driver.recording_options['excludes'] = ['traj.*']
-        driver.recording_options['record_objectives'] = True
-        driver.recording_options['record_constraints'] = True
-        driver.recording_options['record_desvars'] = True
-        driver.recording_options['record_inputs'] = True
-        driver.recording_options['record_outputs'] = True
-        driver.recording_options['record_residuals'] = False
+        if self.record_driver:
+            driver.add_recorder(self.recorder)
+            driver.recording_options['excludes'] = ['traj.*']
+            driver.recording_options['record_objectives'] = True
+            driver.recording_options['record_constraints'] = True
+            driver.recording_options['record_desvars'] = True
+            driver.recording_options['record_inputs'] = True
+            driver.recording_options['record_outputs'] = True
+            driver.recording_options['record_residuals'] = False
         
         self.driver = driver
         return driver
     
     def add_sim_prob(self, sim_prob):    
-        if self.sim_recorder:
+        if self.record_sim:
             sim_prob.add_recorder(rec=self.sim_recorder)
             # can modify options here if we want with sim_prob.recording_options
-            self.sim_prob = sim_prob
-        else:
-            raise Exception("No Sim Recorder")
+        self.sim_prob = sim_prob
         
-    def record_results(self):
+    def record_all(self, case="final"):
+        self.prob.record(case)
+        if self.sim_prob and self.record_sim:
+            self.sim_prob.record(case+"_sim")
+            
+    def record_results(self, write=True):
         results = {}
         results["name"] = self.name
         results["prob_recorder"] = self.recorder._filepath
@@ -99,8 +104,9 @@ class Recorder:
         params = self.prob.model._params
         results["params"] = [param_props(p) for p in params]
         
-        with open(f'{self.name}_results.json', 'w') as fp:
-            json.dump(results, fp, indent=4)
+        if write:
+            with open(f'{self.name}_results.json', 'w') as fp:
+                json.dump(results, fp, indent=4)
         
         return results
 

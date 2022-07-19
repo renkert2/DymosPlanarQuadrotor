@@ -16,7 +16,7 @@ import Param as P
 import SUPPORT_FUNCTIONS.support_funcs as funcs
 
 class Problem(om.Problem):
-    def __init__(self, model = None, traj = None, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), record_driver=True, sim=True, **kwargs):
+    def __init__(self, model = None, traj = None, sim=True, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), **kwargs):
         super().__init__(model=model, **kwargs)
         self.planar_model = model
         self.driver = driver
@@ -25,16 +25,13 @@ class Problem(om.Problem):
         
         self.sim_flag = sim
         self.sim_prob = None
-        
-        self.record_driver = record_driver # Ugly AF
         self.planar_recorder = planar_recorder
         
     def setup(self):
         if self.planar_recorder:        
             r = self.planar_recorder
             r.add_prob(self)
-            if self.record_driver:
-                r.add_driver(self.driver)
+            r.add_driver(self.driver)
      
         super().setup()
 
@@ -55,14 +52,14 @@ class Problem(om.Problem):
         if self.sim_flag:
             self.sim_prob.simulate()
         
-        self.record_all(f"{desc}_initial")
+        self.planar_recorder.record_all(f"{desc}_initial")
         
         self.run_driver(reset_iter_counts=True)
         
         if self.sim_flag:
             self.sim_prob.simulate()
         
-        self.record_all(f"{desc}_final")
+        self.planar_recorder.record_all(f"{desc}_final")
         self.planar_recorder.record_results()
         
     def list_problem_vars(self):
@@ -75,12 +72,7 @@ class Problem(om.Problem):
             source = v["source"]
             indexer = v["indices"]
             return self.get_val(source, indices=indexer.flat())
-    
-    def record_all(self, case="final"):
-        self.record(case)
-        if self.sim_prob:
-            self.sim_prob.record(case+"_sim")
-    
+        
     def cleanup_all(self):
         self.cleanup()
         self.sim_prob.cleanup()

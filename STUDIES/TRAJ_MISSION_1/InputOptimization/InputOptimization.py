@@ -20,7 +20,7 @@ import Recorders as R
 import Trajectories as T
 import PlanarSystem as ps
 
-init.init_output(__file__, dirname="Output_10")
+init.init_output(__file__, dirname="Output")
 
 warm_start = False
 
