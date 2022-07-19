@@ -32,7 +32,7 @@ cons.add(C.BatteryCurrent()) # for multiple phases
 cons.add(C.InverterCurrent())
 model = PS.PlanarSystemSearchModel(traj, cons=cons)
 prob = P.Problem(model=model, traj=traj, planar_recorder=None, record_driver=False)
-prob.driver.options["maxiter"] = 2000 # More complicated trajectory hits default iteration limit, need to increase
+prob.driver.options["maxiter"] = 5000 # More complicated trajectory hits default iteration limit, need to increase
 rec.add_prob(prob)
 
 prob.setup()
