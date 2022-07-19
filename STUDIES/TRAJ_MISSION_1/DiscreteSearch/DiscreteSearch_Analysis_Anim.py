@@ -5,6 +5,7 @@ Created on Thu May  5 08:43:02 2022
 @author: renkert2
 """
 
+from msilib.schema import Directory
 import os
 import pickle
 import openmdao.api as om
@@ -22,7 +23,7 @@ import PLANAR_PLOT.primitives as primitives
 import logging
 logging.basicConfig(level=logging.INFO)
 
-init.init_output(__file__)
+init.init_output(__file__, dirname="Output_07052022")
 reader = search.SearchReader(output_dir = "search_output")
 
 #%% Read Search Result
@@ -36,7 +37,7 @@ base_case = case_reader.get_case("base_case")
 final_case = case_reader.get_case(result.opt_iter.case_name)
 
 
-pp = planar_plot.PlanarPlot(auto_close=False, frame_rate=60, playback_speed=0.25, write=False)
+pp = planar_plot.PlanarPlot(env=planar_plot.MISSION_1(), auto_close=True, frame_rate=30, update_rate=0.5, playback_speed=0.25, write=True, outfile_name="planar_plot.avi")
 
 sprite = planar_sprite.PlanarSprite(trace=primitives.MultiLine(color=(255, 0, 0), width=2))
 sprite.set_traj(base_case)
