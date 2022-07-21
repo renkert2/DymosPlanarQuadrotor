@@ -33,6 +33,24 @@ class _SearchOutput:
 
     def make_path(self, file):
         return os.path.join(self.output_dir, file)
+    
+    def gen_next_path(self, target_path):
+        files = [f for f in os.listdir(self.output_dir) if os.path.isfile(os.path.join(self.output_dir, f))]
+        (target_dir, target_file) = os.path.split(target_path)
+        (target_name, target_ext) = os.path.splitext(target_file)
+        cnt = 0
+        for file in files:
+            (fname, fext) = os.path.splitext(file)
+            if target_name in fname:
+                cnt += 1
+        
+        if cnt:
+            new_name = f"{target_name}_{cnt}"
+        else:
+            new_name = target_name
+        
+        new_path = os.path.join(target_dir, new_name + target_ext)
+        return new_path
         
 class SearchRecorder(_SearchOutput):
     def __init__(self, *args, append_mode = False, **kwargs):
@@ -43,6 +61,14 @@ class SearchRecorder(_SearchOutput):
         except FileExistsError:
             logging.info(f"SearchRecorder directory {self.output_dir} already exists")
         
+        if append_mode:
+            # Append Mode not yet implemented for SQLite Recorder (GRRR...)
+            # Need to go ahead and make another recorder file
+            
+            # Determine if problem_recorder_path file already exists
+            self.problem_recorder_path = self.gen_next_path(self.problem_recorder_path)
+                
+            
         problem_recorder = om.SqliteRecorder(self.problem_recorder_path, record_viewer_data=False)
         self.problem_recorder = problem_recorder
     
@@ -52,6 +78,19 @@ class SearchRecorder(_SearchOutput):
         
             with open(self.result_path, 'wb') as f: # Create new file or overwrite existing
                 pass
+    
+    @property
+    def iterations(self):
+        file = open(self.iterations_path, 'rb')
+        iters = []
+        while True:
+            try:
+                iteration = pickle.load(file)
+                iters.append(iteration)
+            except EOFError:
+                break
+        file.close()
+        return iters
 
     
     def add_prob(self, prob):
@@ -70,7 +109,7 @@ class SearchRecorder(_SearchOutput):
             pickle.dump(iter_data,f)
         
     def record_result(self, searcher_data):
-        with open(self.result_path, 'wb') as f:
+        with open(self.result_path, 'ab') as f:
             pickle.dump(searcher_data, f)
             
         
@@ -270,18 +309,7 @@ class Searcher:
         self._dry_run = False
         self._dry_run_iterator = None
         self._dry_run_feval_iterator = None
-        
-        self._recover = False
-        self._recover_case_reader = None
-        self._recover_iters = None
-        
-    # def recover(self, case_reader, iters):
-    #     #TODO: This isnt working right
-    #     self._recover = True
-    #     self._recover_case_reader = case_reader
-    #     self._recover_iters = iters
-        
-    #     self.search(max_iter = iters[-1].iteration)
+
     
     def restore_result(self, search_recorder):
         # Output Search Result
@@ -336,7 +364,8 @@ class Searcher:
             self.prob.driver.options["disp"] = driver_disp_cache
         
         # Substitute config param vals into Model
-        logging.info(f"Evaluating Configuration: \n {str(config)}")
+        logging.info(f"Evaluating Iteration: {iter_data.iteration}")
+        logging.info(f"Configuration: \n {str(config)}")
         
         self.prob.driver.options["disp"] = False
         if base_case:
@@ -369,27 +398,7 @@ class Searcher:
             # Run Optimal Control Problem
             if self._dry_run:
                 failed = False
-                func_evals += next(self._dry_run_feval_iterator)
-            
-            elif self._recover:
-                recovery_iter = None
-                for ri in self._recover_iters:
-                    if ri.iteration == iter_data.iteration:
-                        recovery_iter = ri
-                        break
-                if recovery_iter:
-                    # TODO: Check that the configurations and objectives match
-                    
-                    logging.info(f"Found recovery iteration {recovery_iter.iteration}")
-                    
-                    if recovery_iter.obj_val:
-                        failed = False
-                        case = self._recover_case_reader.get_case(recovery_iter.case_name)
-                        self.prob.load_case(case)
-                    else:
-                        failed = True
-                    func_evals = recovery_iter.func_evals
-                    
+                func_evals += next(self._dry_run_feval_iterator) 
             else:
                 failed = self.prob.run_driver()
                 func_evals += self.prob.driver.result['nfev']
@@ -427,18 +436,41 @@ class Searcher:
         return iter_data
     
     def search(self, max_iter=None, max_stall_iter=None, func_threshold=None):
+        # Initialize
         config_sets = self.config_searcher.sorted_sets
-        iterations = [] # List of SearchIteration objects
-        opt_iter = None # Current best SearchIteration object
         terminate = False
         stall_cntr = 0
+        iterations = [] # List of SearchIteration objects
+        opt_iter = None # Current best SearchIteration object
+        start_index = 0
+        warm_start = False
         
+        # Check SearchRecorder for Previous Iterations
+        if self.search_recorder:
+            iterations = self.search_recorder.iterations
+            if iterations:
+                warm_start = True
+                opt_obj_val = np.inf
+                if self.counter:
+                    self.counter.reset()
+                    
+                for i in iterations:
+                    if self.counter:
+                        self.counter.increment(fevals=i.func_evals)
+                    if i.obj_val < opt_obj_val:
+                        opt_iter = i
+                        opt_obj_val = i.obj_val
+                start_index = iterations[-1].iteration + 1
+                
         if self.base_case:
             self.prob.final_setup()
             self.prob.load_case(self.base_case)
-            self.prob.record("base_case") # Record problem variables 
+            if not warm_start:
+                self.prob.record("base_case") # Record problem variables 
             
-        for i,config in enumerate(config_sets):
+        i_range = range(start_index, len(config_sets))
+        for i in i_range:
+            config = config_sets[i]
             iter_data = SearchIteration(iteration=i)
             iter_data = self.evaluate(config, base_case = self.base_case, case_name = f"iteration_{i}", iter_data=iter_data)
             
