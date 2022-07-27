@@ -45,6 +45,9 @@ class Problem(om.Problem):
         
     def init_vals(self):
         self.traj.init_vals(self)
+        if self.sim_prob:
+            #self.traj.init_vals(self.sim_prob)
+            pass
     
     def run(self, desc="problem"):
         self.run_model(reset_iter_counts=True)

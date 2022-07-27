@@ -5,6 +5,7 @@ import DynamicModel as dm
 import StaticModel as sm
 import openmdao.api as om
 import Param as P
+import PlanarPT.PlanarPT_Controller as pptc
 
 class PlanarPTParams(P.ParamSet):
     def __init__(self, *args, **kwargs):
@@ -18,25 +19,32 @@ class PlanarPTDynamicTraj(dm.DynamicTrajectory):
     def __init__(self, phases, **kwargs):
         super().__init__(phases, linked_vars=['*'], phase_names="phase", **kwargs)
     
-    def init_vars(self):
-        super().init_vars(openmdao_path = "", parameter_names = ['theta'], 
+    def init_vars(self, **kwargs):
+        super().init_vars(parameter_names = ['theta'], 
                 var_opts = {
                     "theta":{'opt':False,'static_target':True}
-                    })
+                    },
+                **kwargs)
 
 class PlanarPTDynamicPhase(dm.DynamicPhase):
-    def __init__(self, **kwargs):
+    def __init__(self, include_controller=False, **kwargs):
         # Instantiate a Phase and add it to the Trajectory.
         # Here the transcription is necessary but not particularly relevant.
-        super().__init__(ode_class=PlanarPTModelDAE, **kwargs)
+        self.include_controller = include_controller
+        super().__init__(ode_class=PlanarPTSystemDAE,  model_kwargs={"include_controller":include_controller}, **kwargs)
     
-    def init_vars(self):
+    def init_vars(self, **kwargs):
+        control_names = ["d"]
+        if not self.include_controller:
+            control_names.append("u")
+        
         super().init_vars(state_names=["x"],
-                        control_names = ["u","d"],
+                        control_names = control_names,
                         #parameter_names = ["theta"], # We want to declare the parameters in the trajectory
                         #output_names = ["y", "a"],
                         output_names = ["y"],
-                        var_opts = {"x":{"fix_initial":True}})
+                        var_opts = {"x":{"fix_initial":True}},
+                        **kwargs)
 
 class PlanarPTModelDAE(dm.DynamicModel):
     def initialize(self):
@@ -48,6 +56,23 @@ class PlanarPTModelDAE(dm.DynamicModel):
         self.options["Path"] = mdl_path
         self.options["Functions"] = ["h", "f", "g"]
         self.options["StaticVars"] = ["theta"]
+        
+class PlanarPTSystemDAE(om.Group):
+    def initialize(self):
+        self.options.declare('num_nodes', types=int)
+        self.options.declare('include_controller', types=bool, default=False)
+        
+    def setup(self):
+        nn = self.options["num_nodes"]
+        include_controller = self.options["include_controller"]
+        
+        if include_controller:
+            self.add_subsystem(name="CTRL", subsys=pptc.PlanarController(num_nodes=nn))
+        self.add_subsystem(name="PT", subsys=PlanarPTModelDAE(num_nodes=nn))
+
+        if include_controller:
+            self.connect("CTRL.u_1", "PT.u1")
+            self.connect("CTRL.u_2", "PT.u2")        
         
 class PlanarPTModelStatic(sm.StaticModel):
     def initialize(self):
@@ -74,35 +99,21 @@ if __name__ == "__main__":
         pass
     os.chdir('./ModelChecks/')
     
-    def checkModelClass(model_class):
-        class_name = model_class.__name__
-        
-        if not os.path.isdir(class_name):
-            os.mkdir(class_name)
-        os.chdir(class_name)
-        
-        print(f"Checking Model Class: {class_name}")
-        
-        if issubclass(model_class, dm.DynamicModel):
-            mdl_args = {"num_nodes":10}
-        else:
-            mdl_args = {}
-        p = om.Problem(model=model_class(**mdl_args))
-        p.setup()
-        p.final_setup()
-        
-        # Visualize:
-        om.n2(p)
-        om.view_connections(p)
-        
-        # Checks:
-        p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
-        p.check_partials(compact_print=True)
-        
-        os.chdir('..')
+    model = PlanarPTSystemDAE(include_controller=True, num_nodes=10)
+
+    p = om.Problem(model=model)
+    p.setup()
+    p.final_setup()
     
-    model_types = [PlanarPTModelDAE, PlanarPTModelStatic]
+    # Visualize:
+    om.n2(p)
+    om.view_connections(p)
     
-    for mtype in model_types:
-        checkModelClass(mtype)
+    # Checks:
+    p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
+    p.check_partials(compact_print=True)
+    
+    os.chdir('..')
+    
+    
     

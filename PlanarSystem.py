@@ -8,6 +8,7 @@ Created on Wed Nov 17 16:07:54 2021
 import openmdao.api as om
 import PlanarBody.PlanarBodyModels as bm
 import PlanarPT.PlanarPTModels as pt 
+import PlanarController.PlanarController as pc
 import dymos as dm
 import DynamicModel as DM
 import os
@@ -103,18 +104,27 @@ class PlanarSystemParams(P.ParamSet):
 class PlanarSystemDAE(om.Group):
     def initialize(self):
         self.options.declare('num_nodes', types=int)
+        self.options.declare('include_controller', types=bool, default=False)
         
     def setup(self):
         nn = self.options["num_nodes"]
+        include_controller = self.options["include_controller"]
         
+        if include_controller:
+            self.add_subsystem(name="CTRL", subsys=pc.PlanarController(num_nodes=nn))
         self.add_subsystem(name="PT", subsys=pt.PlanarPTModelDAE(num_nodes=nn))
         self.add_subsystem(name="BM", subsys=bm.PlanarBodyODE(num_nodes=nn))
         
         self.connect("PT.y1", "BM.u_1")
         self.connect("PT.y3", "BM.u_2")
+        if include_controller:
+            self.connect("CTRL.u_1", "PT.u1")
+            self.connect("CTRL.u_2", "PT.u2")
+            
         
 class PlanarSystemDynamicTraj(DM.DynamicTrajectory):
-    def __init__(self, phases, **kwargs):
+    def __init__(self, phases, include_controller=False, **kwargs):
+        self.include_controller = include_controller
         super().__init__(phases, linked_vars=['*'], phase_names="phase", **kwargs)
     
     def init_vars(self):
@@ -123,14 +133,18 @@ class PlanarSystemDynamicTraj(DM.DynamicTrajectory):
                     "theta":{'opt':False,'static_target':True}
                     })
         
-        self = bm.ModifyTraj(self, openmdao_path="BM")
+        bm.ModifyTraj(self, openmdao_path="BM")
+        if self.include_controller:
+            pc.ModifyTraj(self, openmdao_path="CTRL")  
         
 class PlanarSystemDynamicPhase(DM.DynamicPhase):
-    def __init__(self, **kwargs):
+    def __init__(self, include_controller=False, **kwargs):
         # Instantiate a Phase and add it to the Trajectory.
         # Here the transcription is necessary but not particularly relevant.
-        super().__init__(ode_class=PlanarSystemDAE, **kwargs)
+        model_kwargs = {"include_controller":include_controller}
+        super().__init__(ode_class=PlanarSystemDAE, model_kwargs=model_kwargs, **kwargs)
     
+        self.include_controller = include_controller
         ## Add PowerTrain Information.  In the PlanarSystemDynamicModel, the PlanarPowerTrainModel dynamic model 
         # is added as a subsystem named PT.  When we specify the open_mdao path as PT, init_vars will find the 
         # relevant metadata and use it to add the states, controls, etc to the phase.  The phase variables name will
@@ -138,25 +152,36 @@ class PlanarSystemDynamicPhase(DM.DynamicPhase):
         # referred to as state "PT_Z_x1"
     
     def init_vars(self):
+        if self.include_controller:
+            pt_control_names = ["d"]
+        else:
+            pt_control_names = ["u","d"]
+                    
         super().init_vars(openmdao_path="PT", 
                         state_names=["x"],
-                        control_names = ["u","d"],
+                        control_names = pt_control_names,
                         output_names = ["y", "a"],
                         var_opts = {"d":{"val":0}})
         ## Add Body Model Information
         # The PlanarQuadrotorODE Module has a method which takes an existing phase
         # and manually adds its states and controls to it.  
-        self = bm.ModifyPhase(self, openmdao_path="BM", declare_controls=False)
+        bm.ModifyPhase(self, openmdao_path="BM", declare_controls=False)
+        if self.include_controller:
+            pc.ModifyPhase(self, openmdao_path="CTRL", body_model_path="BM", powertrain_path="PT")
         
 class PlanarSystemModel(P.ParamSystem):
     def __init__(self, traj, cons = None, **kwargs):
+        self._traj = traj
+        
         ps = PlanarSystemParams()
+        if self.include_controller:
+            ps.update(pc.PlanarControllerParams())
         psurr = PlanarSystemSurrogates(params=ps)
         pg = P.ParamGroup(param_set = ps)
         
         super().__init__(pg, **kwargs)
         
-        self._traj = traj
+
         self.surrogates = psurr
         
         if cons==None:
@@ -167,6 +192,10 @@ class PlanarSystemModel(P.ParamSystem):
             raise Exception("cons argument must be a constraint set")
             
         self.cons = cons # Problem Constraints
+    
+    @property
+    def include_controller(self):
+        return self._traj.include_controller
     
     def setup(self):
         # Setup the Surrogates
