@@ -81,11 +81,12 @@ class PlanarTrajectory(ps.PlanarSystemDynamicTraj):
      # Superclass for specific optimal control trajectories that we want the vehicle to take.
      # We want all options, etc to be constant so that the trajectories are uniform across all problems
      
-     def __init__(self, tx=None, sim_mode=False, sim_args={"times_per_seg":20}):
+     def __init__(self, tx=None, sim_mode=False, include_controller=False, sim_args={"times_per_seg":20}):
          self.tx = tx # Problem transcription  
          self.sim_mode = sim_mode
+         self.include_controller = include_controller
          phases = self.init_phases()
-         super().__init__(phases)
+         super().__init__(phases, include_controller=include_controller)
          super().init_vars()
          
          self._sim_args = sim_args
@@ -131,6 +132,8 @@ class Step(PlanarTrajectory):
         self.x_des = 10
         self.y_des = 10
         
+        self.time = 10
+        
         super().__init__(tx=tx, **kwargs)
 
     def init_phases(self):
@@ -146,7 +149,7 @@ class Step(PlanarTrajectory):
         (self.x_lb, self.x_ub) = pos_margin([self.x_init, self.x_des], 0.1)
         (self.y_lb, self.y_ub) = pos_margin([self.y_init, self.y_des], 0.1)
 
-        phase = ps.PlanarSystemDynamicPhase(transcription=self.tx)
+        phase = ps.PlanarSystemDynamicPhase(transcription=self.tx, include_controller=self.include_controller)
         phase.init_vars()
         
         if self.sim_mode:
@@ -157,7 +160,7 @@ class Step(PlanarTrajectory):
             ff = True
         
         # Set up States and Inputs as Optimization Variables
-        phase.set_time_options(fix_initial=fi, initial_val=0, duration_bounds=(1, 20), duration_ref0=1, duration_ref=20)
+        phase.set_time_options(fix_initial=fi, initial_val=0, duration_bounds=(self.time/20, self.time*2), duration_ref0=1, duration_ref=self.time)
         
         phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=fi, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
         phase.set_state_options("PT_x2", fix_initial=fi, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
@@ -168,11 +171,15 @@ class Step(PlanarTrajectory):
         phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, lower=self.y_lb, ref0=self.y_lb, upper=self.y_ub, ref=self.y_ub)
         phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff)
         phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, lower=-np.pi/2, ref0=-np.pi/2, upper=np.pi/2, ref=np.pi/2)
+        if self.include_controller:
+            phase.set_state_options("CTRL_e_omega_1_I", val=0, fix_initial=True, fix_final=False)
+            phase.set_state_options("CTRL_e_omega_2_I", val=0, fix_initial=True, fix_final=False)
         
-        opt_in = not self.sim_mode
-        phase.set_control_options("PT_u1", lower=0, upper=1, opt=opt_in, ref0=0.0, ref=1)
-        phase.set_control_options("PT_u2", lower=0, upper=1, opt=opt_in, ref0=0.0, ref=1)
-        
+        if not self.include_controller:
+            opt_in = not self.sim_mode
+            phase.set_control_options("PT_u1", lower=0, upper=1, opt=opt_in, ref0=0.0, ref=1)
+            phase.set_control_options("PT_u2", lower=0, upper=1, opt=opt_in, ref0=0.0, ref=1)
+            
         if not self.sim_mode:
             phase.add_boundary_constraint('PT.x2_dot', loc='final', shape=(1,), equals=0) # Shape may need to change to (nn,)
             phase.add_boundary_constraint('PT.x3_dot', loc='final', shape=(1,), equals=0)
@@ -187,22 +194,28 @@ class Step(PlanarTrajectory):
     def init_vals(self, prob, name="traj"):
         # Set Initial Values
         prob.set_val(f'{name}.phase0.t_initial', 0.0)
-        prob.set_val(f'{name}.phase0.t_duration', 10.0)
-        
-        prob.set_val(f'{name}.phase0.controls:PT_u1', 0.5)
-        prob.set_val(f'{name}.phase0.controls:PT_u2', 0.5)
-        
+        prob.set_val(f'{name}.phase0.t_duration', self.time)
+                
         prob.set_val(f'{name}.phase0.states:PT_x1', 1.0)
         
         phase = list(self._phases.values())[0]
         prob.set_val(f'{name}.phase0.states:PT_x2', phase.interp('PT_x2', ys=(0,1000)))
         prob.set_val(f'{name}.phase0.states:PT_x3', phase.interp('PT_x3', ys=(0,1000)))
-        prob.set_val(f'{name}.phase0.states:BM_v_x', phase.interp('BM_v_x', ys=[0, 0]))
-        prob.set_val(f'{name}.phase0.states:BM_v_y', phase.interp('BM_v_y', ys=[0, 0]))
-        prob.set_val(f'{name}.phase0.states:BM_x', phase.interp('BM_x', ys=[0, 10]))
-        prob.set_val(f'{name}.phase0.states:BM_y', phase.interp('BM_y', ys=[0, 10]))
+        prob.set_val(f'{name}.phase0.states:BM_v_x', phase.interp('BM_v_x', ys=[self.x_des/self.time, self.x_des/self.time]))
+        prob.set_val(f'{name}.phase0.states:BM_v_y', phase.interp('BM_v_y', ys=[self.y_des/self.time, self.y_des/self.time]))
+        prob.set_val(f'{name}.phase0.states:BM_x', phase.interp('BM_x', ys=[0, self.x_des]))
+        prob.set_val(f'{name}.phase0.states:BM_y', phase.interp('BM_y', ys=[0, self.y_des]))
         prob.set_val(f'{name}.phase0.states:BM_omega', phase.interp('BM_omega', ys=[0, 0]))
         prob.set_val(f'{name}.phase0.states:BM_theta', phase.interp('BM_theta', ys=[0, 0]))
+        
+        if self.include_controller:
+            prob.set_val(f'{name}.phase0.controls:CTRL_x_T', phase.interp('CTRL_x_T', ys=[0, self.x_des]))
+            prob.set_val(f'{name}.phase0.controls:CTRL_y_T', phase.interp('CTRL_y_T', ys=[0, self.y_des]))
+            prob.set_val(f'{name}.phase0.controls:CTRL_x_T_dot', phase.interp('CTRL_x_T_dot', ys=[self.x_des/self.time, self.x_des/self.time]))
+            prob.set_val(f'{name}.phase0.controls:CTRL_y_T_dot', phase.interp('CTRL_y_T_dot', ys=[self.y_des/self.time, self.y_des/self.time]))
+        else:
+            prob.set_val(f'{name}.phase0.controls:PT_u1', 0.5)
+            prob.set_val(f'{name}.phase0.controls:PT_u2', 0.5)
         
 class Mission_1(PlanarTrajectory):
     def __init__(self, tx=dm.GaussLobatto(num_segments=10, compressed=True), **kwargs):

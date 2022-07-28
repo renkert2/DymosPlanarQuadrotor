@@ -24,7 +24,7 @@ os.chdir("Output")
 #%%
 nn = 20
 tx = dm.GaussLobatto(num_segments=nn, solve_segments='forward')
-phase = ps.PlanarSystemDynamicPhase(transcription=tx)
+phase = ps.PlanarSystemDynamicPhase(transcription=tx, model_)
 phase.init_vars()
 
 # Setup Dynamic Problem
