@@ -22,7 +22,7 @@ import Constraints as C
 init.init_output(__file__, dirname="Output_20")
 
 #%% Setup Search Recorder
-rec = Search.SearchRecorder()
+rec = Search.SearchRecorder(append_mode=True)
 # Creates recorder for problem internally
 
 #%% Setup Problem
@@ -31,7 +31,7 @@ cons = C.ConstraintSet() # Create an empty constraint set
 cons.add(C.BatteryCurrent()) # for multiple phases
 cons.add(C.InverterCurrent())
 model = PS.PlanarSystemSearchModel(traj, cons=cons)
-prob = P.Problem(model=model, traj=traj, planar_recorder=None, record_driver=False)
+prob = P.Problem(model=model, traj=traj, planar_recorder=None)
 prob.driver.options["maxiter"] = 5000 # More complicated trajectory hits default iteration limit, need to increase
 rec.add_prob(prob)
 
