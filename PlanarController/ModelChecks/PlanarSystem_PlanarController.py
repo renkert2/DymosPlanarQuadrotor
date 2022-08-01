@@ -48,7 +48,7 @@ tx = dm.GaussLobatto(num_segments=nn)
 phase = ps.PlanarSystemDynamicPhase(transcription=tx, include_controller=True)
 phase.init_vars()
 
-traj = ps.PlanarSystemDynamicTraj(phase)
+traj = ps.PlanarSystemDynamicTraj(phase, include_controller=True)
 traj.init_vars()
 
 sys = ps.PlanarSystemModel(traj)

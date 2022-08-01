@@ -155,12 +155,14 @@ class Step(PlanarTrajectory):
         if self.sim_mode:
             fi=True
             ff=False
+            ft = True
         else:
             fi = True
             ff = True
+            ft = False
         
         # Set up States and Inputs as Optimization Variables
-        phase.set_time_options(fix_initial=fi, initial_val=0, duration_bounds=(self.time/20, self.time*2), duration_ref0=1, duration_ref=self.time)
+        phase.set_time_options(fix_initial=True, fix_duration=ft, initial_val=0, duration_bounds=(self.time/20, self.time*2), duration_ref0=1, duration_ref=self.time)
         
         phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=fi, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
         phase.set_state_options("PT_x2", fix_initial=fi, lower=0, upper=5000, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
@@ -201,8 +203,8 @@ class Step(PlanarTrajectory):
         phase = list(self._phases.values())[0]
         prob.set_val(f'{name}.phase0.states:PT_x2', phase.interp('PT_x2', ys=(0,1000)))
         prob.set_val(f'{name}.phase0.states:PT_x3', phase.interp('PT_x3', ys=(0,1000)))
-        prob.set_val(f'{name}.phase0.states:BM_v_x', phase.interp('BM_v_x', ys=[self.x_des/self.time, self.x_des/self.time]))
-        prob.set_val(f'{name}.phase0.states:BM_v_y', phase.interp('BM_v_y', ys=[self.y_des/self.time, self.y_des/self.time]))
+        prob.set_val(f'{name}.phase0.states:BM_v_x', phase.interp('BM_v_x', ys=[0, self.x_des/self.time]))
+        prob.set_val(f'{name}.phase0.states:BM_v_y', phase.interp('BM_v_y', ys=[0, self.y_des/self.time]))
         prob.set_val(f'{name}.phase0.states:BM_x', phase.interp('BM_x', ys=[0, self.x_des]))
         prob.set_val(f'{name}.phase0.states:BM_y', phase.interp('BM_y', ys=[0, self.y_des]))
         prob.set_val(f'{name}.phase0.states:BM_omega', phase.interp('BM_omega', ys=[0, 0]))
@@ -211,8 +213,10 @@ class Step(PlanarTrajectory):
         if self.include_controller:
             prob.set_val(f'{name}.phase0.controls:CTRL_x_T', phase.interp('CTRL_x_T', ys=[0, self.x_des]))
             prob.set_val(f'{name}.phase0.controls:CTRL_y_T', phase.interp('CTRL_y_T', ys=[0, self.y_des]))
-            prob.set_val(f'{name}.phase0.controls:CTRL_x_T_dot', phase.interp('CTRL_x_T_dot', ys=[self.x_des/self.time, self.x_des/self.time]))
-            prob.set_val(f'{name}.phase0.controls:CTRL_y_T_dot', phase.interp('CTRL_y_T_dot', ys=[self.y_des/self.time, self.y_des/self.time]))
+            prob.set_val(f'{name}.phase0.controls:CTRL_v_x_T', phase.interp('CTRL_v_x_T', ys=[self.x_des/self.time, self.x_des/self.time]))
+            prob.set_val(f'{name}.phase0.controls:CTRL_v_y_T', phase.interp('CTRL_v_y_T', ys=[self.y_des/self.time, self.y_des/self.time]))
+            prob.set_val(f'{name}.phase0.controls:CTRL_a_x_T', 0)
+            prob.set_val(f'{name}.phase0.controls:CTRL_a_y_T', 0)
         else:
             prob.set_val(f'{name}.phase0.controls:PT_u1', 0.5)
             prob.set_val(f'{name}.phase0.controls:PT_u2', 0.5)
@@ -365,5 +369,91 @@ class Mission_1(PlanarTrajectory):
             
             prob.set_val(f'{name}.{pn}.states:BM_omega', 0)
             prob.set_val(f'{name}.{pn}.states:BM_theta', 0)
+            
+class Track(PlanarTrajectory):
+    def __init__(self, time, x_T, y_T, v_x_T, v_y_T, a_x_T, a_y_T, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):        
+        self.time = time
+        self.x_T = x_T
+        self.y_T = y_T
+        self.v_x_T = v_x_T
+        self.v_y_T = v_y_T
+        self.a_x_T = a_x_T
+        self.a_y_T = a_y_T
         
-         
+        super().__init__(tx=tx, sim_mode=True, include_controller=True, **kwargs)
+        
+    def init_phases(self):
+        super().init_phases()
+        phase = ps.PlanarSystemDynamicPhase(transcription=self.tx, include_controller=True)
+        phase.init_vars()
+        
+        def pos_margin(p, margin):
+            # Takes a list of positions and returns the min and the max with a padded boundary
+            p_max = max(p)
+            p_min = min(p)
+            d = margin*(p_max - p_min)
+            return (p_min - d, p_max + d)
+        
+        (self.x_lb, self.x_ub) = pos_margin(self.x_T, 0.5)
+        (self.y_lb, self.y_ub) = pos_margin(self.y_T, 0.5)
+        
+        fi=True
+        ff=False
+        ft = True
+        
+        # Set up States and Inputs as Optimization Variables
+        phase.set_time_options(fix_initial=fi, fix_duration=ft, initial_val=0, duration_ref=self.time[-1])
+        
+        phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=fi, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
+        phase.set_state_options("PT_x2", fix_initial=fi, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
+        phase.set_state_options("PT_x3", fix_initial=fi, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
+        phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff)
+        phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff)
+        phase.set_state_options('BM_x', fix_initial=fi, fix_final=ff, ref0=self.x_lb, ref=self.x_ub)
+        phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, ref0=self.y_lb, ref=self.y_ub)
+        phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff)
+        phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, ref0=-np.pi/2, ref=np.pi/2)
+        phase.set_state_options("CTRL_e_omega_1_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100)
+        phase.set_state_options("CTRL_e_omega_2_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100)
+        phase.set_state_options("CTRL_e_T_I", val=0, fix_initial=fi, fix_final = ff, ref=((self.x_ub-self.x_lb)**2 + (self.y_ub-self.y_lb)**2))
+        
+        # Minimize tracking error
+        phase.add_objective('CTRL_e_T_I', loc='final')
+        
+        return phase
+    
+    def init_vals(self, prob, name="traj"):
+        # Set Initial Values
+        prob.set_val(f'{name}.phase0.t_initial', 0.0)
+        prob.set_val(f'{name}.phase0.t_duration', self.time[-1])
+                
+        prob.set_val(f'{name}.phase0.states:PT_x1', 1.0)
+        
+        interp_kwargs = {"xs":self.time, "kind":"cubic"}
+        phase = list(self._phases.values())[0]
+        prob.set_val(f'{name}.phase0.states:PT_x2', 0)
+        prob.set_val(f'{name}.phase0.states:PT_x3', 0)
+        prob.set_val(f'{name}.phase0.states:BM_v_x', phase.interp('BM_v_x', ys=self.v_x_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.states:BM_v_y', phase.interp('BM_v_y', ys=self.v_y_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.states:BM_x', phase.interp('BM_x', ys=self.x_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.states:BM_y', phase.interp('BM_y', ys=self.y_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.states:BM_omega', 0)
+        prob.set_val(f'{name}.phase0.states:BM_theta', 0)
+
+        prob.set_val(f'{name}.phase0.controls:CTRL_x_T', phase.interp('CTRL_x_T', ys=self.x_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.controls:CTRL_y_T', phase.interp('CTRL_y_T', ys=self.y_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.controls:CTRL_v_x_T', phase.interp('CTRL_v_x_T', ys=self.v_x_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.controls:CTRL_v_y_T', phase.interp('CTRL_v_y_T', ys=self.v_y_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.controls:CTRL_a_x_T', phase.interp('CTRL_a_x_T', ys=self.a_x_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.controls:CTRL_a_y_T', phase.interp('CTRL_a_y_T', ys=self.a_y_T, **interp_kwargs))
+
+def getReferenceTraj(case, phases=["phase0"]):
+    #TODO: Implement multiple phases
+    time = case.get_val("traj.phases.phase0.timeseries.time")
+    time = np.ndarray.flatten(time)
+    time,I = np.unique(time, return_index=True)
+    trajdat = {}
+    for n,t in (("x_T", "states:BM_x"), ("y_T", "states:BM_y"), ("v_x_T", "states:BM_v_x"), ("v_y_T", "states:BM_v_y"), ("a_x_T", "state_rates:BM_v_x"),  ("a_y_T", "state_rates:BM_v_y")):
+        trajdat[n] = np.ndarray.flatten(case.get_val(f"traj.phases.phase0.timeseries.{t}"))[I]
+    
+    return (time, trajdat)

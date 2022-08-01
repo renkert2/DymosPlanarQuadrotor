@@ -22,22 +22,16 @@ import PlanarSystem as ps
 
 init.init_output(__file__, dirname="Output")
 
-traj = T.Step(tx=dm.GaussLobatto(num_segments=50, compressed=True), include_controller=True, sim_mode=True)
+#traj = T.Step(tx=dm.GaussLobatto(num_segments=20, compressed=True), include_controller=True, sim_mode=True)
+traj = T.Step(tx=dm.GaussLobatto(num_segments=20, compressed=True, solve_segments='forward'), include_controller=True, sim_mode=True)
 traj.x_des=0
+traj.time=3
 
 cons = C.ConstraintSet() # Create an empty constraint set
 #cons.add(C.BatteryCurrent()) # for multiple phases
 #cons.add(C.InverterCurrent())
 model = ps.PlanarSystemModel(traj, cons=cons)
-
-
-#%% Baseline Controller Tuning
 params = model._params
-
-params["k_p_omega"].val = 0.000001
-params["k_i_omega"].val = 0
-
-params["k_d_r"].val = 0.01
 
 #%%
 rec = R.Recorder(name="nominal_sim_cases.sql")
@@ -49,14 +43,26 @@ prob.setup()
 prob.init_vals()
 prob.final_setup()
 
+#%%
+params["k_p_r"].val = 2
+params["k_d_r"].val = 2
+params["k_p_theta"].val = 1
+params["k_d_theta"].val = 1
+
+params["k_p_omega"].val = 0.003
+params["k_i_omega"].val = 0.03
+params["k_b_omega"].val = 1000
+
 
 #%%
 #prob.run_model()
-om.n2(prob)
+#om.n2(prob)
 
 #%%
-prob.record("nominal_sim_initial")
-prob.run_driver()
-prob.record("nominal_sim_final")
+prob.run_model()
+prob.record("final")
+
+prob.sim_prob.simulate()
+prob.sim_prob.record("final")
 
 prob.cleanup_all()

@@ -84,10 +84,16 @@ prob.set_val('traj.phase0.states:PT_x2', 0)
 prob.set_val('traj.phase0.states:PT_x3', 0)
 
 # Controller Tuning
-param_set["k_p_omega"].val = 0.0007
-param_set["k_i_omega"].val = 0.004
-param_set["k_b_omega"].val = 2000
+# param_set["k_p_omega"].val = 0.0007
+# param_set["k_i_omega"].val = 0.004
+# param_set["k_b_omega"].val = 2000
 
+param_set["k_p_omega"].val = 0.003
+param_set["k_i_omega"].val = 0.03
+param_set["k_b_omega"].val = 1000
+
+#param_set["k_i_omega"].val = 0
+#param_set["k_b_omega"].val = 0
 
 #
 tic = time.perf_counter()
@@ -115,6 +121,20 @@ states = ["CTRL_u_1", "CTRL_u_2"]
 labels = ["$u_1$", "$u_2$"]
 fig, axes = plt.subplots(len(states), 1)
 fig.suptitle(r"PowerTrain Controls", fontweight='bold')
+for i, ctrl in enumerate(states):
+    sim = axes[i].plot(prob.get_val("traj.phases.phase0.timeseries.time"), prob.get_val(f'traj.phase0.timeseries.{ctrl}'), '-')
+    axes[i].set_ylabel(labels[i])
+axes[-1].set_xlabel('time (s)')
+plt.tight_layout()
+
+plt.show()
+
+#%%
+
+states = ['states:CTRL_e_omega_1_I', 'states:CTRL_e_omega_1_I']
+labels = [r"$\omega_{I,1}$", r"$\omega_{I,2}$"]
+fig, axes = plt.subplots(len(states), 1)
+fig.suptitle(r"Integrators", fontweight='bold')
 for i, ctrl in enumerate(states):
     sim = axes[i].plot(prob.get_val("traj.phases.phase0.timeseries.time"), prob.get_val(f'traj.phase0.timeseries.{ctrl}'), '-')
     axes[i].set_ylabel(labels[i])

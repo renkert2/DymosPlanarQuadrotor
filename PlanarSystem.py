@@ -120,6 +120,8 @@ class PlanarSystemDAE(om.Group):
         if include_controller:
             self.connect("CTRL.u_1", "PT.u1")
             self.connect("CTRL.u_2", "PT.u2")
+            self.connect("BM.v_x_dot", "CTRL.a_x")
+            self.connect("BM.v_y_dot", "CTRL.a_y")
             
         
 class PlanarSystemDynamicTraj(DM.DynamicTrajectory):
@@ -173,9 +175,11 @@ class PlanarSystemModel(P.ParamSystem):
     def __init__(self, traj, cons = None, **kwargs):
         self._traj = traj
         
-        ps = PlanarSystemParams()
+        self.system_params = PlanarSystemParams()
+        ps = P.ParamSet(self.system_params.copy())
         if self.include_controller:
-            ps.update(pc.PlanarControllerParams())
+            self.controller_params = pc.PlanarControllerParams()
+            ps.update(self.controller_params)
         psurr = PlanarSystemSurrogates(params=ps)
         pg = P.ParamGroup(param_set = ps)
         
