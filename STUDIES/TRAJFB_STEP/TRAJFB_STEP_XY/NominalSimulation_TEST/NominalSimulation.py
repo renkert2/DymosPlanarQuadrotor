@@ -28,8 +28,8 @@ reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 input_opt_final = reader.get_case("input_opt_final")
 
 time, trajdat = T.getReferenceTraj(input_opt_final)
-tx = dm.GaussLobatto(num_segments=20, compressed=True)
-#tx = dm.Radau(num_segments=20, compressed=True)
+tx = dm.Radau(num_segments=20, compressed=True)
+#tx = dm.ExplicitShooting(compressed=True, num_segments=10, num_steps_per_segment=10, method='rk4')
 traj = T.Track(time, trajdat["x_T"], trajdat["y_T"], trajdat["v_x_T"], trajdat["v_y_T"], trajdat["a_x_T"], trajdat["a_y_T"], trajdat["theta_T"], trajdat["omega_T"], tx=tx)
 cons = C.ConstraintSet() # Create an empty constraint set
 #cons.add(C.BatteryCurrent()) # for multiple phases
@@ -42,7 +42,10 @@ rec = R.Recorder(name="nominal_sim_cases.sql")
 prob = P.Problem(model=model, traj = traj, planar_recorder=rec)
 
 prob.setup()
-#model.traj.phases.phase0.nonlinear_solver.options["maxiter"] = 1000
+# nls = model.traj.phases.phase0.nonlinear_solver
+# nls.options["maxiter"] = 200
+# nls.options["err_on_non_converge"] = True
+# nls.options["solve_subsystems"] = True
 prob.init_vals()
 prob.final_setup()
 
@@ -56,12 +59,9 @@ params["k_p_omega"].val = 0.003
 params["k_i_omega"].val = 0.03
 params["k_b_omega"].val = 1000
 
-pv_ctrl = model.controller_params.export_vals()
-
-with open("pv_ctrl.pickle", 'wb') as f:
-    pickle.dump(pv_ctrl, f)
 
 #%%
+# prob.run_model()
 prob.run_driver()
 prob.record("nominal_sim_final")
 

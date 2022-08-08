@@ -5,9 +5,6 @@ import my_plt
 import matplotlib.pyplot as plt
 import SUPPORT_FUNCTIONS.init as init
 import os
-import Recorders as R
-import numpy as np
-import re
 
 init.init_output(__file__)
 
@@ -15,17 +12,15 @@ input_opt_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_STEP", "InputOpti
 reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 input_opt_final = reader.get_case("input_opt_final")
 
-name = "controller_opt_cases"
-sim_name = "controller_opt_cases_sim"
+name = "nominal_sim_cases"
+simname = "nominal_sim_cases_sim"
 
-reader = R.Reader(name+".sql")
+reader = om.CaseReader(name+".sql")
 cases = reader.get_cases("problem")
 
-sim_reader = om.CaseReader(sim_name+".sql")
+sim_reader = om.CaseReader(simname+".sql")
 sim_cases = sim_reader.get_cases("problem")
 
-#%%
-(d,t_latex) = reader.delta_table()
 #%% 
 print(reader.list_cases())
 
@@ -34,7 +29,7 @@ print(reader.list_cases())
                                 vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'BM_theta']],
                                 labels=['$x$', '$y$', r'$\theta$'], 
                                 title="Planar Quadrotor Input Optimization", 
-                                legend=["Initial", "Final"])
+                                legend=["Final"])
 
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phase0.timeseries', save=False, 
@@ -44,16 +39,16 @@ print(reader.list_cases())
                                 legend=["Final"])
 
 #%%
-(fig, axes) = plotting.subplots(None, cases, path='traj.phases.phase0.timeseries', save=False, 
+(fig, axes) = plotting.subplots(None, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
                                 vars=['CTRL_u_1', 'CTRL_u_2'],
                                 labels=['$u_1$', '$u_2$'], 
                                 title="Inverter Inputs", 
-                                legend=["Initial", "Final"])
-#(f, axes) = plotting.subplots(None, input_opt_final, path='traj.phase0.timeseries', save=False, axes=axes,
-#                                vars=['controls:PT_u1', 'controls:PT_u2'])
+                                legend=["Final"])
+(f, axes) = plotting.subplots(None, input_opt_final, path='traj.phase0.timeseries', save=False, axes=axes,
+                                vars=['controls:PT_u1', 'controls:PT_u2'])
 
-#for ax in axes:
-#    ax.legend(["Feedback",None, "Optimal",None])
+for ax in axes:
+    ax.legend(["Feedback",None, "Optimal",None])
     
 #my_plt.export(fig, "step_xy_inputs")
 
@@ -91,21 +86,21 @@ print(reader.list_cases())
                                 legend=["Final"])
 
 #%% Position Reference Following
-(fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phase0.timeseries', save=False, 
+(fig, axes) = plotting.subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, 
                                 vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'CTRL_e_T_I']],
                                 labels=['$x$', '$y$', 'Accum. Error'], 
                                 title="Position Reference Following", 
-                                legend=["Initial", "Final"])
-# (f, axes) = plotting.subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, axes=axes[range(2)],
-#                                 vars=['controls:CTRL_x_T', 'controls:CTRL_y_T'])
+                                legend=["Final"])
+(f, axes) = plotting.subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, axes=axes[range(2)],
+                                vars=['controls:CTRL_x_T', 'controls:CTRL_y_T'])
 
-# for ax in axes[range(2)]:
-#     ax.legend(["State",None, "Reference",None])
+for ax in axes[range(2)]:
+    ax.legend(["State",None, "Reference",None])
 
 #my_plt.export(fig, "step_xy_position")
 
 #%% Rotor Speed Reference Following
-(fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
+(fig, axes) = plotting.subplots(None, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
                                 vars=["states:PT_x2", "states:PT_x3"],
                                 labels=['$\omega_1$', '$\omega_2$'], 
                                 title="Speed Reference Following")
@@ -116,57 +111,3 @@ for ax in axes:
     ax.legend(["State",None, "Reference",None])
 
 #my_plt.export(fig, "step_x_rotorspeed_stable")
-
-#%% Iter Vals
-
-driver_cases = reader.get_cases('driver', recurse=False)
-iters = np.arange(len(driver_cases))
-
-plt.figure(1)
-var = 'params.k_p_r__Controller'
-var_data = np.zeros((len(iters),))
-for j, case in enumerate(driver_cases):
-    var_data[j] = case[var][-1]
-    
-plt.plot(iters,var_data)
-plt.xlabel("Iteration")
-plt.ylabel("$k_{p,r}$")
-#my_plt.export(plt.figure(1), fname="iter_desvar_vals")
-
-#%%
-plt.figure(2)
-var = 'traj.phase0.states:CTRL_e_T_I'
-var_data = np.zeros((len(iters),))
-for j, case in enumerate(driver_cases):
-    var_data[j] = case[var][-1]
-    
-plt.plot(iters,var_data)
-plt.xlabel("Iteration")
-plt.ylabel("Objective")
-#my_plt.export(plt.figure(2), fname="iter_obj_vals")
-
-#%%
-
-all_cons = list(driver_cases[0].get_constraints().keys())
-exp = "defects:(.*)"
-cons = []
-for i,c in enumerate(all_cons):
-    match = re.search(exp, c)
-    if match:
-        name = match.group(1)
-        name = name.replace("_", "\_")
-        cons.append((c,name))
-
-plt.figure(2)
-for c,n in cons:
-    var_data = np.zeros((len(iters),))
-    for j, case in enumerate(driver_cases):
-        var_data[j] = np.linalg.norm(case[c])
-    
-    plt.plot(iters, var_data, label=n, alpha=0.5)
-
-plt.xlabel("Iteration")
-plt.ylabel("Constraint Value")
-plt.legend()
-
-#my_plt.export(plt.figure(2), fname="iter_constraint_vals")

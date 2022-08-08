@@ -8,5 +8,5 @@ recent_files = ['..\\..\\..\\.spyder-py3\\temp.py', 'CheckPartials.py']
 
 [main]
 version = 0.2.0
-recent_files = ['..\\..\\..\\.spyder-py3\\temp.py', 'STUDIES\\TRAJFB_STEP\\TRAJFB_STEP_XY\\ControllerOptimization\\ControllerOptimization.py', 'STUDIES\\TRAJFB_STEP\\TRAJFB_STEP_XY\\ControllerOptimization\\ControllerOptimization_Analysis.py', 'PlanarController\\PlanarController.py', 'Trajectories.py', 'PlanarSystem.py', 'STUDIES\\TRAJ_STEP\\SystemOptimization\\SystemOptimization.py', '..\\..\\..\\Anaconda3\\lib\\site-packages\\openmdao\\core\\problem.py', 'PlanarBody\\PlanarBodyModels.py', 'STUDIES\\TRAJFB_STEP\\TRAJFB_STEP_XY\\NominalSimulation\\NominalSimulation.py']
+recent_files = ['STUDIES\\TRAJFB_STEP\\TRAJFB_STEP_XY\\ControllerOptimization\\ControllerOptimization.py', 'STUDIES\\TRAJFB_STEP\\TRAJFB_STEP_XY\\NominalSimulation\\NominalSimulation.py', 'Problems.py']
 
