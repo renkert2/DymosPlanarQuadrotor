@@ -29,7 +29,6 @@ input_opt_final = reader.get_case("input_opt_final")
 
 time, trajdat = T.getReferenceTraj(input_opt_final)
 tx = dm.GaussLobatto(num_segments=20, compressed=True)
-#tx = dm.Radau(num_segments=20, compressed=True)
 traj = T.Track(time, trajdat["x_T"], trajdat["y_T"], trajdat["v_x_T"], trajdat["v_y_T"], trajdat["a_x_T"], trajdat["a_y_T"], trajdat["theta_T"], trajdat["omega_T"], tx=tx)
 cons = C.ConstraintSet() # Create an empty constraint set
 #cons.add(C.BatteryCurrent()) # for multiple phases
@@ -38,7 +37,7 @@ model = ps.PlanarSystemModel(traj, cons=cons)
 params = model._params
 
 #%%
-rec = R.Recorder(name="nominal_sim_cases.sql")
+rec = R.Recorder(name="gain_sweep_cases.sql")
 prob = P.Problem(model=model, traj = traj, planar_recorder=rec)
 
 prob.setup()
@@ -46,7 +45,7 @@ prob.setup()
 prob.init_vals()
 prob.final_setup()
 
-#%%
+#%% Nominal Controller
 params["k_p_r"].val = 1
 params["k_d_r"].val = 2
 params["k_p_theta"].val = 0.3
@@ -56,17 +55,16 @@ params["k_p_omega"].val = 0.003
 params["k_i_omega"].val = 0.03
 params["k_b_omega"].val = 1000
 
-pv_ctrl = model.controller_params.export_vals()
-
-with open("pv_ctrl.pickle", 'wb') as f:
-    pickle.dump(pv_ctrl, f)
-
 #%%
-prob.run_driver()
-prob.record("nominal_sim_final")
+k_p_r_vals = np.arange(0.1,10,0.1)
+for i,v in enumerate(k_p_r_vals):
+    print(f"Evaluating Gain {i}: k_p_r={v}")
+    params["k_p_r"].val=v
+    prob.run_driver()
+    prob.record(f"gain_sweep_{i}")
+    obj = prob.get_objective()
+    print(f"Objective Function Value: {obj}")
 
-prob.sim_prob.simulate()
-prob.sim_prob.record("nominal_sim_final_sim")
 
 #%%
 prob.cleanup_all()

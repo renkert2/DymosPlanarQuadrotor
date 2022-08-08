@@ -371,7 +371,7 @@ class Mission_1(PlanarTrajectory):
             prob.set_val(f'{name}.{pn}.states:BM_theta', 0)
             
 class Track(PlanarTrajectory):
-    def __init__(self, time, x_T, y_T, v_x_T, v_y_T, a_x_T, a_y_T, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):        
+    def __init__(self, time, x_T, y_T, v_x_T, v_y_T, a_x_T, a_y_T, theta_T, omega_T, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):        
         self.time = time
         self.x_T = x_T
         self.y_T = y_T
@@ -379,6 +379,10 @@ class Track(PlanarTrajectory):
         self.v_y_T = v_y_T
         self.a_x_T = a_x_T
         self.a_y_T = a_y_T
+        
+        # The following are only used for scaling, not as actual inputs
+        self.theta_T = theta_T
+        self.omega_T = omega_T
         
         super().__init__(tx=tx, sim_mode=True, include_controller=True, **kwargs)
         
@@ -394,8 +398,15 @@ class Track(PlanarTrajectory):
             d = margin*(p_max - p_min)
             return (p_min - d, p_max + d)
         
-        (self.x_lb, self.x_ub) = pos_margin(self.x_T, 0.5)
-        (self.y_lb, self.y_ub) = pos_margin(self.y_T, 0.5)
+        (x_lb, x_ub) = pos_margin(self.x_T, 0)
+        (y_lb, y_ub) = pos_margin(self.y_T, 0)
+        
+        (v_x_lb, v_x_ub) = pos_margin(self.v_x_T, 0)
+        (v_y_lb, v_y_ub) = pos_margin(self.v_y_T, 0)
+        
+        (theta_lb, theta_ub) = pos_margin(self.theta_T, 0)
+        (omega_lb, omega_ub) = pos_margin(self.omega_T, 0)
+        
         
         fi=True
         ff=False
@@ -407,18 +418,20 @@ class Track(PlanarTrajectory):
         phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=fi, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
         phase.set_state_options("PT_x2", fix_initial=fi, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
         phase.set_state_options("PT_x3", fix_initial=fi, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
-        phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff)
-        phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff)
-        phase.set_state_options('BM_x', fix_initial=fi, fix_final=ff, ref0=self.x_lb, ref=self.x_ub)
-        phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, ref0=self.y_lb, ref=self.y_ub)
-        phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff)
-        phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, ref0=-np.pi/2, ref=np.pi/2)
+        phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff, ref0=v_x_lb, ref=v_x_ub)
+        phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff, ref0=v_y_lb, ref=v_y_ub)
+        phase.set_state_options('BM_x', fix_initial=fi, fix_final=ff, ref0=x_lb, ref=x_ub)
+        phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, ref0=y_lb, ref=y_ub)
+        phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff, ref0=omega_lb, ref=omega_ub)
+        phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, ref0=theta_lb, ref=theta_ub)
         phase.set_state_options("CTRL_e_omega_1_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100)
         phase.set_state_options("CTRL_e_omega_2_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100)
-        phase.set_state_options("CTRL_e_T_I", val=0, fix_initial=fi, fix_final = ff, ref=((self.x_ub-self.x_lb)**2 + (self.y_ub-self.y_lb)**2))
+        
+        e_T_I_ref = ((x_ub-x_lb)**2 + (y_ub-y_lb)**2)/4
+        phase.set_state_options("CTRL_e_T_I", val=0, fix_initial=fi, fix_final = ff, ref=e_T_I_ref)
         
         # Minimize tracking error
-        phase.add_objective('CTRL_e_T_I', loc='final')
+        phase.add_objective('CTRL_e_T_I', loc='final', ref=e_T_I_ref)
         
         return phase
     
@@ -453,7 +466,7 @@ def getReferenceTraj(case, phases=["phase0"]):
     time = np.ndarray.flatten(time)
     time,I = np.unique(time, return_index=True)
     trajdat = {}
-    for n,t in (("x_T", "states:BM_x"), ("y_T", "states:BM_y"), ("v_x_T", "states:BM_v_x"), ("v_y_T", "states:BM_v_y"), ("a_x_T", "state_rates:BM_v_x"),  ("a_y_T", "state_rates:BM_v_y")):
+    for n,t in (("x_T", "states:BM_x"), ("y_T", "states:BM_y"), ("v_x_T", "states:BM_v_x"), ("v_y_T", "states:BM_v_y"), ("a_x_T", "state_rates:BM_v_x"),  ("a_y_T", "state_rates:BM_v_y"), ("theta_T", "states:BM_theta"), ("omega_T", "states:BM_omega")):
         trajdat[n] = np.ndarray.flatten(case.get_val(f"traj.phases.phase0.timeseries.{t}"))[I]
     
     return (time, trajdat)
