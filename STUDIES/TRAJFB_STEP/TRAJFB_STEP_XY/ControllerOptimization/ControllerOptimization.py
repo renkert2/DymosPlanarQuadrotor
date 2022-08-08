@@ -52,7 +52,12 @@ cp["k_p_r"].ub = 10
 
 #%%
 rec = R.Recorder(name="controller_opt_cases.sql")
-prob = P.Problem(model=model, traj = traj, planar_recorder=rec)
+driver = om.pyOptSparseDriver()
+driver.options['optimizer'] = "IPOPT"
+driver.opt_settings["print_level"] = 5
+driver.declare_coloring()
+
+prob = P.Problem(model=model, traj = traj, planar_recorder=rec, driver=driver)
 
 prob.setup()
 prob.init_vals()
