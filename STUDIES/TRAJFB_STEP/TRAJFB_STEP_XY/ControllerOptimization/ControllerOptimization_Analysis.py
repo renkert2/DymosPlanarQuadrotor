@@ -109,11 +109,11 @@ print(reader.list_cases())
                                 vars=["states:PT_x2", "states:PT_x3"],
                                 labels=['$\omega_1$', '$\omega_2$'], 
                                 title="Speed Reference Following")
-(f, axes) = plotting.subplots(None, sim_cases, path='traj.phases.phase0.timeseries', save=False, axes=axes,
-                                vars=['CTRL_omega_1_star', 'CTRL_omega_2_star'])
+# (f, axes) = plotting.subplots(None, sim_cases, path='traj.phases.phase0.timeseries', save=False, axes=axes,
+#                                 vars=['CTRL_omega_1_star', 'CTRL_omega_2_star'])
 
-for ax in axes:
-    ax.legend(["State",None, "Reference",None])
+# for ax in axes:
+#     ax.legend(["State",None, "Reference",None])
 
 #my_plt.export(fig, "step_x_rotorspeed_stable")
 

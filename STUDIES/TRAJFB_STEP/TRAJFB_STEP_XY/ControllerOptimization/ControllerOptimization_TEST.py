@@ -37,7 +37,7 @@ model = ps.PlanarSystemModel(traj, cons=cons)
 cp = model.controller_params
 cp["k_p_r"].opt = True
 cp["k_p_r"].lb = 0.5
-cp["k_p_r"].ub = 100
+cp["k_p_r"].ub = 2.75
 
 # cp["k_d_r"].opt = True
 # cp["k_d_r"].lb = 0.1
@@ -98,7 +98,7 @@ prob.setup()
 prob.init_vals()
 
 #%% Initialize Values
-nom_sim_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJFB_STEP", "TRAJFB_STEP_XY", "NominalSimulation", "Output")
+nom_sim_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJFB_STEP", "TRAJFB_STEP_XY", "NominalSimulation_TEST", "Output")
 
 reader = om.CaseReader(os.path.join(nom_sim_path, "nominal_sim_cases.sql"))
 nom_sim_case = reader.get_case("nominal_sim_final")
@@ -109,8 +109,6 @@ with open(os.path.join(nom_sim_path, "pv_ctrl.pickle"), 'rb') as f:
     
 for p in model.controller_params:
     p.load_val(pv_ctrl_init)
-    
-prob.set_val("params.k_p_r__Controller", 1.0)
 
 #%% Reporting
 #prob.run_model()

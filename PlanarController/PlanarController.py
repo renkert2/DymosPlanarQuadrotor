@@ -635,7 +635,7 @@ def ModifyPhase(phase, openmdao_path="", body_model_path="", powertrain_path="")
     phase.add_state(V2N("e_omega_2_I"), rate_source=V2T("e_omega_2_I_dot"), targets=[V2T("e_omega_2_I")], units='rad')
     
     # Add Tracking Error State
-    phase.add_state(V2N("e_T_I"), rate_source=V2T("e_T"))
+    phase.add_state(V2N("e_T_I"), rate_source=V2T("e_T"), lower=0)
     
     # Add Timeseries Outputs
     # TODO: if this doesn't work, may need to add shape option explicitly

@@ -398,15 +398,20 @@ class Track(PlanarTrajectory):
             d = margin*(p_max - p_min)
             return (p_min - d, p_max + d)
         
-        (x_lb, x_ub) = pos_margin(self.x_T, 0)
-        (y_lb, y_ub) = pos_margin(self.y_T, 0)
+        (x_lb, x_ub) = pos_margin(self.x_T, 2)
+        (y_lb, y_ub) = pos_margin(self.y_T, 2)
         
-        (v_x_lb, v_x_ub) = pos_margin(self.v_x_T, 0)
-        (v_y_lb, v_y_ub) = pos_margin(self.v_y_T, 0)
+        (v_x_lb, v_x_ub) = pos_margin(self.v_x_T, 2)
+        (v_y_lb, v_y_ub) = pos_margin(self.v_y_T, 2)
         
-        (theta_lb, theta_ub) = pos_margin(self.theta_T, 0)
-        (omega_lb, omega_ub) = pos_margin(self.omega_T, 0)
+        (theta_lb, theta_ub) = pos_margin(self.theta_T, 2)
+        (omega_lb, omega_ub) = pos_margin(self.omega_T, 2)
         
+        PT_omega_lb = -2000
+        PT_omega_ub = 2000
+        
+        PT_omega_I_lb = PT_omega_lb*self.time[-1]
+        PT_omega_I_ub = PT_omega_ub*self.time[-1]
         
         fi=True
         ff=False
@@ -416,19 +421,19 @@ class Track(PlanarTrajectory):
         phase.set_time_options(fix_initial=fi, fix_duration=ft, initial_val=0, duration_ref=self.time[-1])
         
         phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=fi, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
-        phase.set_state_options("PT_x2", fix_initial=fi, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
-        phase.set_state_options("PT_x3", fix_initial=fi, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
-        phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff, ref0=v_x_lb, ref=v_x_ub)
-        phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff, ref0=v_y_lb, ref=v_y_ub)
-        phase.set_state_options('BM_x', fix_initial=fi, fix_final=ff, ref0=x_lb, ref=x_ub)
-        phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, ref0=y_lb, ref=y_ub)
-        phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff, ref0=omega_lb, ref=omega_ub)
-        phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, ref0=theta_lb, ref=theta_ub)
-        phase.set_state_options("CTRL_e_omega_1_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100)
-        phase.set_state_options("CTRL_e_omega_2_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100)
+        phase.set_state_options("PT_x2", fix_initial=fi, ref0=0.0, ref=PT_omega_ub, lower=PT_omega_lb, upper=PT_omega_ub) # Scaling ref=5000 has the largest impact on the solution
+        phase.set_state_options("PT_x3", fix_initial=fi, ref0=0.0, ref=PT_omega_ub, lower=PT_omega_lb, upper=PT_omega_ub) # Scaling ref=5000 has the largest impact on the solution
+        phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff, ref0=v_x_lb, ref=v_x_ub, lower=v_x_lb, upper=v_x_ub)
+        phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff, ref0=v_y_lb, ref=v_y_ub, lower=v_y_lb, upper=v_y_ub)
+        phase.set_state_options('BM_x', fix_initial=fi, fix_final=ff, ref0=x_lb, ref=x_ub, lower=x_lb, upper=x_ub)
+        phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, ref0=y_lb, ref=y_ub, lower=y_lb, upper=y_ub)
+        phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff, ref0=omega_lb, ref=omega_ub, lower=omega_lb, upper=omega_ub)
+        phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, ref0=theta_lb, ref=theta_ub, lower=theta_lb, upper=theta_ub)
+        phase.set_state_options("CTRL_e_omega_1_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100, lower=PT_omega_I_lb, upper=PT_omega_I_ub)
+        phase.set_state_options("CTRL_e_omega_2_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100, lower=PT_omega_I_lb, upper=PT_omega_I_ub)
         
         e_T_I_ref = ((x_ub-x_lb)**2 + (y_ub-y_lb)**2)/4
-        phase.set_state_options("CTRL_e_T_I", val=0, fix_initial=fi, fix_final = ff, ref=e_T_I_ref)
+        phase.set_state_options("CTRL_e_T_I", val=0, lower=0, fix_initial=fi, fix_final = ff, ref=e_T_I_ref)
         
         # Minimize tracking error
         phase.add_objective('CTRL_e_T_I', loc='final', ref=e_T_I_ref)

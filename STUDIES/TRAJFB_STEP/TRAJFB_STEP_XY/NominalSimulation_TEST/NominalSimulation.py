@@ -28,7 +28,8 @@ reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 input_opt_final = reader.get_case("input_opt_final")
 
 time, trajdat = T.getReferenceTraj(input_opt_final)
-tx = dm.Radau(num_segments=20, compressed=True)
+tx = dm.GaussLobatto(num_segments=20, compressed=True)
+#tx = dm.Radau(num_segments=20, compressed=True)
 #tx = dm.ExplicitShooting(compressed=True, num_segments=10, num_steps_per_segment=10, method='rk4')
 traj = T.Track(time, trajdat["x_T"], trajdat["y_T"], trajdat["v_x_T"], trajdat["v_y_T"], trajdat["a_x_T"], trajdat["a_y_T"], trajdat["theta_T"], trajdat["omega_T"], tx=tx)
 cons = C.ConstraintSet() # Create an empty constraint set
@@ -50,15 +51,23 @@ prob.init_vals()
 prob.final_setup()
 
 #%%
+om.n2(prob)
+
+#%%
 params["k_p_r"].val = 1
 params["k_d_r"].val = 2
 params["k_p_theta"].val = 0.3
 params["k_d_theta"].val = 0.75
 
-params["k_p_omega"].val = 0.003
-params["k_i_omega"].val = 0.03
-params["k_b_omega"].val = 1000
+params["k_p_omega"].val = 0.01
+params["k_i_omega"].val = 0
+params["k_b_omega"].val = 0
 
+
+pv_ctrl = model.controller_params.export_vals()
+
+with open("pv_ctrl.pickle", 'wb') as f:
+    pickle.dump(pv_ctrl, f)
 
 #%%
 # prob.run_model()
