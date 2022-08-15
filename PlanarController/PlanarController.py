@@ -39,7 +39,7 @@ class PlanarController(om.Group):
         body_controller = PlanarBodyController(**shared_args)
         self.add_subsystem("body_controller", body_controller, promotes=["*"])
         
-        ppt_controller = PlanarPTController(saturate=True, saturation_constant=10, **shared_args)
+        ppt_controller = PlanarPTController(saturate=True, saturation_type="SMOOTH", saturation_constant=10, **shared_args)
         self.add_subsystem("ppt_controller", ppt_controller, promotes=["*"])
         
 class PlanarBodyController(om.Group):
@@ -388,6 +388,7 @@ class PlanarPTController(om.ExplicitComponent):
         self.options.declare('num_nodes', types=int)
         self.options.declare('saturate', types=bool, default=True)
         self.options.declare('saturation_constant', types=int, default=2)
+        self.options.declare('saturation_type', types=str, default="SMOOTH")
         
     def setup(self):
         nn = self.options["num_nodes"]
@@ -424,7 +425,7 @@ class PlanarPTController(om.ExplicitComponent):
         
         # Use self._var_rel2meta (or self._static_var_rel2meta) dictionary to get all inputs and outputs; check shape field to differentiate inputs from outputs
         partial_method = 'exact'
-        input_names = ['k_p_omega__Controller', 'k_i_omega__Controller', 'omega_1_star', 'omega_2_star', 'omega_1', 'omega_2', 'e_omega_1_I', 'e_omega_2_I']
+        input_names = ['k_p_omega__Controller', 'k_i_omega__Controller', 'k_b_omega__Controller', 'omega_1_star', 'omega_2_star', 'omega_1', 'omega_2', 'e_omega_1_I', 'e_omega_2_I']
         output_names = ['u_1', 'u_2', 'e_omega_1', 'e_omega_2', "e_omega_1_I_dot", "e_omega_2_I_dot"]
         for output_name in output_names:
             output_meta = self._var_rel2meta[output_name]
@@ -448,8 +449,14 @@ class PlanarPTController(om.ExplicitComponent):
         
         def S(u):
             if self.options["saturate"]:
-                a = self.options["saturation_constant"]
-                S = (u/(1 + (u)**a)**(1/a))
+                if self.options["saturation_type"] == "SMOOTH":
+                    a = self.options["saturation_constant"]
+                    #S = (u/(1 + (u)**a)**(1/a)) # Saturation between -1 and 1
+                    S = (1/2)*((2*u-1)*((2*u-1)**a + 1)**(-1/a) + 1) # Saturation between 0 and 1
+                elif self.options["saturation_type"] == "EXPLICIT":
+                    S = np.clip(u, 0, 1)
+                else:
+                    raise Exception("Invalid saturation type")
             else:
                 S = u
             return S
@@ -478,10 +485,32 @@ class PlanarPTController(om.ExplicitComponent):
         # Inputs: 
         I = inputs
         
+        def S(u):
+            if self.options["saturate"]:
+                if self.options["saturation_type"] == "SMOOTH":
+                    a = self.options["saturation_constant"]
+                    #S = (u/(1 + (u)**a)**(1/a)) # Saturation between -1 and 1
+                    S = (1/2)*((2*u-1)*((2*u-1)**a + 1)**(-1/a) + 1) # Saturation between 0 and 1
+                elif self.options["saturation_type"] == "EXPLICIT":
+                    S = np.clip(u, 0, 1)
+                else:
+                    raise Exception("Invalid saturation type")
+            else:
+                S = u
+            return S
+        
         def S_prime(u):
             if self.options["saturate"]:
-                a = self.options["saturation_constant"]
-                S_prime = (1+u**a)**(-(1+a)/a)
+                if self.options["saturation_type"] == "SMOOTH":
+                    a = self.options["saturation_constant"]
+                    # S_prime = (1+u**a)**(-(1+a)/a) # Saturation between -1 and 1
+                    S_prime = ((2*u - 1)**a + 1)**(-(a+1)/a) # Saturation between 0 and 1
+                elif self.options["saturation_type"] == "EXPLICIT":
+                    S_prime = np.ones(np.shape(u))
+                    S_prime[S_prime <= 0] = 0
+                    S_prime[S_prime >= 1] = 0
+                else:
+                    raise Exception("Invalid saturation type")
             else:
                 S_prime = 1
             return S_prime
@@ -494,9 +523,12 @@ class PlanarPTController(om.ExplicitComponent):
         e_omega_2 = I["omega_2"] - I["omega_2_star"]
         u_1 = -I["k_p_omega__Controller"]*e_omega_1 - I["k_i_omega__Controller"]*I["e_omega_1_I"]
         u_2 = -I["k_p_omega__Controller"]*e_omega_2 - I["k_i_omega__Controller"]*I["e_omega_2_I"]
+        u_1_clip = S(u_1)
+        u_2_clip = S(u_2)
         
         partials["e_omega_1", "k_p_omega__Controller"] = zeros
         partials["e_omega_1", "k_i_omega__Controller"] = zeros
+        partials["e_omega_1", "k_b_omega__Controller"] = zeros
         partials["e_omega_1", "omega_1_star"] = -1*ones
         partials["e_omega_1", "omega_2_star"] = zeros
         partials["e_omega_1", "omega_1"] = ones
@@ -506,6 +538,7 @@ class PlanarPTController(om.ExplicitComponent):
         
         partials["e_omega_2", "k_p_omega__Controller"] = zeros
         partials["e_omega_2", "k_i_omega__Controller"] = zeros
+        partials["e_omega_2", "k_b_omega__Controller"] = zeros
         partials["e_omega_2", "omega_1_star"] = zeros
         partials["e_omega_2", "omega_2_star"] = -1*ones
         partials["e_omega_2", "omega_1"] = zeros
@@ -516,6 +549,7 @@ class PlanarPTController(om.ExplicitComponent):
         S_p_u_1 = S_prime(u_1)
         partials["u_1", "k_p_omega__Controller"] = S_p_u_1*(-e_omega_1)
         partials["u_1", "k_i_omega__Controller"] = S_p_u_1*(-I["e_omega_1_I"])
+        partials["u_1", "k_b_omega__Controller"] = S_p_u_1*zeros
         partials["u_1", "omega_1_star"] =  S_p_u_1*(-I["k_p_omega__Controller"]*(-1*ones))
         partials["u_1", "omega_2_star"] =  S_p_u_1*zeros
         partials["u_1", "omega_1"] =  S_p_u_1*(-I["k_p_omega__Controller"]*(ones))
@@ -526,6 +560,7 @@ class PlanarPTController(om.ExplicitComponent):
         S_p_u_2 = S_prime(u_2) 
         partials["u_2", "k_p_omega__Controller"] = S_p_u_2*(-e_omega_2)
         partials["u_2", "k_i_omega__Controller"] = S_p_u_2*(-I["e_omega_2_I"])
+        partials["u_2", "k_b_omega__Controller"] = S_p_u_1*zeros
         partials["u_2", "omega_1_star"] = S_p_u_2*zeros
         partials["u_2", "omega_2_star"] = S_p_u_2*(-I["k_p_omega__Controller"]*(-1*ones))
         partials["u_2", "omega_1"] = S_p_u_2*(zeros)
@@ -535,6 +570,7 @@ class PlanarPTController(om.ExplicitComponent):
         
         partials["e_omega_1_I_dot", "k_p_omega__Controller"] = I["k_b_omega__Controller"]*(-e_omega_1)*(1-S_p_u_1)
         partials["e_omega_1_I_dot", "k_i_omega__Controller"] = I["k_b_omega__Controller"]*(1-S_p_u_1)*(-I["e_omega_1_I"])
+        partials["e_omega_1_I_dot", "k_b_omega__Controller"] = (u_1 - u_1_clip)
         partials["e_omega_1_I_dot", "omega_1_star"] = -1*ones + I["k_b_omega__Controller"]*(1-S_p_u_1)*(-I["k_p_omega__Controller"]*(-1*ones))
         partials["e_omega_1_I_dot", "omega_2_star"] = zeros
         partials["e_omega_1_I_dot", "omega_1"] = ones + I["k_b_omega__Controller"]*(1-S_p_u_1)*(-I["k_p_omega__Controller"]*(ones))
@@ -544,6 +580,7 @@ class PlanarPTController(om.ExplicitComponent):
         
         partials["e_omega_2_I_dot", "k_p_omega__Controller"] = I["k_b_omega__Controller"]*(-e_omega_2)*(1-S_p_u_2)
         partials["e_omega_2_I_dot", "k_i_omega__Controller"] = I["k_b_omega__Controller"]*(1-S_p_u_2)*(-I["e_omega_2_I"])
+        partials["e_omega_2_I_dot", "k_b_omega__Controller"] = (u_2 - u_2_clip)
         partials["e_omega_2_I_dot", "omega_1_star"] = zeros
         partials["e_omega_2_I_dot", "omega_2_star"] = -1*ones + I["k_b_omega__Controller"]*(1-S_p_u_2)*(-I["k_p_omega__Controller"]*(-1*ones))
         partials["e_omega_2_I_dot", "omega_1"] = zeros
