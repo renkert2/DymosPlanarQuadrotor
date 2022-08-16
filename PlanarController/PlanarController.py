@@ -66,7 +66,7 @@ class PlanarBodyController(om.Group):
         c = calcDesiredRotorSpeeds(**shared_args)
         self.add_subsystem("omega_star", c, promotes=["*"])
         
-        tracking_error = calcTrackingError(**shared_args)
+        tracking_error = calcTrackingError(W_x=1.0,W_y=1.0,**shared_args)
         self.add_subsystem("tracking_error", tracking_error, promotes=["*"])
 
 class calcDesiredForces(om.ExplicitComponent):
@@ -592,6 +592,8 @@ class PlanarPTController(om.ExplicitComponent):
 class calcTrackingError(om.ExplicitComponent):
     def initialize(self):
         self.options.declare('num_nodes', types=int)
+        self.options.declare('W_x', types=float, default=1.0)
+        self.options.declare('W_y', types=float, default=1.0)
         
     def setup(self):
         nn = self.options["num_nodes"]
@@ -608,15 +610,19 @@ class calcTrackingError(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         e_x = inputs["e_p_x"]
         e_y = inputs["e_p_y"]
+        W_x = self.options["W_x"]
+        W_y = self.options["W_y"]
         
-        outputs["e_T"] = (e_x**2 + e_y**2)
+        outputs["e_T"] = (W_x*e_x**2 + W_y*e_y**2)
         
     def compute_partials(self, inputs, partials):
         e_x = inputs["e_p_x"]
         e_y = inputs["e_p_y"]
+        W_x = self.options["W_x"]
+        W_y = self.options["W_y"]
         
-        partials["e_T", "e_p_x"] = 2*e_x
-        partials["e_T", "e_p_y"] = 2*e_y
+        partials["e_T", "e_p_x"] = 2*W_x*e_x
+        partials["e_T", "e_p_y"] = 2*W_y*e_y
         
         
 def genRenameFunctions(openmdao_path):

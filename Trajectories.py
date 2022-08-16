@@ -404,7 +404,10 @@ class Track(PlanarTrajectory):
         (v_x_lb, v_x_ub) = pos_margin(self.v_x_T, 2)
         (v_y_lb, v_y_ub) = pos_margin(self.v_y_T, 2)
         
-        (theta_lb, theta_ub) = pos_margin(self.theta_T, 2)
+        # (theta_lb, theta_ub) = pos_margin(self.theta_T, 2)
+        # (omega_lb, omega_ub) = pos_margin(self.omega_T, 2)
+        
+        (theta_lb, theta_ub) = (-np.pi/2, np.pi/2)
         (omega_lb, omega_ub) = pos_margin(self.omega_T, 2)
         
         PT_omega_lb = -2000
@@ -432,7 +435,9 @@ class Track(PlanarTrajectory):
         phase.set_state_options("CTRL_e_omega_1_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100, lower=PT_omega_I_lb, upper=PT_omega_I_ub)
         phase.set_state_options("CTRL_e_omega_2_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100, lower=PT_omega_I_lb, upper=PT_omega_I_ub)
         
-        e_T_I_ref = ((x_ub-x_lb)**2 + (y_ub-y_lb)**2)/4
+        (x_lref, x_uref) = pos_margin(self.x_T, 0)
+        (y_lref, y_uref) = pos_margin(self.y_T, 0)
+        e_T_I_ref = ((x_uref-x_lref)**2 + (y_uref-y_lref)**2)/4
         phase.set_state_options("CTRL_e_T_I", val=0, lower=0, fix_initial=fi, fix_final = ff, ref=e_T_I_ref)
         
         # Minimize tracking error

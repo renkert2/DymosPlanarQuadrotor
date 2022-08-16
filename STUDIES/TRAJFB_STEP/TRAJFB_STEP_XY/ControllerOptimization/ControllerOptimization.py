@@ -35,21 +35,22 @@ cons = C.ConstraintSet() # Create an empty constraint set
 #cons.add(C.InverterCurrent())
 model = ps.PlanarSystemModel(traj, cons=cons)
 cp = model.controller_params
+
 cp["k_p_r"].opt = True
-cp["k_p_r"].lb = 0.5
-cp["k_p_r"].ub = 100
+cp["k_p_r"].lb = 0.0
+cp["k_p_r"].ub = 2
 
-# cp["k_d_r"].opt = True
-# cp["k_d_r"].lb = 0.1
-# cp["k_d_r"].ub = 10
+cp["k_d_r"].opt = True
+cp["k_d_r"].lb = 0.0
+cp["k_d_r"].ub = 35
 
-# cp["k_p_theta"].opt = True
-# cp["k_p_theta"].lb = 0.1
-# cp["k_p_theta"].ub = 10
+cp["k_p_theta"].opt = True
+cp["k_p_theta"].lb = 0.0
+cp["k_p_theta"].ub = 2
 
-# cp["k_d_theta"].opt = True
-# cp["k_d_theta"].lb = 0.1
-# cp["k_d_theta"].ub = 10
+cp["k_d_theta"].opt = True
+cp["k_d_theta"].lb = 0.0
+cp["k_d_theta"].ub = 2
 
 #%%
 rec = R.Recorder(name="controller_opt_cases.sql")
@@ -57,7 +58,8 @@ driver = om.pyOptSparseDriver()
 
 driver.options['optimizer'] = "IPOPT"
 driver.opt_settings["print_level"] = 1
-driver.opt_settings["max_iter"] = 500
+driver.opt_settings["max_iter"] = 3000
+driver.opt_settings["tol"] = 1e-8 # Default: 1e-8
 
 # NLP
 #Xdriver.opt_settings['bound_relax_factor'] = 0.00 # If nonzero, relaxes constraints.
@@ -79,8 +81,11 @@ driver.opt_settings["max_iter"] = 500
 # Restoration
 #driver.opt_settings['expect_infeasible_problem"] = 'yes' #default='no'
 #driver.opt_settings['start_with_resto'] = 'yes' #default='no'
+
+
 # driver.options['optimizer'] = "SLSQP"
 # driver.opt_settings["IPRINT"] = 1
+# driver.opt_settings["MAXIT"] = 500
 
 driver.recording_options['includes'] = ['*']
 driver.recording_options['excludes'] = []
@@ -110,7 +115,7 @@ with open(os.path.join(nom_sim_path, "pv_ctrl.pickle"), 'rb') as f:
 for p in model.controller_params:
     p.load_val(pv_ctrl_init)
     
-prob.set_val("params.k_p_r__Controller", 1.0)
+#prob.set_val("params.k_p_r__Controller", 1.0)
 
 #%% Reporting
 #prob.run_model()

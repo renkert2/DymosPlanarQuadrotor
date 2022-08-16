@@ -56,7 +56,7 @@ params["k_i_omega"].val = 0.03
 params["k_b_omega"].val = 1000
 
 #%%
-k_p_r_vals = np.arange(0.1,10,0.1)
+k_p_r_vals = np.arange(8,12,0.1)
 for i,v in enumerate(k_p_r_vals):
     print(f"Evaluating Gain {i}: k_p_r={v}")
     params["k_p_r"].val=v

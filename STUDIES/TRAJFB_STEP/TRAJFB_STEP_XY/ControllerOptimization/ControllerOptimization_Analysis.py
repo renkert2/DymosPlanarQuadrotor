@@ -90,17 +90,23 @@ print(reader.list_cases())
                                 title="Speed Controller Integrator", 
                                 legend=["Final"])
 
+#%%
+(fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
+                                vars=['states:CTRL_e_omega_1_I', 'states:CTRL_e_omega_1_I'],
+                                labels=[r'$I_{\omega_1}$', r'$I_{\omega_2}$'], 
+                                title="Speed Controller Integrator", 
+                                legend=["Final"])
+
 #%% Position Reference Following
-(fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phase0.timeseries', save=False, 
+(fig, axes) = plotting.subplots(None, cases[-1], path='traj.phase0.timeseries', save=False, 
                                 vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'CTRL_e_T_I']],
                                 labels=['$x$', '$y$', 'Accum. Error'], 
-                                title="Position Reference Following", 
-                                legend=["Initial", "Final"])
-# (f, axes) = plotting.subplots(None, sim_cases, path='traj.phase0.timeseries', save=False, axes=axes[range(2)],
-#                                 vars=['controls:CTRL_x_T', 'controls:CTRL_y_T'])
+                                title="Position Reference Following")
+(f, axes) = plotting.subplots(None, cases[-1], path='traj.phase0.timeseries', save=False, axes=axes[range(2)],
+                                vars=['controls:CTRL_x_T', 'controls:CTRL_y_T'])
 
-# for ax in axes[range(2)]:
-#     ax.legend(["State",None, "Reference",None])
+for ax in axes[range(2)]:
+    ax.legend(["State",None, "Reference",None])
 
 #my_plt.export(fig, "step_xy_position")
 
@@ -123,7 +129,7 @@ driver_cases = reader.get_cases('driver', recurse=False)
 iters = np.arange(len(driver_cases))
 
 plt.figure(1)
-var = 'params.k_p_r__Controller'
+var = 'params.k_d_r__Controller'
 var_data = np.zeros((len(iters),))
 for j, case in enumerate(driver_cases):
     var_data[j] = case[var][-1]
