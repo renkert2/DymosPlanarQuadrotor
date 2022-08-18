@@ -47,10 +47,10 @@ prob.init_vals()
 prob.final_setup()
 
 #%%
-params["k_p_r"].val = 1
-params["k_d_r"].val = 2
-params["k_p_theta"].val = 0.3
-params["k_d_theta"].val = 0.75
+params["k_p_r"].val = 0
+params["k_d_r"].val = 19
+params["k_p_theta"].val = 0.3/2
+params["k_d_theta"].val = 0.75/3
 
 params["k_p_omega"].val = 0.003
 params["k_i_omega"].val = 0.03

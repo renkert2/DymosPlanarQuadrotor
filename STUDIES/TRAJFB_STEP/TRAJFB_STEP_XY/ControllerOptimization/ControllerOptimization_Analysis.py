@@ -98,7 +98,7 @@ print(reader.list_cases())
                                 legend=["Final"])
 
 #%% Position Reference Following
-(fig, axes) = plotting.subplots(None, cases[-1], path='traj.phase0.timeseries', save=False, 
+(fig, axes) = plotting.subplots(None, cases, path='traj.phase0.timeseries', save=False, 
                                 vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'CTRL_e_T_I']],
                                 labels=['$x$', '$y$', 'Accum. Error'], 
                                 title="Position Reference Following")
@@ -106,7 +106,7 @@ print(reader.list_cases())
                                 vars=['controls:CTRL_x_T', 'controls:CTRL_y_T'])
 
 for ax in axes[range(2)]:
-    ax.legend(["State",None, "Reference",None])
+    ax.legend(["Initial",None, "Optimal",None, "Reference"])
 
 #my_plt.export(fig, "step_xy_position")
 

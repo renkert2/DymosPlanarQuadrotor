@@ -36,13 +36,13 @@ cons = C.ConstraintSet() # Create an empty constraint set
 model = ps.PlanarSystemModel(traj, cons=cons)
 cp = model.controller_params
 
-cp["k_p_r"].opt = True
+cp["k_p_r"].opt = False
 cp["k_p_r"].lb = 0.0
 cp["k_p_r"].ub = 2
 
 cp["k_d_r"].opt = True
 cp["k_d_r"].lb = 0.0
-cp["k_d_r"].ub = 35
+cp["k_d_r"].ub = 50
 
 cp["k_p_theta"].opt = True
 cp["k_p_theta"].lb = 0.0
