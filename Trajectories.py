@@ -471,12 +471,23 @@ class Track(PlanarTrajectory):
         prob.set_val(f'{name}.phase0.controls:CTRL_a_y_T', phase.interp('CTRL_a_y_T', ys=self.a_y_T, **interp_kwargs))
 
 def getReferenceTraj(case, phases=["phase0"]):
-    #TODO: Implement multiple phases
-    time = case.get_val("traj.phases.phase0.timeseries.time")
-    time = np.ndarray.flatten(time)
+    def _get_val(prob, paths, return_arrays=False):
+        val_arrays = []
+        for p in paths:
+            val = prob.get_val(p)
+            val_arrays.append(val)
+        
+        val_cat = np.concatenate(val_arrays)
+        val_cat = np.ndarray.flatten(val_cat)
+        if return_arrays:
+            return (val_cat, val_arrays)
+        else:
+            return val_cat 
+        
+    time = _get_val(case, paths=[f"traj.phases.{p}.timeseries.time" for p in phases])
     time,I = np.unique(time, return_index=True)
     trajdat = {}
     for n,t in (("x_T", "states:BM_x"), ("y_T", "states:BM_y"), ("v_x_T", "states:BM_v_x"), ("v_y_T", "states:BM_v_y"), ("a_x_T", "state_rates:BM_v_x"),  ("a_y_T", "state_rates:BM_v_y"), ("theta_T", "states:BM_theta"), ("omega_T", "states:BM_omega")):
-        trajdat[n] = np.ndarray.flatten(case.get_val(f"traj.phases.phase0.timeseries.{t}"))[I]
+        trajdat[n] = _get_val(case, [f"traj.phases.{p}.timeseries.{t}" for p in phases])[I]
     
     return (time, trajdat)

@@ -28,7 +28,7 @@ reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 input_opt_final = reader.get_case("input_opt_final")
 
 time, trajdat = T.getReferenceTraj(input_opt_final)
-tx = dm.GaussLobatto(num_segments=20, compressed=True)
+tx = dm.GaussLobatto(num_segments=30, compressed=True)
 #tx = dm.Radau(num_segments=20, compressed=True)
 traj = T.Track(time, trajdat["x_T"], trajdat["y_T"], trajdat["v_x_T"], trajdat["v_y_T"], trajdat["a_x_T"], trajdat["a_y_T"], trajdat["theta_T"], trajdat["omega_T"], tx=tx)
 cons = C.ConstraintSet() # Create an empty constraint set
@@ -48,9 +48,10 @@ prob.final_setup()
 
 #%%
 params["k_p_r"].val = 0
-params["k_d_r"].val = 19
-params["k_p_theta"].val = 0.3/2
-params["k_d_theta"].val = 0.75/3
+params["k_d_r_x"].val = 2
+params["k_d_r_y"].val = 2
+params["k_p_theta"].val = 0.3
+params["k_d_theta"].val = 0.75
 
 params["k_p_omega"].val = 0.003
 params["k_i_omega"].val = 0.03

@@ -21,10 +21,7 @@ class PlanarControllerParams(P.ParamSet):
         
         kw = {"parent":"Controller", "component":"PlanarController"}
         self.add(P.Param(name="k_p_r", val=1, desc="Position Proportional Gain", strID="k_p_r__Controller", **kw))
-        #self.add(P.Param(name="k_d_r", val=1, desc="Position Derivative Gain", strID="k_d_r__Controller", **kw))
-        self.add(P.Param(name="k_d_r_x", val=1, desc="X Position Derivative Gain", strID="k_d_r_x__Controller", **kw))
-        self.add(P.Param(name="k_d_r_y", val=1, desc="Y Position Derivative Gain", strID="k_d_r_y__Controller", **kw))
-        
+        self.add(P.Param(name="k_d_r", val=1, desc="Position Derivative Gain", strID="k_d_r__Controller", **kw))
         self.add(P.Param(name="k_p_theta", val=1, desc="Angle Proportional Gain", strID="k_p_theta__Controller", **kw))
         self.add(P.Param(name="k_d_theta", val=1, desc="Angle Derivative Gain", strID="k_d_theta__Controller", **kw))
         self.add(P.Param(name="k_p_omega", val=1, desc="Rotor Speed Proportional Gain", strID="k_p_omega__Controller", **kw))
@@ -80,9 +77,7 @@ class calcDesiredForces(om.ExplicitComponent):
         nn = self.options["num_nodes"]
         
         self.add_input("k_p_r__Controller", shape=(1,), val=1, desc="Position Proportional Gain", tags=['dymos.static_target'])
-        #self.add_input("k_d_r__Controller", shape=(1,), val=1, desc="Position Derivative Gain", tags=['dymos.static_target'])
-        self.add_input("k_d_r_x__Controller", shape=(1,), val=1, desc="X Position Derivative Gain", tags=['dymos.static_target'])
-        self.add_input("k_d_r_y__Controller", shape=(1,), val=1, desc="Y Position Derivative Gain", tags=['dymos.static_target'])
+        self.add_input("k_d_r__Controller", shape=(1,), val=1, desc="Position Derivative Gain", tags=['dymos.static_target'])
         self.add_input('Mass__System', shape = (1,), val=1, desc='mass', units='kg', tags=['dymos.static_target'])
         
         for i in ("e_p_x", "e_p_y", "e_v_x", "e_v_y", "e_a_x", "e_a_y"):
@@ -125,38 +120,30 @@ class calcDesiredForces(om.ExplicitComponent):
         
         args = {"rows":arange, "cols":c}
         self.declare_partials("F_star_x", "k_p_r__Controller", method="exact", **args)
-        #self.declare_partials("F_star_x", "k_d_r__Controller", method="exact", **args)
-        self.declare_partials("F_star_x", "k_d_r_x__Controller", method="exact", **args)
-        self.declare_partials("F_star_x", "k_d_r_y__Controller", dependent=False, **args)
+        self.declare_partials("F_star_x", "k_d_r__Controller", method="exact", **args)
         self.declare_partials("F_star_x", "Mass__System", dependent=False, **args)
         
         self.declare_partials("F_star_y", "k_p_r__Controller", method="exact", **args)
-        #self.declare_partials("F_star_y", "k_d_r__Controller", method="exact", **args)
-        self.declare_partials("F_star_y", "k_d_r_x__Controller", dependent=False, **args)
-        self.declare_partials("F_star_y", "k_d_r_y__Controller", method="exact", **args)
+        self.declare_partials("F_star_y", "k_d_r__Controller", method="exact", **args)
         self.declare_partials("F_star_y", "Mass__System", val=g, **args)
         
         self.declare_partials("F_star_x_dot", "k_p_r__Controller", method="exact", **args)
-        #self.declare_partials("F_star_x_dot", "k_d_r__Controller", method="exact", **args)
-        self.declare_partials("F_star_x_dot", "k_d_r_x__Controller", method="exact", **args)
-        self.declare_partials("F_star_x_dot", "k_d_r_y__Controller", dependent=False, **args)
+        self.declare_partials("F_star_x_dot", "k_d_r__Controller", method="exact", **args)
         self.declare_partials("F_star_x_dot", "Mass__System", dependent=False, **args)
         
         self.declare_partials("F_star_y_dot", "k_p_r__Controller", method="exact", **args)
-        #self.declare_partials("F_star_y_dot", "k_d_r__Controller", method="exact", **args)
-        self.declare_partials("F_star_y_dot", "k_d_r_x__Controller", dependent=False, **args)
-        self.declare_partials("F_star_y_dot", "k_d_r_y__Controller", method="exact", **args)
+        self.declare_partials("F_star_y_dot", "k_d_r__Controller", method="exact", **args)
         self.declare_partials("F_star_y_dot", "Mass__System", dependent=False, **args)
         
     def compute(self,inputs,outputs):
         I = inputs
         O = outputs
         
-        O["F_star_x"]= -I["k_p_r__Controller"]*I["e_p_x"]-I["k_d_r_x__Controller"]*I["e_v_x"]
-        O["F_star_y"]= -I["k_p_r__Controller"]*I["e_p_y"]-I["k_d_r_y__Controller"]*I["e_v_y"]+ I["Mass__System"]*g
+        O["F_star_x"]= -I["k_p_r__Controller"]*I["e_p_x"]-I["k_d_r__Controller"]*I["e_v_x"]
+        O["F_star_y"]= -I["k_p_r__Controller"]*I["e_p_y"]-I["k_d_r__Controller"]*I["e_v_y"]+ I["Mass__System"]*g
         
-        O["F_star_x_dot"]= -I["k_p_r__Controller"]*I["e_v_x"]-I["k_d_r_x__Controller"]*I["e_a_x"]
-        O["F_star_y_dot"]= -I["k_p_r__Controller"]*I["e_v_y"]-I["k_d_r_y__Controller"]*I["e_a_y"]
+        O["F_star_x_dot"]= -I["k_p_r__Controller"]*I["e_v_x"]-I["k_d_r__Controller"]*I["e_a_x"]
+        O["F_star_y_dot"]= -I["k_p_r__Controller"]*I["e_v_y"]-I["k_d_r__Controller"]*I["e_a_y"]
         
     def compute_partials(self, inputs, partials):
         I = inputs
@@ -165,24 +152,24 @@ class calcDesiredForces(om.ExplicitComponent):
         ones = np.ones((nn,))
         
         partials["F_star_x", "e_p_x"] = -I["k_p_r__Controller"]*ones
-        partials["F_star_x", "e_v_x"] = -I["k_d_r_x__Controller"]*ones
+        partials["F_star_x", "e_v_x"] = -I["k_d_r__Controller"]*ones
         partials["F_star_y", "e_p_y"] = -I["k_p_r__Controller"]*ones
-        partials["F_star_y", "e_v_y"] = -I["k_d_r_y__Controller"]*ones
+        partials["F_star_y", "e_v_y"] = -I["k_d_r__Controller"]*ones
         
         partials["F_star_x_dot", "e_v_x"] = -I["k_p_r__Controller"]*ones
-        partials["F_star_x_dot", "e_a_x"] = -I["k_d_r_x__Controller"]*ones
+        partials["F_star_x_dot", "e_a_x"] = -I["k_d_r__Controller"]*ones
         partials["F_star_y_dot", "e_v_y"] = -I["k_p_r__Controller"]*ones
-        partials["F_star_y_dot", "e_a_y"] = -I["k_d_r_y__Controller"]*ones
+        partials["F_star_y_dot", "e_a_y"] = -I["k_d_r__Controller"]*ones
         
         partials["F_star_x", "k_p_r__Controller"] = -I["e_p_x"]
-        partials["F_star_x", "k_d_r_x__Controller"] = -I["e_v_x"]
+        partials["F_star_x", "k_d_r__Controller"] = -I["e_v_x"]
         partials["F_star_y", "k_p_r__Controller"] = -I["e_p_y"]
-        partials["F_star_y", "k_d_r_y__Controller"] = -I["e_v_y"]
+        partials["F_star_y", "k_d_r__Controller"] = -I["e_v_y"]
         
         partials["F_star_x_dot", "k_p_r__Controller"] = -I["e_v_x"]
-        partials["F_star_x_dot", "k_d_r_x__Controller"] = -I["e_a_x"]
+        partials["F_star_x_dot", "k_d_r__Controller"] = -I["e_a_x"]
         partials["F_star_y_dot", "k_p_r__Controller"] = -I["e_v_y"]
-        partials["F_star_y_dot", "k_d_r_y__Controller"] = -I["e_a_y"]
+        partials["F_star_y_dot", "k_d_r__Controller"] = -I["e_a_y"]
         
 class calcDesiredThrust(om.ExplicitComponent):
     def initialize(self):
@@ -705,7 +692,7 @@ def ModifyTraj(traj, openmdao_path=""):
     # Add Trajectory Parameters
     opts = {'opt':False,'static_target':True}
     
-    controller_params = ["k_p_r__Controller", "k_d_r_x__Controller", "k_d_r_y__Controller", "k_p_theta__Controller", "k_d_theta__Controller", "k_p_omega__Controller", "k_i_omega__Controller", "k_b_omega__Controller"]
+    controller_params = ["k_p_r__Controller", "k_d_r__Controller", "k_p_theta__Controller", "k_d_theta__Controller", "k_p_omega__Controller", "k_i_omega__Controller", "k_b_omega__Controller"]
     sys_params = ["Mass__System", "r__Frame", "K_T__Propeller"]
     
     for param in controller_params:
