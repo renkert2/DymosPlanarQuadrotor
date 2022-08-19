@@ -10,6 +10,8 @@
 *.png
 *.pickle
 *.avi
+*.spyproject/
+*.vscode/
 
 **/__pychache__/
 __pycache__/
