@@ -398,15 +398,23 @@ class Track(PlanarTrajectory):
             d = margin*(p_max - p_min)
             return (p_min - d, p_max + d)
         
-        (x_lb, x_ub) = pos_margin(self.x_T, 0)
-        (y_lb, y_ub) = pos_margin(self.y_T, 0)
+        (x_lb, x_ub) = pos_margin(self.x_T, 2)
+        (y_lb, y_ub) = pos_margin(self.y_T, 2)
         
-        (v_x_lb, v_x_ub) = pos_margin(self.v_x_T, 0)
-        (v_y_lb, v_y_ub) = pos_margin(self.v_y_T, 0)
+        (v_x_lb, v_x_ub) = pos_margin(self.v_x_T, 2)
+        (v_y_lb, v_y_ub) = pos_margin(self.v_y_T, 2)
         
-        (theta_lb, theta_ub) = pos_margin(self.theta_T, 0)
-        (omega_lb, omega_ub) = pos_margin(self.omega_T, 0)
+        # (theta_lb, theta_ub) = pos_margin(self.theta_T, 2)
+        # (omega_lb, omega_ub) = pos_margin(self.omega_T, 2)
         
+        (theta_lb, theta_ub) = (-np.pi/2, np.pi/2)
+        (omega_lb, omega_ub) = pos_margin(self.omega_T, 2)
+        
+        PT_omega_lb = -2000
+        PT_omega_ub = 2000
+        
+        PT_omega_I_lb = PT_omega_lb*self.time[-1]
+        PT_omega_I_ub = PT_omega_ub*self.time[-1]
         
         fi=True
         ff=False
@@ -416,19 +424,21 @@ class Track(PlanarTrajectory):
         phase.set_time_options(fix_initial=fi, fix_duration=ft, initial_val=0, duration_ref=self.time[-1])
         
         phase.set_state_options("PT_x1", val=1, lower=0, upper=1, fix_initial=fi, ref0 = 0, ref=1) # Fix Battery State of Charge Initial State to 1
-        phase.set_state_options("PT_x2", fix_initial=fi, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
-        phase.set_state_options("PT_x3", fix_initial=fi, ref0=0.0, ref=5000) # Scaling ref=5000 has the largest impact on the solution
-        phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff, ref0=v_x_lb, ref=v_x_ub)
-        phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff, ref0=v_y_lb, ref=v_y_ub)
-        phase.set_state_options('BM_x', fix_initial=fi, fix_final=ff, ref0=x_lb, ref=x_ub)
-        phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, ref0=y_lb, ref=y_ub)
-        phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff, ref0=omega_lb, ref=omega_ub)
-        phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, ref0=theta_lb, ref=theta_ub)
-        phase.set_state_options("CTRL_e_omega_1_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100)
-        phase.set_state_options("CTRL_e_omega_2_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100)
+        phase.set_state_options("PT_x2", fix_initial=fi, ref0=0.0, ref=PT_omega_ub, lower=PT_omega_lb, upper=PT_omega_ub) # Scaling ref=5000 has the largest impact on the solution
+        phase.set_state_options("PT_x3", fix_initial=fi, ref0=0.0, ref=PT_omega_ub, lower=PT_omega_lb, upper=PT_omega_ub) # Scaling ref=5000 has the largest impact on the solution
+        phase.set_state_options('BM_v_x', fix_initial=fi, fix_final=ff, ref0=v_x_lb, ref=v_x_ub, lower=v_x_lb, upper=v_x_ub)
+        phase.set_state_options('BM_v_y', fix_initial=fi, fix_final=ff, ref0=v_y_lb, ref=v_y_ub, lower=v_y_lb, upper=v_y_ub)
+        phase.set_state_options('BM_x', fix_initial=fi, fix_final=ff, ref0=x_lb, ref=x_ub, lower=x_lb, upper=x_ub)
+        phase.set_state_options('BM_y', fix_initial=fi, fix_final=ff, ref0=y_lb, ref=y_ub, lower=y_lb, upper=y_ub)
+        phase.set_state_options('BM_omega', fix_initial=fi, fix_final=ff, ref0=omega_lb, ref=omega_ub, lower=omega_lb, upper=omega_ub)
+        phase.set_state_options('BM_theta', fix_initial=fi, fix_final=ff, ref0=theta_lb, ref=theta_ub, lower=theta_lb, upper=theta_ub)
+        phase.set_state_options("CTRL_e_omega_1_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100, lower=PT_omega_I_lb, upper=PT_omega_I_ub)
+        phase.set_state_options("CTRL_e_omega_2_I", val=0, fix_initial=fi, fix_final=ff, ref0=0.0, ref=100, lower=PT_omega_I_lb, upper=PT_omega_I_ub)
         
-        e_T_I_ref = ((x_ub-x_lb)**2 + (y_ub-y_lb)**2)/4
-        phase.set_state_options("CTRL_e_T_I", val=0, fix_initial=fi, fix_final = ff, ref=e_T_I_ref)
+        (x_lref, x_uref) = pos_margin(self.x_T, 0)
+        (y_lref, y_uref) = pos_margin(self.y_T, 0)
+        e_T_I_ref = ((x_uref-x_lref)**2 + (y_uref-y_lref)**2)/4
+        phase.set_state_options("CTRL_e_T_I", val=0, lower=0, fix_initial=fi, fix_final = ff, ref=e_T_I_ref)
         
         # Minimize tracking error
         phase.add_objective('CTRL_e_T_I', loc='final', ref=e_T_I_ref)
@@ -461,12 +471,23 @@ class Track(PlanarTrajectory):
         prob.set_val(f'{name}.phase0.controls:CTRL_a_y_T', phase.interp('CTRL_a_y_T', ys=self.a_y_T, **interp_kwargs))
 
 def getReferenceTraj(case, phases=["phase0"]):
-    #TODO: Implement multiple phases
-    time = case.get_val("traj.phases.phase0.timeseries.time")
-    time = np.ndarray.flatten(time)
+    def _get_val(prob, paths, return_arrays=False):
+        val_arrays = []
+        for p in paths:
+            val = prob.get_val(p)
+            val_arrays.append(val)
+        
+        val_cat = np.concatenate(val_arrays)
+        val_cat = np.ndarray.flatten(val_cat)
+        if return_arrays:
+            return (val_cat, val_arrays)
+        else:
+            return val_cat 
+        
+    time = _get_val(case, paths=[f"traj.phases.{p}.timeseries.time" for p in phases])
     time,I = np.unique(time, return_index=True)
     trajdat = {}
     for n,t in (("x_T", "states:BM_x"), ("y_T", "states:BM_y"), ("v_x_T", "states:BM_v_x"), ("v_y_T", "states:BM_v_y"), ("a_x_T", "state_rates:BM_v_x"),  ("a_y_T", "state_rates:BM_v_y"), ("theta_T", "states:BM_theta"), ("omega_T", "states:BM_omega")):
-        trajdat[n] = np.ndarray.flatten(case.get_val(f"traj.phases.phase0.timeseries.{t}"))[I]
+        trajdat[n] = _get_val(case, [f"traj.phases.{p}.timeseries.{t}" for p in phases])[I]
     
     return (time, trajdat)

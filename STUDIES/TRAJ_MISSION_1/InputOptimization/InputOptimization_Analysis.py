@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import SUPPORT_FUNCTIONS.init as init
 import os
 
-init.init_output(__file__)
+init.init_output(__file__, dirname="Output_20")
 
 name = "input_opt_cases"
 sim_name= name+"_sim"
@@ -28,11 +28,11 @@ print(reader.list_cases())
 print(sim_reader.list_cases())
 
 #%% Trajectory Plots
-#graphics = plotting.timeseries_plots(sim=[sim_cases[1]], phases=[f"phase{i}" for i in range(5)], title="Input Optimization", legend=None)
+graphics = plotting.timeseries_plots(sim=[sim_cases[1]], phases=[f"phase{i}" for i in range(5)], title="Input Optimization", legend=None)
 #graphics = plotting.timeseries_plots(prob=[cases[0], cases[-1]], phases=[f"phase{i}" for i in range(4)], title="Input Optimization", legend=None)
 
 # Plot Powertrain States
-graphics = plotting.timeseries_plots(sim=[sim_cases[1]], phases=[f"phase{i}" for i in range(5)], title="Input Optimization", legend=None, show_plts=[1])
+#graphics = plotting.timeseries_plots(sim=[sim_cases[1]], phases=[f"phase{i}" for i in range(5)], title="Input Optimization", legend=None, show_plts=[1])
 
 #%% Export
 import weekly_reports

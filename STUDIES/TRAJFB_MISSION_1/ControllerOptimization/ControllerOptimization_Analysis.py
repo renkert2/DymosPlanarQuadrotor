@@ -35,9 +35,6 @@ print(reader.list_cases())
                                 labels=['$x$', '$y$', r'$\theta$'], 
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial", "Final"])
-fig.set_figheight(5)
-fig.set_figwidth(6)
-my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
 
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phase0.timeseries', save=False, 
@@ -101,18 +98,17 @@ my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
                                 legend=["Final"])
 
 #%% Position Reference Following
-(fig, axes) = plotting.subplots(None, cases, path='traj.phase0.timeseries', save=False, plot_dividers=False,
+(fig, axes) = plotting.subplots(None, cases, path='traj.phase0.timeseries', save=False, 
                                 vars=[f"states:{x}" for x in  ['BM_x', 'BM_y', 'CTRL_e_T_I']],
                                 labels=['$x$', '$y$', 'Accum. Error'], 
                                 title="Position Reference Following")
-(f, axes_2) = plotting.subplots(None, cases[-1], path='traj.phase0.timeseries', save=False, axes=axes[range(2)], plot_dividers=False,
-                                 vars=['controls:CTRL_x_T', 'controls:CTRL_y_T'])
-                                 
-axes[0].legend(["Initial", "Final", "Reference"])
+(f, axes) = plotting.subplots(None, cases[-1], path='traj.phase0.timeseries', save=False, axes=axes[range(2)],
+                                vars=['controls:CTRL_x_T', 'controls:CTRL_y_T'])
 
-fig.set_figheight(5)
-fig.set_figwidth(6)
-my_plt.export(fig, "step_xy_referencetracking_zeroprop100UB")
+for ax in axes[range(2)]:
+    ax.legend(["Initial",None, "Optimal",None, "Reference"])
+
+#my_plt.export(fig, "step_xy_position")
 
 #%% Rotor Speed Reference Following
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
@@ -141,7 +137,7 @@ for j, case in enumerate(driver_cases):
 plt.plot(iters,var_data)
 plt.xlabel("Iteration")
 plt.ylabel("$k_{p,r}$")
-my_plt.export(plt.figure(1), fname="iter_desvar_vals_singlegain")
+#my_plt.export(plt.figure(1), fname="iter_desvar_vals")
 
 #%%
 plt.figure(2)
@@ -153,7 +149,7 @@ for j, case in enumerate(driver_cases):
 plt.plot(iters,var_data)
 plt.xlabel("Iteration")
 plt.ylabel("Objective")
-my_plt.export(plt.figure(2), fname="iter_obj_vals_singlegains")
+#my_plt.export(plt.figure(2), fname="iter_obj_vals")
 
 #%%
 
@@ -179,4 +175,4 @@ plt.xlabel("Iteration")
 plt.ylabel("Constraint Value")
 plt.legend()
 
-my_plt.export(plt.figure(2), fname="iter_constraint_vals_singlegains")
+#my_plt.export(plt.figure(2), fname="iter_constraint_vals")
