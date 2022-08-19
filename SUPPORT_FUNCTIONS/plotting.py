@@ -12,7 +12,7 @@ import numpy as np
 from . import init
 import my_plt # loads style, provides export method
 
-def subplots(prob=None, sim=None, path=['traj.phase0.timeseries'], vars=[], labels=[], legend=[], title="", save=False, axes=None, fig=None, simplot_kwargs={}, probplot_kwargs={}):
+def subplots(prob=None, sim=None, path=['traj.phase0.timeseries'], vars=[], labels=[], legend=[], title="", save=False, axes=None, fig=None, simplot_kwargs={}, probplot_kwargs={}, plot_dividers=True):
     if axes is None:
         fig, axes = plt.subplots(len(vars), 1)
     if not hasattr(axes, "__len__"):
@@ -63,14 +63,15 @@ def subplots(prob=None, sim=None, path=['traj.phase0.timeseries'], vars=[], labe
                 l, = axes[i].plot(t_sim, _get_val(s, [f'{p}.{var}' for p in path]), '-', **simplot_kwargs)
                 lines.append(l)
                 
-                for arr in t_sim_arr:
-                    axes[i].axvline(x=arr[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
-            
+                if plot_dividers:
+                    for arr in t_sim_arr:
+                        axes[i].axvline(x=arr[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
+                
             if p:
                 l, = axes[i].plot(t_prob, _get_val(p, [f'{p}.{var}' for p in path]), 'o', **probplot_kwargs)
                 lines.append(l)
                 
-                if not s:
+                if not s and plot_dividers:
                     for arr in t_prob_arr:
                         axes[i].axvline(x=arr[-1], linestyle="--", linewidth=l.get_linewidth()/2, color=l.get_color())
             
