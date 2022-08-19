@@ -7,7 +7,7 @@ Created on Wed Apr  6 15:10:11 2022
 
 import openmdao.api as om
 import SUPPORT_FUNCTIONS.plotting as plotting
-import my_plt
+from ARG_Research_Python import my_plt
 import matplotlib.pyplot as plt
 import SUPPORT_FUNCTIONS.init as init
 import SUPPORT_FUNCTIONS.slugify as slug

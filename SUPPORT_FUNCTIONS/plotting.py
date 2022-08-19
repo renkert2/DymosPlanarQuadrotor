@@ -10,7 +10,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from . import init
-import my_plt # loads style, provides export method
+from ARG_Research_Python import my_plt # loads style, provides export method
 
 def subplots(prob=None, sim=None, path=['traj.phase0.timeseries'], vars=[], labels=[], legend=[], title="", save=False, axes=None, fig=None, simplot_kwargs={}, probplot_kwargs={}, plot_dividers=True):
     if axes is None:

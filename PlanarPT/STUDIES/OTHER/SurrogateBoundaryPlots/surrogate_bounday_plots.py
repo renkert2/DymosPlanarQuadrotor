@@ -2,7 +2,7 @@
 
 import PlanarSystem as PS
 import SUPPORT_FUNCTIONS.init as init
-import my_plt
+from ARG_Research_Python import my_plt
 import matplotlib.pyplot as plt
 import os
 

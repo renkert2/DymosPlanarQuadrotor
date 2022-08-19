@@ -4,7 +4,7 @@ Created on Thu Apr 14 10:58:38 2022
 
 @author: renkert2
 """
-import my_plt
+from ARG_Research_Python import my_plt
 import matplotlib.pyplot as plt
 import numpy as np
 import SUPPORT_FUNCTIONS.init as init

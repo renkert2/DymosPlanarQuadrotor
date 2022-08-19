@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import DynamicModel as dm
-import StaticModel as sm
 import openmdao.api as om
-import Param as P
+
+from GraphTools_Phil_V2.OpenMDAO import Param as P
+import GraphTools_Phil_V2.OpenMDAO.DynamicModel as dm
+import GraphTools_Phil_V2.OpenMDAO.StaticModel as sm
+
 import PlanarPT.PlanarPT_Controller as pptc
 
 class PlanarPTParams(P.ParamSet):

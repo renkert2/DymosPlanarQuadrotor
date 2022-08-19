@@ -13,7 +13,7 @@ from matplotlib import cm
 import matplotlib as mpl
 from pprint import pprint
 mpl.rcParams["image.aspect"] = "equal"
-import my_plt
+from ARG_Research_Python import my_plt
 
 
 

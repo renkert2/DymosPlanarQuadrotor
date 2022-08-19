@@ -6,21 +6,15 @@ Created on Mon May  2 15:00:51 2022
 """
 
 import os
-import sys
 import openmdao.api as om
-import my_plt
-import matplotlib.pyplot as plt
 import pickle
 import logging
 logging.basicConfig(level=logging.INFO)
 
 import SUPPORT_FUNCTIONS.init as init
 import PlanarSystem as PS
-import Surrogate as S
 import OPTIM.Search as Search
-import Param
 import Trajectories as T
-import Constraints as C
 import Problems as P
 import Recorders as R
 

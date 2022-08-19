@@ -45,7 +45,7 @@ om.n2(prob, outfile = "sys_opt_n2.html")
 prob.cleanup()
 
 #%% Save Optimal Parameter Values
-import Param
+from GraphTools_Phil_V2.OpenMDAO import Param
 import pickle
 
 params = prob.model._params

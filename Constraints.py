@@ -7,9 +7,11 @@ Created on Fri Apr  1 11:32:38 2022
 import openmdao.api as om
 import openmdao.core.component as omcomp
 import numpy as np
-import SUPPORT_FUNCTIONS.support_funcs as SF
 import tabulate
-import Param as P
+
+from GraphTools_Phil_V2.OpenMDAO import Param as P
+
+import SUPPORT_FUNCTIONS.support_funcs as SF
 
 class Constraint:
     # Constraint Base

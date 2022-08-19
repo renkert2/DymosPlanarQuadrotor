@@ -1,7 +1,7 @@
 import numpy as np
 import openmdao.api as om
 import os
-import DynamicModel as DM
+import GraphTools_Phil_V2.OpenMDAO.DynamicModel as DM
 
 g = 9.80665
        

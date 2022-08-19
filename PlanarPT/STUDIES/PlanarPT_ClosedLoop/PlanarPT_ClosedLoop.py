@@ -4,18 +4,22 @@ Created on Fri Mar 11 11:53:42 2022
 
 @author: renkert2
 """
-import SUPPORT_FUNCTIONS.init as init
+
 import os
 import dymos as dm
 import openmdao.api as om
 import time
 import matplotlib.pyplot as plt
 import logging
-import DynamicModel as DM
-import Param as P
+
+from GraphTools_Phil_V2.OpenMDAO import Param as P
+import GraphTools_Phil_V2.OpenMDAO.DynamicModel as DM
+
+import SUPPORT_FUNCTIONS.init as init
+from ARG_Research_Python import my_plt
 import PlanarPT.PlanarPTModels as ppt
 import PlanarPT.PlanarPT_Controller as pptc
-import my_plt
+
 logging.basicConfig(level=logging.INFO)
 
 init.init_output(__file__)

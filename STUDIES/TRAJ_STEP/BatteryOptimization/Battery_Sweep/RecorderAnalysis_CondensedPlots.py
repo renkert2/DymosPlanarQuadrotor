@@ -50,8 +50,8 @@ axes[1].axvline(x=4, ls='--', c='r', label="Nominal")
 axes[1].legend()
 
 #%%
-import my_plt
-import weekly_reports
+from ARG_Research_Python import my_plt
+from ARG_Research_Python import weekly_reports
 import os
 wr_dir = os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_03232022")
 my_plt.export(fig, fname="battery_sweep_condensed", directory=wr_dir)

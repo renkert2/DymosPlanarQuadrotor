@@ -6,7 +6,8 @@ Created on Mon May 16 14:23:55 2022
 """
 import numpy as np
 import openmdao.api as om
-import Param as P
+
+from GraphTools_Phil_V2.OpenMDAO import Param as P
 
 
 class IndexParamComp(om.ExplicitComponent, P._ParamComp_Super):

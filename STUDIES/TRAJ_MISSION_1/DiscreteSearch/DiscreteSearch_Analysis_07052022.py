@@ -12,7 +12,7 @@ import SUPPORT_FUNCTIONS.init as init
 import OPTIM.Search as search
 import matplotlib.pyplot as plt
 import numpy as np
-import my_plt
+from ARG_Research_Python import my_plt
 import PlanarSystem as PS
 
 import logging
@@ -109,7 +109,7 @@ print(f"Func Evals to find Optimal Configuration: {total_fevals}")
 
 
 #%%
-import Param
+from GraphTools_Phil_V2.OpenMDAO import Param
 end_sol = Param.ParamValSet()
 with open(os.path.join(init.HOME_PATH, "STUDIES", "FlightTimePerPrice", "discrete_solution_paramvals.json")) as source:
     end_sol.load(source)
@@ -155,14 +155,14 @@ for (f,n) in zip(figs,names):
 #%% Plot Heatmaps of Mean Obj. Value
 figs = result.plotCompHeatmat(stat_func=np.mean, stat_func_label="Mean Obj. Value")
 names = ["batt_design_space_meanval", "motor_design_space_meanval", "prop_design_space_meanval"]
-import my_plt
+from ARG_Research_Python import my_plt
 for (f,n) in zip(figs,names):
     my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_06292022"))
 
 #%% Plot Heatmaps ob Min Obj. Value
 figs = result.plotCompHeatmat(stat_func=np.min, stat_func_label="Min Obj. Value")
 names = ["batt_design_space_minval", "motor_design_space_minval", "prop_design_space_minval"]
-import my_plt
+from ARG_Research_Python import my_plt
 for (f,n) in zip(figs,names):
     my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_06292022"))
     

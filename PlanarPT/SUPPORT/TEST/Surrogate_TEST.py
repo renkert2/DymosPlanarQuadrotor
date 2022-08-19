@@ -10,7 +10,6 @@ import SUPPORT_FUNCTIONS.init as init
 import openmdao.api as om
 import matplotlib.pyplot as plt
 import PlanarPT.SUPPORT.Surrogate as S
-import Param as P
 
 #%%
 p = PS.PlanarSystemParams()

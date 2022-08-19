@@ -12,15 +12,16 @@ import os
 import openmdao.api as om
 import pickle
 import tabulate
-
-import my_plt
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.colors import LinearSegmentedColormap
 
+from GraphTools_Phil_V2.OpenMDAO import Param as P
+
 import SUPPORT_FUNCTIONS.init
 import Surrogate
-import Param as P
+
+
 import Recorders as R
 
 class _SearchOutput:

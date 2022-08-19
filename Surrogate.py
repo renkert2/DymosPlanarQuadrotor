@@ -4,15 +4,15 @@ import numpy as np
 import io
 import shapely.geometry as SG
 import shapely.affinity as SA
-import my_plt
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib import colors
 import matplotlib as mpl
-import Param as P
 import warnings
 import tabulate
+
+from GraphTools_Phil_V2.OpenMDAO import Param as P
 
 class Fit:
     def __init__(self, outputs = None, inputs = None):

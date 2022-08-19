@@ -6,17 +6,19 @@ Created on Wed Nov 17 16:07:54 2021
 """
 
 import openmdao.api as om
+import dymos as dm
+import os
+import matplotlib.pyplot as plt
+
+import GraphTools_Phil_V2.OpenMDAO.DynamicModel as DM
+from GraphTools_Phil_V2.OpenMDAO import Param as P
+
+import SUPPORT_FUNCTIONS.init as init
+import Surrogate as S
+import Constraints as C
 import PlanarBody.PlanarBodyModels as bm
 import PlanarPT.PlanarPTModels as pt 
 import PlanarController.PlanarController as pc
-import dymos as dm
-import DynamicModel as DM
-import os
-import Param as P
-import Surrogate as S
-import SUPPORT_FUNCTIONS.init as init
-import matplotlib.pyplot as plt
-import Constraints as C
 
 # CONSTANTS
 g = 9.80665

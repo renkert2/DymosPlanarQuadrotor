@@ -13,11 +13,11 @@ import time
 import matplotlib.pyplot as plt
 import logging
 
+from GraphTools_Phil_V2.OpenMDAO import Param as P
+
 import SUPPORT_FUNCTIONS.plotting as my_plt # Just to get the default formatting
 import SUPPORT_FUNCTIONS.init as init
 import PlanarPT.PlanarPTModels as ppt
-import DynamicModel as DM
-import Param as P
 
 init.init_output(__file__)
     

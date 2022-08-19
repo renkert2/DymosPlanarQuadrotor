@@ -34,7 +34,7 @@ final_case = case_reader.get_case(result.opt_iter.case_name)
 
 #%%
 fig, ax = result.plot()
-import my_plt
+from ARG_Research_Python import my_plt
 import weekly_reports
 my_plt.export(fig, fname="discrete_search_result_05112022", directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
 
@@ -62,7 +62,7 @@ result.config_searcher.component_searchers = comp_searchers
 #%%
 figs = result.plotDesignSpace()
 names = ["batt_design_space_search", "motor_design_space_search", "prop_design_space_search"]
-import my_plt
+from ARG_Research_Python import my_plt
 for (f,n) in zip(figs,names):
     my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
 
@@ -72,14 +72,14 @@ figs = result.config_searcher.plotDesignSpace(result.iterations[0].config, confi
 #%% Plot Heatmaps of Mean Obj. Value
 figs = result.plotCompHeatmat(stat_func=np.mean, stat_func_label="Mean Obj. Value")
 names = ["batt_design_space_meanval", "motor_design_space_meanval", "prop_design_space_meanval"]
-import my_plt
+from ARG_Research_Python import my_plt
 for (f,n) in zip(figs,names):
     my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
 
 #%% Plot Heatmaps ob Min Obj. Value
 figs = result.plotCompHeatmat(stat_func=np.min, stat_func_label="Min Obj. Value")
 names = ["batt_design_space_minval", "motor_design_space_minval", "prop_design_space_minval"]
-import my_plt
+from ARG_Research_Python import my_plt
 for (f,n) in zip(figs,names):
     my_plt.export(f, fname=n, directory=os.path.join(weekly_reports.WEEKLY_REPORTS, "Renkert_WeeklyReport_05182022"))
     

@@ -17,9 +17,10 @@ import openmdao.api as om
 import openmdao.core as omcore
 from dymos.utils.misc import _unspecified
 import os
-import DynamicModel as DM
-import Param as P
 import logging
+
+from GraphTools_Phil_V2.OpenMDAO import Param as P
+import GraphTools_Phil_V2.OpenMDAO.DynamicModel as DM
 
 g = 9.80665
 

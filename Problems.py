@@ -4,16 +4,17 @@ Created on Tue Mar 22 15:39:09 2022
 
 @author: renkert2
 """
-
-import PlanarSystem as ps
 import dymos as dm
 import openmdao.api as om
 import numpy as np
 from tabulate import tabulate
+
+from GraphTools_Phil_V2.OpenMDAO import Param as P
+
+import SUPPORT_FUNCTIONS.support_funcs as funcs
 import Recorders
 import Trajectories
-import Param as P
-import SUPPORT_FUNCTIONS.support_funcs as funcs
+import PlanarSystem as ps
 
 class Problem(om.Problem):
     def __init__(self, model = None, traj = None, sim=True, driver=om.ScipyOptimizeDriver(), planar_recorder=Recorders.Recorder(), **kwargs):

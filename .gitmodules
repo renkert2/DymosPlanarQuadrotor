@@ -2,3 +2,6 @@
 	path = GraphTools_Phil_V2
 	url = https://github.com/renkert2/GraphTools_Phil_V2.git
 	branch = phils_branch
+[submodule "ARG_Research_Python"]
+	path = ARG_Research_Python
+	url = https://github.com/renkert2/ARG_Research_Python.git

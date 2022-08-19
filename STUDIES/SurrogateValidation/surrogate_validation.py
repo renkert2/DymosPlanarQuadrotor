@@ -14,7 +14,7 @@ import numpy as np
 
 import SUPPORT_FUNCTIONS.init as init
 import PlanarSystem as PS
-import Param as P
+from GraphTools_Phil_V2.OpenMDAO import Param as P
 
 init.init_output(__file__)
 

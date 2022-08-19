@@ -7,7 +7,7 @@ Created on Wed Apr  6 15:10:11 2022
 
 import openmdao.api as om
 import SUPPORT_FUNCTIONS.plotting as plotting
-import my_plt
+from ARG_Research_Python import my_plt
 import matplotlib.pyplot as plt
 import SUPPORT_FUNCTIONS.init as init
 import SUPPORT_FUNCTIONS.slugify as slug
@@ -44,7 +44,7 @@ graphics = plotting.timeseries_plots(prob = cases, sim=sim_cases,  phases=[f"pha
 # my_plt.export(fig, fname="sys_opt_des_var_iters", directory=os.getcwd())
 #%% Boundary Plots
 import PlanarSystem as PS
-import Param
+from GraphTools_Phil_V2.OpenMDAO import Param
 pp = PS.PlanarSystemParams()
 ps = PS.PlanarSystemSurrogates(pp)
 ps.setup()

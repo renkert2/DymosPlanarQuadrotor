@@ -8,7 +8,7 @@ Created on Mon Mar 21 18:17:44 2022
 import os
 import sys
 import openmdao.api as om
-import Param as P
+from GraphTools_Phil_V2.OpenMDAO import Param as P
 
 file_dir = os.path.dirname(__file__)
 os.chdir(file_dir)

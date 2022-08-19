@@ -12,8 +12,8 @@ import openmdao.api as om
 import time
 import matplotlib.pyplot as plt
 import logging
-import DynamicModel as DM
-import PARAMS.Param as P
+
+from GraphTools_Phil_V2.OpenMDAO import Param as P
 
 file_dir = os.path.dirname(__file__)
 parent_path = os.path.join(file_dir, "..", "..")

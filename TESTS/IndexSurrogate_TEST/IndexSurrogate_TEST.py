@@ -8,7 +8,7 @@ Created on Mon May 16 15:07:10 2022
 import openmdao.api as om
 import SUPPORT_FUNCTIONS.init as init
 import IndexSurrogate as IS
-import Param as P
+from GraphTools_Phil_V2.OpenMDAO import Param as P
 
 init.init_output(__file__)
 

@@ -88,10 +88,6 @@ for p,n in zip([prob, prob_ss], ["solve\_segments=False", "solve\_segments='forw
         a.set_xlabel("node")
         a.legend()
 
-#%%
-# import my_plt
-# my_plt.export(plt.figure(1), fname="mdl_test_solve_seg_false")
-# my_plt.export(plt.figure(2), fname="mdl_test_solve_seg_forward")
 
 #%% Load Optimal Vals
 for p in probs:
