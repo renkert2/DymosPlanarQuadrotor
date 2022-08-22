@@ -1,0 +1,15 @@
+name: arg_research
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - spyder
+  - ca-certificates
+  - certifi
+  - openssl
+  - openmdao
+  - pyglet
+  - tabulate
+  - shapely
+  - matplotlib
+prefix: C:\Users\renkert2\Miniconda3\envs\arg_research
