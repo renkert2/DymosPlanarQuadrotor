@@ -35,8 +35,6 @@ print(reader.list_cases())
                                 labels=['$x$', '$y$', r'$\theta$'], 
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial", "Final"])
-fig.set_figheight(5)
-fig.set_figwidth(6)
 #my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
 
 #%%
@@ -66,13 +64,21 @@ my_plt.export(fig, "step_xy_inputs")
                                 labels=['$F^*_x$', '$F^*_y$', "$T^*$"], 
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial", "Final"])
-
+my_plt.export(fig, "step_xy_des_forces")
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
                                 vars=['CTRL_theta_star', 'CTRL_tau_z_star'],
-                                labels=['$\theta^*$', '$\tau^*_z$'], 
+                                labels=['$\\theta^*$', '$\\tau^*_z$'], 
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial", "Final"])
+
+#%%
+(fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
+                                vars=['states:BM_omega'],
+                                labels=['$\\omega$'], 
+                                title="Planar Quadrotor Input Optimization", 
+                                legend=["Initial", "Final"])
+
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
                                 vars=["states:PT_x2", "states:PT_x3"],
@@ -80,7 +86,7 @@ my_plt.export(fig, "step_xy_inputs")
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial","Final"])
 
-my_plt.export(fig, "step_xy_rotorspeeds")
+#my_plt.export(fig, "step_xy_rotorspeeds")
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
                                 vars=['CTRL_omega_1_star', 'CTRL_omega_2_star', "states:PT_x2", "states:PT_x3"],
@@ -118,9 +124,7 @@ my_plt.export(fig, "step_xy_rotorspeeds")
                                  
 axes[0].legend(["Initial", "Final", "Reference"])
 
-fig.set_figheight(5)
-fig.set_figwidth(6)
-#my_plt.export(fig, "step_xy_referencetracking_zeroprop100UB")
+my_plt.export(fig, "step_xy_referencetracking")
 
 #%% Rotor Speed Reference Following
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
@@ -201,7 +205,7 @@ plt.legend(loc="upper left")
 plt.xlabel("Time (s)")
 plt.ylabel("Constraint Value")
 
-my_plt.export(plt.figure(1), fname="defect_cons_all")
+#my_plt.export(plt.figure(1), fname="defect_cons_all")
 
 #%% Compare to Controller Optimization Results
 for var in ["k_p_r__Controller","k_d_r_x__Controller","k_d_r_y__Controller","k_p_theta__Controller","k_d_theta__Controller","k_p_omega__Controller","k_b_omega__Controller","k_i_omega__Controller"]:

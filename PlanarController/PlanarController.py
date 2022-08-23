@@ -70,6 +70,9 @@ class PlanarBodyController(om.Group):
         c = calcDesiredRotorSpeeds(**shared_args)
         self.add_subsystem("omega_star", c, promotes=["*"])
         
+        input_delta = calcInputDelta(**shared_args)
+        self.add_subsystem("input_delta", input_delta, promotes=["*"])
+        
         tracking_error = calcTrackingError(W_x=1.0,W_y=1.0,**shared_args)
         self.add_subsystem("tracking_error", tracking_error, promotes=["*"])
 
@@ -456,7 +459,7 @@ class PlanarPTController(om.ExplicitComponent):
                     self.declare_partials(output_name, input_name, method=partial_method, rows=arange, cols=arange)
                 else:
                     raise Exception(f"Partial of {output_name} w.r.t. {input_name} not declared")
-
+        
     def compute(self, inputs, outputs):
         I = inputs
         O = outputs
@@ -493,7 +496,6 @@ class PlanarPTController(om.ExplicitComponent):
         
         O["u_1"] = u_1_clip #np.clip(u_1, a_min=0, a_max=1)
         O["u_2"] = u_2_clip #np.clip(u_2, a_min=0, a_max=1)
-
     
     def compute_partials(self, inputs, partials):
         # Inputs: 
@@ -603,6 +605,35 @@ class PlanarPTController(om.ExplicitComponent):
         partials["e_omega_2_I_dot", "e_omega_2_I"] = I["k_b_omega__Controller"]*(1-S_p_u_2)*(- I["k_i_omega__Controller"]*(ones))
         pass
 
+class calcInputDelta(om.ExplicitComponent):
+    def initialize(self):
+        self.options.declare('num_nodes', types=int)
+        
+    def setup(self):
+        nn = self.options["num_nodes"]
+        self.add_input("u_1", shape=(nn,))
+        self.add_input("u_2", shape=(nn,))
+        
+        self.add_output("u_1_delta", shape=(nn,))
+        self.add_output("u_2_delta", shape=(nn,))
+        
+        dval = np.zeros((nn,nn))
+        for i in range(nn-1):
+            dval[i,i] = -1
+            dval[i,i+1] = 1
+            
+        self.declare_partials("u_1_delta", "u_1", val=dval)
+        self.declare_partials("u_1_delta", "u_2", dependent=False)
+        self.declare_partials("u_2_delta", "u_1", dependent=False)
+        self.declare_partials("u_2_delta", "u_2", val=dval)
+        
+    def compute(self, inputs, outputs):
+        u_1_d = np.append(np.diff(inputs["u_1"]),0)
+        outputs["u_1_delta"] = u_1_d
+        
+        u_2_d = np.append(np.diff(inputs["u_2"]),0)
+        outputs["u_2_delta"] = u_2_d
+        
 class calcTrackingError(om.ExplicitComponent):
     def initialize(self):
         self.options.declare('num_nodes', types=int)
@@ -749,7 +780,7 @@ if __name__ == "__main__":
         p = om.Problem(model=om.Group())
         p.model.add_subsystem("sys", model_class(**mdl_args))
         p.setup()
-        p.final_setup()
+        p.run_model()
         
         # Visualize:
         om.n2(p)
@@ -757,11 +788,12 @@ if __name__ == "__main__":
         
         # Checks:
         p.check_config(out_file=os.path.join(os.getcwd(), "openmdao_checks.out"))
-        p.check_partials(compact_print=True)
+        data = p.check_partials(compact_print=True)
         
         os.chdir('..')
+        return p,data
     
-    checkModelClass(PlanarController)
+    p,data = checkModelClass(PlanarController)
     
 ### ARCHIVE ###
 # class PlanarController(om.ExplicitComponent):
