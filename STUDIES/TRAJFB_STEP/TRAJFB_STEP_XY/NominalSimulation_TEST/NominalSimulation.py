@@ -62,10 +62,10 @@ om.n2(prob)
 
 #%%
 params["k_p_r"].val = 0
-params["k_d_r_x"].val = 30
-params["k_d_r_y"].val = 22
-params["k_p_theta"].val = 0
-params["k_d_theta"].val = 0.4
+params["k_d_r_x"].val = 2
+params["k_d_r_y"].val = 2
+params["k_p_theta"].val = 0.3
+params["k_d_theta"].val = 0.75
 
 params["k_p_omega"].val = 0.003
 params["k_i_omega"].val = 0.03

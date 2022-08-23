@@ -37,7 +37,7 @@ print(reader.list_cases())
                                 legend=["Initial", "Final"])
 fig.set_figheight(5)
 fig.set_figwidth(6)
-my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
+#my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
 
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phase0.timeseries', save=False, 
@@ -47,7 +47,7 @@ my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
                                 legend=["Final"])
 
 #%%
-(fig, axes) = plotting.subplots(None, cases, path='traj.phases.phase0.timeseries', save=False, 
+(fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
                                 vars=['CTRL_u_1', 'CTRL_u_2'],
                                 labels=['$u_1$', '$u_2$'], 
                                 title="Inverter Inputs", 
@@ -74,11 +74,11 @@ my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial", "Final"])
 #%%
-(fig, axes) = plotting.subplots(None, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
+(fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
                                 vars=['CTRL_omega_1_star', 'CTRL_omega_2_star', "states:PT_x2", "states:PT_x3"],
                                 labels=['$\omega^*_1$', '$\omega^*_2$', '$\omega_1$', '$\omega_2$'], 
                                 title="Planar Quadrotor Input Optimization", 
-                                legend=["Final"])
+                                legend=["Initial","Final"])
 
 #%%
 (fig, axes) = plotting.subplots(None, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
@@ -157,7 +157,7 @@ my_plt.export(plt.figure(2), fname="iter_obj_vals_singlegains")
 
 #%%
 
-all_cons = list(driver_cases[0].get_constraints().keys())
+all_cons = list(cases[0].get_constraints().keys())
 exp = "defects:(.*)"
 cons = []
 for i,c in enumerate(all_cons):
@@ -167,6 +167,7 @@ for i,c in enumerate(all_cons):
         name = name.replace("_", "\_")
         cons.append((c,name))
 
+#%%
 plt.figure(2)
 for c,n in cons:
     var_data = np.zeros((len(iters),))
@@ -179,4 +180,18 @@ plt.xlabel("Iteration")
 plt.ylabel("Constraint Value")
 plt.legend()
 
-my_plt.export(plt.figure(2), fname="iter_constraint_vals_singlegains")
+#my_plt.export(plt.figure(2), fname="iter_constraint_vals_singlegains")
+
+#%%
+node_times = np.unique(cases[-1].get_val("traj.phases.phase0.time.time"))
+col_node_times = node_times[1:-1:2]
+plt.figure(1)
+for c,n in cons[0:2]:
+    plt.plot(col_node_times, cases[-1][c], label=n)
+plt.legend()
+
+#%% Compare to Controller Optimization Results
+for var in ["k_p_r__Controller","k_d_r_x__Controller","k_d_r_y__Controller","k_p_theta__Controller","k_d_theta__Controller","k_p_omega__Controller","k_b_omega__Controller","k_i_omega__Controller"]:
+    var = "traj.param_comp.parameter_vals:"+var
+    print(f"Case Val: {cases[-1].get_val(var)}, Sim Val: {sim_cases[-1].get_val(var)}, error:{cases[-1].get_val(var) - sim_cases[-1].get_val(var)}")
+

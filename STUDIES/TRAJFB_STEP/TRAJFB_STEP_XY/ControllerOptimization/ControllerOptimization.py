@@ -10,6 +10,7 @@ import openmdao.api as om
 import numpy as np
 import pickle
 
+import GraphTools_Phil_V2.OpenMDAO.PARAMS.Param as Param
 import SUPPORT_FUNCTIONS.plotting as my_plt # Just to get the default formatting
 import matplotlib.pyplot as plt
 import SUPPORT_FUNCTIONS.init as init
@@ -27,7 +28,7 @@ reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 input_opt_final = reader.get_case("input_opt_final")
 
 time, trajdat = T.getReferenceTraj(input_opt_final)
-tx = dm.GaussLobatto(num_segments=30, compressed=True)
+tx = dm.GaussLobatto(num_segments=200, compressed=True)
 #tx = dm.Radau(num_segments=20, compressed=True)
 traj = T.Track(time, trajdat["x_T"], trajdat["y_T"], trajdat["v_x_T"], trajdat["v_y_T"], trajdat["a_x_T"], trajdat["a_y_T"], trajdat["theta_T"], trajdat["omega_T"], tx=tx)
 cons = C.ConstraintSet() # Create an empty constraint set
@@ -114,12 +115,10 @@ nom_sim_case = reader.get_case("nominal_sim_final")
 prob.load_case(nom_sim_case)
 
 with open(os.path.join(nom_sim_path, "pv_ctrl.pickle"), 'rb') as f:
-    pv_ctrl_init = pickle.load(f)
+    pv_ctrl_init = Param.ParamValSet(pickle.load(f))
     
 for p in model.controller_params:
     p.load_val(pv_ctrl_init)
-    
-#prob.set_val("params.k_p_r__Controller", 1.0)
 
 #%% Reporting
 #prob.run_model()

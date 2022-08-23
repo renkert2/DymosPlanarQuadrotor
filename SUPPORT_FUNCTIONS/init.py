@@ -10,7 +10,11 @@ import os
 import sys
 import openmdao.api as om
 
-HOME_PATH =  os.path.join(os.getenv('ARG_RESEARCH'), 'DymosPlanarQuadrotor')
+if "ARG_RESEARCH" in os.environ:
+    HOME_PATH =  os.path.join(os.getenv('ARG_RESEARCH'), 'DymosPlanarQuadrotor')
+else:
+    HOME_PATH = os.getcwd()
+
 if HOME_PATH not in sys.path:
     sys.path.append(HOME_PATH)
 

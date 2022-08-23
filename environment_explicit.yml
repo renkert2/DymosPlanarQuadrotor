@@ -1,5 +1,6 @@
 name: arg_research
 channels:
+  - conda-forge
   - defaults
 dependencies:
   - python=3.10

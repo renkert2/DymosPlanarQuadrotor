@@ -20,11 +20,11 @@ import Recorders as R
 import Trajectories as T
 import PlanarSystem as ps
 
-init.init_output(__file__, dirname="Output")
+init.init_output(__file__, dirname="Output_30")
 
 warm_start = False
 
-traj = T.Mission_1(tx=dm.GaussLobatto(num_segments=10, compressed=True))
+traj = T.Mission_1(tx=dm.GaussLobatto(num_segments=30, compressed=True))
 cons = C.ConstraintSet() # Create an empty constraint set
 cons.add(C.BatteryCurrent()) # for multiple phases
 cons.add(C.InverterCurrent())
