@@ -269,7 +269,7 @@ class calcThetaStar(om.ExplicitComponent):
         Fsxd = I["F_star_x_dot"]
         Fsyd = I["F_star_y_dot"]
         
-        O["theta_star"]= np.arctan2(Fsy, Fsx) - np.pi/2
+        O["theta_star"]= np.arctan2(-Fsx, Fsy)
         O["theta_star_dot"] = (-Fsy*Fsxd + Fsx*Fsyd)/(Fsx**2 + Fsy**2)
         
     def compute_partials(self, inputs, partials):
