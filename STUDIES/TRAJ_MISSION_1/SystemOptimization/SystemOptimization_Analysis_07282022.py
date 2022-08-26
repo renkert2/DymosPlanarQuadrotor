@@ -14,7 +14,7 @@ import SUPPORT_FUNCTIONS.slugify as slug
 import os
 import Recorders as R
 
-init.init_output(__file__, dirname="Output")
+init.init_output(__file__, dirname="Output_07282022")
 export_dir = r"C:\Users\renkert2\Documents\ARG_Research\CBDOPaper\Case Study\MinimumTime\ContinuousDomain\SystemOptimization"
 
 

@@ -9,16 +9,18 @@ import os
 import pickle
 import openmdao.api as om
 import SUPPORT_FUNCTIONS.init as init
+import SUPPORT_FUNCTIONS.pickling as my_pickle
 import OPTIM.Search as search
 import matplotlib.pyplot as plt
 import numpy as np
 
 import PlanarSystem as PS
+import Recorders as R
 
 import logging
 logging.basicConfig(level=logging.INFO)
 
-init.init_output(__file__, dirname="Output_10")
+init.init_output(__file__, dirname="Output_20")
 reader = search.SearchReader(output_dir = "search_output")
 
 #%% Read Search Result
@@ -31,9 +33,9 @@ p = PS.PlanarSystemParams()
 s = PS.PlanarSystemSurrogates(p)
 s.setup()
 
-target_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_MISSION_1", "SystemOptimization", "Output", "pv_opt.pickle")
+target_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_MISSION_1", "SystemOptimization", "Output_20", "pv_opt.pickle")
 with open(target_path, 'rb') as f:
-    target = pickle.load(f)
+    target = my_pickle.renamed_load(f)
 
 comp_searchers = {}
 for (k,v) in s.surrogates.items():
@@ -44,11 +46,23 @@ result.config_searcher.component_searchers = comp_searchers
 
 
 #%%
-case_reader = reader.case_reader
-case_reader.delta_table(init_case_name="base_case", final_case_name=result.opt_iter.case_name)
+case_reader_0 = reader.case_reader
+case_reader_1 = R.Reader(os.path.join(reader.output_dir, "search_cases_1.sql"))
 
-base_case = case_reader.get_case("base_case")
-final_case = case_reader.get_case(result.opt_iter.case_name)
+base_case = case_reader_0.get_case("base_case")
+final_case = case_reader_1.get_case(result.opt_iter.case_name)
+
+R.delta_table(base_case, final_case)
+
+#%%
+pv = result.opt_iter.config.data
+for param in p:
+    pv_ = param.get_compatible(pv)
+    if pv_:
+        init_val = param.val
+        final_val = pv_.val
+        rel_change = (final_val - init_val)/init_val
+        print(f"{param.strID}: Initial={init_val}, Final={final_val}, change={rel_change}")
 
 #%%
 fig, ax = result.plot()

@@ -35,7 +35,7 @@ print(reader.list_cases())
                                 labels=['$x$', '$y$', r'$\theta$'], 
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial", "Final"])
-#my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
+my_plt.export(fig, "step_xy_dynamicsconvergence_corr_inputratecon")
 
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phase0.timeseries', save=False, 
@@ -124,7 +124,9 @@ my_plt.export(fig, "step_xy_des_forces")
                                  
 axes[0].legend(["Initial", "Final", "Reference"])
 
+
 #my_plt.export(fig, "step_xy_referencetracking")
+
 
 #%% Rotor Speed Reference Following
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
@@ -205,7 +207,7 @@ plt.legend(loc="upper left")
 plt.xlabel("Time (s)")
 plt.ylabel("Constraint Value")
 
-#my_plt.export(plt.figure(1), fname="defect_cons_all")
+my_plt.export(plt.figure(1), fname="defect_cons_all_corr_inputratecon")
 
 #%% Compare to Controller Optimization Results
 for var in ["k_p_r__Controller","k_d_r_x__Controller","k_d_r_y__Controller","k_p_theta__Controller","k_d_theta__Controller","k_p_omega__Controller","k_b_omega__Controller","k_i_omega__Controller"]:

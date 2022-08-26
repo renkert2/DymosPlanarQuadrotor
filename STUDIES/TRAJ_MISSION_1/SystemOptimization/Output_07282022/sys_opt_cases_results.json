@@ -1,0 +1,561 @@
+{
+    "prob_recorder": "sys_opt_cases.sql",
+    "sim_recorder": "sys_opt_cases_sim.sql",
+    "name": "sys_opt_cases",
+    "driver": {
+        "fun": 4.745432677823741,
+        "nit": 298,
+        "nfev": 319,
+        "njev": 298,
+        "status": 0,
+        "message": "Optimization terminated successfully",
+        "success": true
+    },
+    "cons": [
+        {
+            "name": "constraint__thrust_ratio",
+            "active": true,
+            "lb": 1.2,
+            "ub": null,
+            "ref": 3,
+            "ref0": 1,
+            "_mdl_name": "constraint__thrust_ratio",
+            "_connections": [
+                [
+                    "static.y1",
+                    "TMax"
+                ]
+            ],
+            "_params": [
+                "HoverThrust__System"
+            ],
+            "_convar": "TR"
+        },
+        {
+            "name": "traj_constraint__",
+            "active": true,
+            "lb": null,
+            "ub": 0,
+            "ref": 100,
+            "ref0": null,
+            "traj_convar": null,
+            "convar_output_path": null,
+            "_mdl_name": "traj_constraint__",
+            "_connections": null,
+            "_params": [],
+            "_convar": "con",
+            "traj_connections": [
+                [
+                    "outputs:PT_a2",
+                    "i__Battery"
+                ],
+                [
+                    "parameters:MaxDischarge__Battery",
+                    "MaxDischarge__Battery"
+                ]
+            ]
+        },
+        {
+            "name": "inverter_current",
+            "active": true,
+            "lb": null,
+            "ub": 80,
+            "ref": 80,
+            "ref0": null,
+            "traj_convar": [
+                "PT.a3",
+                "PT.a5"
+            ],
+            "convar_output_path": [
+                "timeseries.outputs:PT_a3",
+                "timeseries.outputs:PT_a5"
+            ]
+        }
+    ],
+    "params": [
+        {
+            "strID": "Rm__Motor",
+            "val": [
+                0.08005494576968475
+            ],
+            "dep": false,
+            "opt": true,
+            "x0": 0.102,
+            "lb": 0.013,
+            "ub": 0.171
+        },
+        {
+            "strID": "Mass__Motor",
+            "val": [
+                0.0733510478256469
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.05971251885653437,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Q__Battery",
+            "val": [
+                2317.7987613526684
+            ],
+            "dep": false,
+            "opt": true,
+            "x0": 4000,
+            "lb": 500,
+            "ub": 6000
+        },
+        {
+            "strID": "K_Q__Propeller",
+            "val": [
+                4.5012268499622574e-07
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 1.6708906849251808e-07,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "I__Frame",
+            "val": [
+                0.06666666666666667
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": NaN,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "I_max__PMSMInverter_2",
+            "val": [
+                20.0
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 20,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Price__Motor",
+            "val": [
+                52.42325355024376
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 38.319038079849676,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "I__System",
+            "val": [
+                0.25768364660732707
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": NaN,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "k_Q__Propeller",
+            "val": [
+                0.009039591391414822
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.008768788544494371,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "N_p__Battery",
+            "val": [
+                1.0
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 1,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "V_OCV_pack__Battery",
+            "val": [
+                22.2
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 14.8,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Mass__PMSMInverter_2",
+            "val": [
+                0.026
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 0.026,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "R__PMSMInverter_2",
+            "val": [
+                0.1
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 0.1,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "K_T__Propeller",
+            "val": [
+                1.56238048248971e-05
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 6.993961127560334e-06,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "r__Frame",
+            "val": [
+                1.0
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 1,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "J__Motor",
+            "val": [
+                9.14169408004697e-06
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 6.2611344656328065e-06,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Price__PMSMInverter_2",
+            "val": [
+                11.5
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 11.5,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "rho__Frame",
+            "val": [
+                0.1
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 0.1,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Mass__System",
+            "val": [
+                0.8980109857468992
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": NaN,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "k_T__Propeller",
+            "val": [
+                0.10225786865892282
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.09871248249924428,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "N_s__Battery",
+            "val": [
+                6.0
+            ],
+            "dep": false,
+            "opt": true,
+            "x0": 4,
+            "lb": 1,
+            "ub": 6
+        },
+        {
+            "strID": "Capacity__Battery",
+            "val": [
+                8344.075540869606
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 14400,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "kV__Motor",
+            "val": [
+                886.4115243591864
+            ],
+            "dep": false,
+            "opt": true,
+            "x0": 965,
+            "lb": 105,
+            "ub": 2550
+        },
+        {
+            "strID": "Mass__PlanarPowerTrain",
+            "val": [
+                0.6980109857468992
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.7200231400545878,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "R_p__Battery",
+            "val": [
+                0.013834665027874801
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.01150180952433999,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "K_t__Motor",
+            "val": [
+                0.010772983341363025
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.009895644130066031,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "J__Propeller",
+            "val": [
+                0.00014169688212994737
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 6.104663236778932e-05,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Price__PlanarPowerTrain",
+            "val": [
+                197.19507625244765
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 176.48309853725334,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "I__PlanarPowerTrain",
+            "val": [
+                0.1910169799406604
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": NaN,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "D__Motor",
+            "val": [
+                0.03157585901957914
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.028962684489902895,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "k_T_mod__Propeller",
+            "val": [
+                0.85
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 0.85,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "P__Propeller",
+            "val": [
+                0.15505184538726013
+            ],
+            "dep": false,
+            "opt": true,
+            "x0": 0.1143,
+            "lb": 0.07619999999999999,
+            "ub": 0.381
+        },
+        {
+            "strID": "k_P__Propeller",
+            "val": [
+                0.045437942250755745
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.044076738675625365,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Mass__Propeller",
+            "val": [
+                0.022157442144683293
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.014018143617038858,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "R_s__Battery",
+            "val": [
+                0.0023057775046458
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.0028754523810849975,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Mass__Battery",
+            "val": [
+                0.4549940058062388
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 0.5205618151074412,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "J_r__MotorProp",
+            "val": [
+                0.00015083857620999433
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 6.730776683342212e-05,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Price__Propeller",
+            "val": [
+                3.60694573837352
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 2.666671723599975,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "HoverThrust__System",
+            "val": [
+                8.806479433374829
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": NaN,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "D__Propeller",
+            "val": [
+                0.27701989360780355
+            ],
+            "dep": false,
+            "opt": true,
+            "x0": 0.2286,
+            "lb": 0.10413999999999998,
+            "ub": 0.356
+        },
+        {
+            "strID": "Price__Battery",
+            "val": [
+                62.134677675213084
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 71.51167893035407,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "k_P_mod__Propeller",
+            "val": [
+                1.25
+            ],
+            "dep": false,
+            "opt": false,
+            "x0": 1.25,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "MaxDischarge__Battery",
+            "val": [
+                173.83490710145014
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": 300,
+            "lb": null,
+            "ub": null
+        },
+        {
+            "strID": "Mass__Frame",
+            "val": [
+                0.2
+            ],
+            "dep": true,
+            "opt": false,
+            "x0": NaN,
+            "lb": null,
+            "ub": null
+        }
+    ]
+}
