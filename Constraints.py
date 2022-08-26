@@ -396,4 +396,13 @@ class InverterCurrent(TrajConstraint):
         self._ub = 80 # Based off of a reasonably large inverter, suggested by Dr. Alleyne
         self._ref = 80
         self._ref0 = None
+        
+class InputRate(Constraint):
+    def __init__(self):
+        TrajConstraint.__init__(self, traj_convar=["CTRL.u_1_delta", "CTRL.u_2_delta"], convar_output_path=["timeseries.outputs:PT_a3", "timeseries.outputs:PT_a5"])
+        self.name = "inverter_current"
+        self._lb = None
+        self._ub = 80 # Based off of a reasonably large inverter, suggested by Dr. Alleyne
+        self._ref = 80
+        self._ref0 = None
     

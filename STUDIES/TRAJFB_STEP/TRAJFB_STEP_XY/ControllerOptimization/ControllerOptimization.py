@@ -28,13 +28,19 @@ reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 input_opt_final = reader.get_case("input_opt_final")
 
 time, trajdat = T.getReferenceTraj(input_opt_final)
-tx = dm.GaussLobatto(num_segments=200, compressed=True)
+tx = dm.GaussLobatto(num_segments=30, compressed=True)
 #tx = dm.Radau(num_segments=20, compressed=True)
 traj = T.Track(time, trajdat["x_T"], trajdat["y_T"], trajdat["v_x_T"], trajdat["v_y_T"], trajdat["a_x_T"], trajdat["a_y_T"], trajdat["theta_T"], trajdat["omega_T"], tx=tx)
 cons = C.ConstraintSet() # Create an empty constraint set
 #cons.add(C.BatteryCurrent()) # for multiple phases
 #cons.add(C.InverterCurrent())
 model = ps.PlanarSystemModel(traj, cons=cons)
+
+#TODO: Implement as system constraint somehow
+model.add_constraint("traj.phase0.rhs_col.CTRL.u_1_delta", lower=-0.5, upper=0.5)
+model.add_constraint("traj.phase0.rhs_col.CTRL.u_2_delta", lower=-0.5, upper=0.5)
+
+
 cp = model.controller_params
 
 cp["k_p_r"].opt = False
@@ -62,7 +68,7 @@ rec = R.Recorder(name="controller_opt_cases.sql")
 driver = om.pyOptSparseDriver()
 
 driver.options['optimizer'] = "IPOPT"
-driver.opt_settings["print_level"] = 1
+driver.opt_settings["print_level"] = 5
 driver.opt_settings["max_iter"] = 3000
 driver.opt_settings["tol"] = 1e-8 # Default: 1e-8
 

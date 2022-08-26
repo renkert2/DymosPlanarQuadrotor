@@ -9,7 +9,7 @@ import Recorders as R
 import numpy as np
 import re
 
-init.init_output(__file__, "Output_30")
+init.init_output(__file__, "Output")
 
 input_opt_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_STEP", "InputOptimization", "Output")
 reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
@@ -56,7 +56,7 @@ print(reader.list_cases())
 #for ax in axes:
 #    ax.legend(["Feedback",None, "Optimal",None])
     
-my_plt.export(fig, "step_xy_inputs")
+#my_plt.export(fig, "step_xy_inputs")
 
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
@@ -124,7 +124,7 @@ my_plt.export(fig, "step_xy_des_forces")
                                  
 axes[0].legend(["Initial", "Final", "Reference"])
 
-my_plt.export(fig, "step_xy_referencetracking")
+#my_plt.export(fig, "step_xy_referencetracking")
 
 #%% Rotor Speed Reference Following
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
