@@ -19,6 +19,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from GraphTools_Phil_V2.OpenMDAO import Param as P
 
 import SUPPORT_FUNCTIONS.init
+import SUPPORT_FUNCTIONS.pickling as my_pickle
 import Surrogate
 
 
@@ -128,7 +129,7 @@ class SearchReader(_SearchOutput):
     def result(self):
         if not self._result:
             with open(self.result_path, 'rb') as f:
-                r = pickle.load(f)
+                r = my_pickle.renamed_load(f)
             self._result = r
         return self._result
     
@@ -139,7 +140,7 @@ class SearchReader(_SearchOutput):
             self._iterations = []
             while True:
                 try:
-                    iteration = pickle.load(file)
+                    iteration = my_pickle.renamed_load(file)
                     self._iterations.append(iteration)
                 except EOFError:
                     break

@@ -9,7 +9,7 @@ import Recorders as R
 import numpy as np
 import re
 
-init.init_output(__file__, "Output_30")
+init.init_output(__file__, "Output")
 
 input_opt_path = os.path.join(init.HOME_PATH, "STUDIES", "TRAJ_STEP", "InputOptimization", "Output")
 reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
@@ -35,7 +35,7 @@ print(reader.list_cases())
                                 labels=['$x$', '$y$', r'$\theta$'], 
                                 title="Planar Quadrotor Input Optimization", 
                                 legend=["Initial", "Final"])
-#my_plt.export(fig, "step_xy_dynamicsconvergence_zeroprop100UB")
+my_plt.export(fig, "step_xy_dynamicsconvergence_corr_inputratecon")
 
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phase0.timeseries', save=False, 
@@ -56,7 +56,7 @@ print(reader.list_cases())
 #for ax in axes:
 #    ax.legend(["Feedback",None, "Optimal",None])
     
-my_plt.export(fig, "step_xy_inputs")
+my_plt.export(fig, "step_xy_inputs_corr_inputratecon")
 
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
@@ -124,7 +124,7 @@ my_plt.export(fig, "step_xy_des_forces")
                                  
 axes[0].legend(["Initial", "Final", "Reference"])
 
-my_plt.export(fig, "step_xy_referencetracking")
+my_plt.export(fig, "step_xy_referencetracking_corr_inputratecon")
 
 #%% Rotor Speed Reference Following
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
@@ -205,7 +205,7 @@ plt.legend(loc="upper left")
 plt.xlabel("Time (s)")
 plt.ylabel("Constraint Value")
 
-#my_plt.export(plt.figure(1), fname="defect_cons_all")
+my_plt.export(plt.figure(1), fname="defect_cons_all_corr_inputratecon")
 
 #%% Compare to Controller Optimization Results
 for var in ["k_p_r__Controller","k_d_r_x__Controller","k_d_r_y__Controller","k_p_theta__Controller","k_d_theta__Controller","k_p_omega__Controller","k_b_omega__Controller","k_i_omega__Controller"]:

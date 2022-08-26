@@ -125,7 +125,7 @@ class Reader(SqliteCaseReader):
         
         return iters, var_data
     
-    def delta_table(self, init_case_name = None, final_case_name = None, includes = {"objectives":None, "design_vars":"params.*"}):
+    def delta_table(self, init_case_name = None, final_case_name = None, **kwargs):
         prob_cases = self.get_cases("problem")
         if init_case_name:
             init_case = self.get_case(init_case_name)
@@ -137,6 +137,26 @@ class Reader(SqliteCaseReader):
         else:
             final_case = prob_cases[-1]
             
+        return delta_table(init_case, final_case, **kwargs)
+
+    
+    @staticmethod
+    def get_val_multiphase(case, path_format_string, phases=["phase0"]):        
+        if all(isinstance(x, int) for x in phases): # Phases specified as integers
+            phases = [f"phase{i}" for i in phases]
+        elif not all(isinstance(x, str) for x in phases):
+            raise Exception("phases must be specified as integers or strings")
+
+        paths = [path_format_string.format(x) for x in phases]
+        val_arrays = []
+        for p in paths:
+            val = case.get_val(p).flatten()
+            val_arrays.append(val)
+    
+        val_cat = np.concatenate(val_arrays)
+        return val_cat
+    
+def delta_table(init_case, final_case, includes = {"objectives":None, "design_vars":"params.*"}):     
         delta_dict = {}
         for c,n in zip((init_case, final_case), ("initial", "final")):
             for method, name in zip([c.get_objectives, c.get_design_vars, c.get_constraints], ["objectives", "design_vars", "constraints"]):
@@ -180,21 +200,6 @@ class Reader(SqliteCaseReader):
                 
         return delta_dict, latex_tables
     
-    @staticmethod
-    def get_val_multiphase(case, path_format_string, phases=["phase0"]):        
-        if all(isinstance(x, int) for x in phases): # Phases specified as integers
-            phases = [f"phase{i}" for i in phases]
-        elif not all(isinstance(x, str) for x in phases):
-            raise Exception("phases must be specified as integers or strings")
-
-        paths = [path_format_string.format(x) for x in phases]
-        val_arrays = []
-        for p in paths:
-            val = case.get_val(p).flatten()
-            val_arrays.append(val)
-    
-        val_cat = np.concatenate(val_arrays)
-        return val_cat
             
 class CaseData:
     # Used to package Case into serializable object for pickling
