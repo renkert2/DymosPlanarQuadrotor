@@ -12,6 +12,7 @@ import SUPPORT_FUNCTIONS.init as init
 import SUPPORT_FUNCTIONS.pickling as my_pickle
 import SUPPORT_FUNCTIONS.plotting as plotting
 import OPTIM.Search as search
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from ARG_Research_Python import my_plt
 import numpy as np
@@ -26,7 +27,16 @@ logging.basicConfig(level=logging.INFO)
 init.init_output(__file__, dirname="Output_07282022")
 reader = search.SearchReader(output_dir = "search_output")
 
-export_dir = r"C:\Users\renkert2\Documents\ARG_Research\CBDOPaper\Case Study\MinimumTime\DiscreteDomain"
+export_dir = r"C:\Users\renkert2\Documents\ARG_Research\CBDOConferencePaper\Case Study\MinimumTime\DiscreteDomain"
+
+mpl.rcParams["font.serif"] = "Times"
+mpl.rcParams["axes.titlesize"] = 8
+mpl.rcParams["axes.labelsize"] = 8
+mpl.rcParams["legend.fontsize"] = 8
+mpl.rcParams['font.size'] = 8
+mpl.rcParams["lines.linewidth"] = 2
+mpl.rcParams["savefig.bbox"] = 'tight'
+mpl.rcParams["savefig.pad_inches"] = 0.025
 
 #%% Read Search Result
 result = reader.result
@@ -110,7 +120,7 @@ print(f"Func Evals to find Optimal Configuration: {total_fevals_optiter}")
 
 #%%
 fig, ax = result.plot()
-fig.set_size_inches(6,4)
+fig.set_size_inches(3.25,2.75)
 ax[1].legend(loc="lower right")
 ax[1].set_ylabel("Distance Metric")
 ax[1].set_xlabel("Iteration")
@@ -127,7 +137,7 @@ comps = ["Battery", "PMSMMotor", "Propeller"]
 labels = [("Series Cells", "Capacity (mAh)"), ("Speed Constant (RPM/V)", "Wind Resistance ($\Omega$)"), ("Diameter (m)", "Pitch (m)")]
 for c,l,f in zip(comps, labels, figs):
     f.suptitle(None)
-    f.set_size_inches(6, 4, forward=True)
+    f.set_size_inches(3.25, 2.25, forward=True)
     
     ax = f.get_axes()[0]
     ax.set_xlabel(l[0])
@@ -151,7 +161,6 @@ for c,l,f in zip(comps, labels, figs):
         ax.legend(loc="upper left")
     elif c == "PMSMMotor":
         ax.legend(loc="lower right")
-    
     figs.append(f)
 
 
@@ -160,13 +169,22 @@ for (f,n) in zip(figs,names):
     my_plt.export(f, fname=n, directory=export_dir)
 
 #%%
+def mllabel(x):
+    return r"\begin{center}" + x + r"\end{center}"
+
 graphics = plotting.timeseries_plots(sim=[base_case, final_case], phases=[f"phase{i}" for i in range(5)], title="Discrete Search Result Optimization", legend=["Initial", "Opt. Config."])
-names = t = ["opt_config_body_states", "opt_config_powertrain_states", "opt_config_inverter_currents", "opt_config_inverter_inputs"]
+names = ["opt_config_body_states", "opt_config_powertrain_states", "opt_config_inverter_currents", "opt_config_inverter_inputs"]
+lbls = [[r"Horizontal \\ Position (m)", r"Vertical \\ Position (m)", r"Angular \\ Position (rad)"], None, None, None]
 figs = []
-for f,a in graphics:
+for i,(f,a) in enumerate(graphics):
+    if lbls[i]:
+        for j,a_ in enumerate(a):
+            a_.set_ylabel(mllabel(lbls[i][j]))
     f.suptitle(None)
-    f.set_size_inches(6,4.5)
+    f.set_size_inches(3.25,3.5)
+    
     figs.append(f)
+    
     
 #%%
 for (f,n) in zip(figs,names):

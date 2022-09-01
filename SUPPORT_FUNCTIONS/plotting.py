@@ -154,7 +154,7 @@ def iterplots(case_reader, vars, labels=[], title="", save=False, **kwargs):
     
     return (fig, axes)
     
-def boundaryiterplots(b, reader):
+def boundaryiterplots(b, reader, markersize=15, itermarkersize=10):
     (fig, ax) = b.plot_boundary_2D()
     
     # Change scatterplot color
@@ -165,9 +165,9 @@ def boundaryiterplots(b, reader):
     fig.suptitle(f"Design Space: {b.comp_name}")
     opt_vars = [f"params.{p.strID}" for p in b.boundary.args]
     (iters, vals) = reader.get_itervals(opt_vars)
-    ax.plot(vals[0], vals[1], '.-k', markersize=10, linewidth=1)
+    ax.plot(vals[0], vals[1], '.-k', markersize=itermarkersize, linewidth=1)
     
-    mkropts = {"marker":"o", "markersize":15, "markerfacecolor":"none", "markeredgewidth":2, "color":"k"}
+    mkropts = {"marker":"o", "markersize":markersize, "markerfacecolor":"none", "markeredgewidth":2, "color":"k"}
     # Initial Point
     x_0 = [v[0] for v in vals]
     l_i, = ax.plot(*x_0, markeredgecolor="orange",  label="Initial", **mkropts)
