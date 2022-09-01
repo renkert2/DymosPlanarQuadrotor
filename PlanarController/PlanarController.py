@@ -73,7 +73,7 @@ class PlanarBodyController(om.Group):
         c = calcDesiredRotorSpeeds(**shared_args)
         self.add_subsystem("omega_star", c, promotes=["*"])
         
-        tracking_error = calcTrackingError(W_x=1.0,W_y=1.0,**shared_args)
+        tracking_error = calcTrackingError(W_x=1.0,W_y=1.0,W_u=10.0,**shared_args)
         self.add_subsystem("tracking_error", tracking_error, promotes=["*"])
 
 class calcDesiredForces(om.ExplicitComponent):
@@ -425,6 +425,9 @@ class PlanarPTController(om.ExplicitComponent):
         ### Dynamic Outputs
         self.add_output("u_1", shape=(nn,), val=0, desc="Inverter 1 Input")
         self.add_output("u_2", shape=(nn,), val=0, desc="Inverter 2 Input")
+        
+        self.add_output("u_1_unsat", shape=(nn,), val=0, desc="Unsaturated Inverter 1 Input")
+        self.add_output("u_2_unsat", shape=(nn,), val=0, desc="Unsaturated Inverter 2 Input")
 
         # Controller States        
         self.add_output("e_omega_1", shape=(nn,), desc="Rotor speed 1 error")
@@ -443,7 +446,7 @@ class PlanarPTController(om.ExplicitComponent):
         # Use self._var_rel2meta (or self._static_var_rel2meta) dictionary to get all inputs and outputs; check shape field to differentiate inputs from outputs
         partial_method = 'exact'
         input_names = ['k_p_omega__Controller', 'k_i_omega__Controller', 'k_b_omega__Controller', 'omega_1_star', 'omega_2_star', 'omega_1', 'omega_2', 'e_omega_1_I', 'e_omega_2_I']
-        output_names = ['u_1', 'u_2', 'e_omega_1', 'e_omega_2', "e_omega_1_I_dot", "e_omega_2_I_dot"]
+        output_names = ['u_1', 'u_2', 'u_1_unsat', 'u_2_unsat', 'e_omega_1', 'e_omega_2', "e_omega_1_I_dot", "e_omega_2_I_dot"]
         for output_name in output_names:
             output_meta = self._var_rel2meta[output_name]
             for input_name in input_names:
@@ -487,6 +490,9 @@ class PlanarPTController(om.ExplicitComponent):
         
         u_1 = -I["k_p_omega__Controller"]*e_omega_1 - I["k_i_omega__Controller"]*I["e_omega_1_I"]
         u_2 = -I["k_p_omega__Controller"]*e_omega_2 - I["k_i_omega__Controller"]*I["e_omega_2_I"]
+        
+        O["u_1_unsat"] = u_1
+        O["u_2_unsat"] = u_2
         
         u_1_clip = S(u_1)
         u_2_clip = S(u_2)
@@ -584,6 +590,26 @@ class PlanarPTController(om.ExplicitComponent):
         partials["u_2", "e_omega_1_I"] = S_p_u_2*zeros
         partials["u_2", "e_omega_2_I"] = S_p_u_2*(- I["k_i_omega__Controller"]*(ones))
         
+        partials["u_1_unsat", "k_p_omega__Controller"] = (-e_omega_1)
+        partials["u_1_unsat", "k_i_omega__Controller"] = (-I["e_omega_1_I"])
+        partials["u_1_unsat", "k_b_omega__Controller"] = zeros
+        partials["u_1_unsat", "omega_1_star"] =  (-I["k_p_omega__Controller"]*(-1*ones))
+        partials["u_1_unsat", "omega_2_star"] =  zeros
+        partials["u_1_unsat", "omega_1"] =  (-I["k_p_omega__Controller"]*(ones))
+        partials["u_1_unsat", "omega_2"] = zeros
+        partials["u_1_unsat", "e_omega_1_I"] = (- I["k_i_omega__Controller"]*(ones))
+        partials["u_1_unsat", "e_omega_2_I"] = zeros
+        
+        partials["u_2_unsat", "k_p_omega__Controller"] = (-e_omega_2)
+        partials["u_2_unsat", "k_i_omega__Controller"] = (-I["e_omega_2_I"])
+        partials["u_2_unsat", "k_b_omega__Controller"] = zeros
+        partials["u_2_unsat", "omega_1_star"] = zeros
+        partials["u_2_unsat", "omega_2_star"] = (-I["k_p_omega__Controller"]*(-1*ones))
+        partials["u_2_unsat", "omega_1"] = (zeros)
+        partials["u_2_unsat", "omega_2"] = (-I["k_p_omega__Controller"]*(ones))
+        partials["u_2_unsat", "e_omega_1_I"] = zeros
+        partials["u_2_unsat", "e_omega_2_I"] = (- I["k_i_omega__Controller"]*(ones))
+        
         partials["e_omega_1_I_dot", "k_p_omega__Controller"] = I["k_b_omega__Controller"]*(-e_omega_1)*(1-S_p_u_1)
         partials["e_omega_1_I_dot", "k_i_omega__Controller"] = I["k_b_omega__Controller"]*(1-S_p_u_1)*(-I["e_omega_1_I"])
         partials["e_omega_1_I_dot", "k_b_omega__Controller"] = (u_1 - u_1_clip)
@@ -639,6 +665,7 @@ class calcTrackingError(om.ExplicitComponent):
         self.options.declare('num_nodes', types=int)
         self.options.declare('W_x', types=float, default=1.0)
         self.options.declare('W_y', types=float, default=1.0)
+        self.options.declare('W_u', types=float, default=0.1)
         
     def setup(self):
         nn = self.options["num_nodes"]
@@ -646,30 +673,44 @@ class calcTrackingError(om.ExplicitComponent):
         self.add_input("e_p_x", shape=(nn,))
         self.add_input("e_p_y", shape=(nn,))
         
+        self.add_input("u_1_unsat", shape=(nn,))
+        self.add_input("u_2_unsat", shape=(nn,))
+        
         self.add_output("e_T", shape=(nn,))
         
         arange = np.arange(self.options['num_nodes'])
         self.declare_partials("e_T", "e_p_x", method='exact', rows=arange, cols=arange)
         self.declare_partials("e_T", "e_p_y", method='exact', rows=arange, cols=arange)
+        self.declare_partials("e_T", "u_1_unsat", method='exact', rows=arange, cols=arange)
+        self.declare_partials("e_T", "u_2_unsat", method='exact', rows=arange, cols=arange)
         
     def compute(self, inputs, outputs):
         e_x = inputs["e_p_x"]
         e_y = inputs["e_p_y"]
+        u_1 = inputs["u_1_unsat"]
+        u_2 = inputs["u_2_unsat"]
+
         W_x = self.options["W_x"]
         W_y = self.options["W_y"]
+        W_u = self.options["W_u"]
         
-        outputs["e_T"] = (W_x*e_x**2 + W_y*e_y**2)
+        outputs["e_T"] = (W_x*e_x**2 + W_y*e_y**2) + W_u*(u_1**2 + u_2**2)
         
     def compute_partials(self, inputs, partials):
         e_x = inputs["e_p_x"]
         e_y = inputs["e_p_y"]
+        u_1 = inputs["u_1_unsat"]
+        u_2 = inputs["u_2_unsat"]
+
         W_x = self.options["W_x"]
         W_y = self.options["W_y"]
+        W_u = self.options["W_u"]
         
         partials["e_T", "e_p_x"] = 2*W_x*e_x
         partials["e_T", "e_p_y"] = 2*W_y*e_y
-        
-        
+        partials["e_T", "u_1_unsat"] = 2*W_u*u_1
+        partials["e_T", "u_2_unsat"] = 2*W_u*u_2
+  
 def genRenameFunctions(openmdao_path):
     def V2T(var):
         # If path to OpenMDAO Variable is specified, Convert it to target openmdao path
@@ -724,7 +765,9 @@ def ModifyPhase(phase, openmdao_path="", body_model_path="", powertrain_path="")
     
     # Add Tracking Error State
     phase.add_state(V2N("e_T_I"), rate_source=V2T("e_T"), lower=0)
-    
+    #phase.add_state(V2N("u_1_unsat_I"), rate_source=V2T("u_1_unsat"), targets=[V2T("u_1_unsat_I")], lower=0)
+    #phase.add_state(V2N("u_2_unsat_I"), rate_source=V2T("u_2_unsat"), targets=[V2T("u_2_unsat_I")], lower=0)
+
     # Add Timeseries Outputs
     # TODO: if this doesn't work, may need to add shape option explicitly
     for out in ["u_1", "u_2", "F_star_x", "F_star_y", "T_star", "theta_star", "tau_z_star", "omega_1_star", "omega_2_star", "e_omega_1", "e_omega_2"]:

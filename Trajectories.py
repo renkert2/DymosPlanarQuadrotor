@@ -371,7 +371,7 @@ class Mission_1(PlanarTrajectory):
             prob.set_val(f'{name}.{pn}.states:BM_theta', 0)
             
 class Track(PlanarTrajectory):
-    def __init__(self, time, x_T, y_T, v_x_T, v_y_T, a_x_T, a_y_T, theta_T, omega_T, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):        
+    def __init__(self, time, x_T, y_T, v_x_T, v_y_T, a_x_T, a_y_T, theta_T, omega_T, zero_initial=False, tx=dm.GaussLobatto(num_segments=25, compressed=True), **kwargs):        
         self.time = time
         self.x_T = x_T
         self.y_T = y_T
@@ -384,6 +384,8 @@ class Track(PlanarTrajectory):
         self.theta_T = theta_T
         self.omega_T = omega_T
         
+        self.zero_initial = zero_initial
+        
         super().__init__(tx=tx, sim_mode=True, include_controller=True, **kwargs)
         
     def init_phases(self):
@@ -395,7 +397,11 @@ class Track(PlanarTrajectory):
             # Takes a list of positions and returns the min and the max with a padded boundary
             p_max = max(p)
             p_min = min(p)
-            d = margin*(p_max - p_min)
+            rnge = p_max - p_min
+            if rnge != 0:
+                d = margin*(p_max - p_min)
+            else:
+                d = margin*p_max
             return (p_min - d, p_max + d)
         
         (x_lb, x_ub) = pos_margin(self.x_T, 2)
@@ -438,6 +444,7 @@ class Track(PlanarTrajectory):
         (x_lref, x_uref) = pos_margin(self.x_T, 0)
         (y_lref, y_uref) = pos_margin(self.y_T, 0)
         e_T_I_ref = ((x_uref-x_lref)**2 + (y_uref-y_lref)**2)/4
+        #TODO: May need to increase this limit for the control input term
         phase.set_state_options("CTRL_e_T_I", val=0, lower=0, fix_initial=fi, fix_final = ff, ref=e_T_I_ref)
         
         # Minimize tracking error
@@ -452,14 +459,24 @@ class Track(PlanarTrajectory):
                 
         prob.set_val(f'{name}.phase0.states:PT_x1', 1.0)
         
-        interp_kwargs = {"xs":self.time, "kind":"cubic"}
+        if len(self.time) > 2:
+            knd = "cubic"
+        else:
+            knd = "linear"
+            
+        def zero_mod(arr):
+            if self.zero_initial:
+                arr[0] = 0
+            return arr
+
+        interp_kwargs = {"xs":self.time, "kind":knd}
         phase = list(self._phases.values())[0]
         prob.set_val(f'{name}.phase0.states:PT_x2', 0)
         prob.set_val(f'{name}.phase0.states:PT_x3', 0)
-        prob.set_val(f'{name}.phase0.states:BM_v_x', phase.interp('BM_v_x', ys=self.v_x_T, **interp_kwargs))
-        prob.set_val(f'{name}.phase0.states:BM_v_y', phase.interp('BM_v_y', ys=self.v_y_T, **interp_kwargs))
-        prob.set_val(f'{name}.phase0.states:BM_x', phase.interp('BM_x', ys=self.x_T, **interp_kwargs))
-        prob.set_val(f'{name}.phase0.states:BM_y', phase.interp('BM_y', ys=self.y_T, **interp_kwargs))
+        prob.set_val(f'{name}.phase0.states:BM_v_x', phase.interp('BM_v_x', ys=zero_mod(self.v_x_T), **interp_kwargs))
+        prob.set_val(f'{name}.phase0.states:BM_v_y', phase.interp('BM_v_y', ys=zero_mod(self.v_y_T), **interp_kwargs))
+        prob.set_val(f'{name}.phase0.states:BM_x', phase.interp('BM_x', ys=zero_mod(self.x_T), **interp_kwargs))
+        prob.set_val(f'{name}.phase0.states:BM_y', phase.interp('BM_y', ys=zero_mod(self.y_T), **interp_kwargs))
         prob.set_val(f'{name}.phase0.states:BM_omega', 0)
         prob.set_val(f'{name}.phase0.states:BM_theta', 0)
 
@@ -491,3 +508,20 @@ def getReferenceTraj(case, phases=["phase0"]):
         trajdat[n] = _get_val(case, [f"traj.phases.{p}.timeseries.{t}" for p in phases])[I]
     
     return (time, trajdat)
+
+class TrackStep(Track):
+    def __init__(self, t_final, x_final, y_final, **kwargs):
+        
+        time = [0, t_final]
+        x_T = [0, x_final]
+        y_T = [0, y_final]
+        v_x_T = x_final/t_final * np.ones(2)
+        v_y_T = y_final/t_final * np.ones(2)
+        a_x_T = [0, 0]
+        a_y_T = [0, 0]
+        
+        theta_T = [-np.pi/2,np.pi/2]
+        omega_T = [-10,10]
+        
+        super().__init__(time, x_T, y_T, v_x_T, v_y_T, a_x_T, a_y_T, theta_T, omega_T,**kwargs)
+        
