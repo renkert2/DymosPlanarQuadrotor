@@ -46,6 +46,9 @@ class PlanarController(om.Group):
         ppt_controller = PlanarPTController(saturate=True, saturation_type="SMOOTH", saturation_constant=10, **shared_args)
         self.add_subsystem("ppt_controller", ppt_controller, promotes=["*"])
         
+        input_delta = calcInputDelta(**shared_args)
+        self.add_subsystem("input_delta", input_delta, promotes=["*"])
+        
 class PlanarBodyController(om.Group):
     def initialize(self):
         self.options.declare('num_nodes', types=int)    
@@ -69,9 +72,6 @@ class PlanarBodyController(om.Group):
         
         c = calcDesiredRotorSpeeds(**shared_args)
         self.add_subsystem("omega_star", c, promotes=["*"])
-        
-        input_delta = calcInputDelta(**shared_args)
-        self.add_subsystem("input_delta", input_delta, promotes=["*"])
         
         tracking_error = calcTrackingError(W_x=1.0,W_y=1.0,**shared_args)
         self.add_subsystem("tracking_error", tracking_error, promotes=["*"])

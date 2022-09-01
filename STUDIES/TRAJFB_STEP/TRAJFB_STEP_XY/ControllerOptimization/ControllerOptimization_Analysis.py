@@ -56,7 +56,7 @@ my_plt.export(fig, "step_xy_dynamicsconvergence_corr_inputratecon")
 #for ax in axes:
 #    ax.legend(["Feedback",None, "Optimal",None])
     
-my_plt.export(fig, "step_xy_inputs_corr_inputratecon")
+#my_plt.export(fig, "step_xy_inputs")
 
 #%%
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 
@@ -124,7 +124,9 @@ my_plt.export(fig, "step_xy_des_forces")
                                  
 axes[0].legend(["Initial", "Final", "Reference"])
 
-my_plt.export(fig, "step_xy_referencetracking_corr_inputratecon")
+
+#my_plt.export(fig, "step_xy_referencetracking")
+
 
 #%% Rotor Speed Reference Following
 (fig, axes) = plotting.subplots(cases, sim_cases, path='traj.phases.phase0.timeseries', save=False, 

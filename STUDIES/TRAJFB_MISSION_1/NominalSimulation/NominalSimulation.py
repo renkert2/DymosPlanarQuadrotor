@@ -27,7 +27,7 @@ reader = om.CaseReader(os.path.join(input_opt_path, "input_opt_cases.sql"))
 input_opt_final = reader.get_case("input_opt_final")
 
 time, trajdat = T.getReferenceTraj(input_opt_final, phases=[f"phase{i}" for i in range(5)])
-tx = dm.GaussLobatto(num_segments=100, compressed=True)
+tx = dm.GaussLobatto(num_segments=30, compressed=True)
 #tx = dm.Radau(num_segments=20, compressed=True)
 traj = T.Track(time, trajdat["x_T"], trajdat["y_T"], trajdat["v_x_T"], trajdat["v_y_T"], trajdat["a_x_T"], trajdat["a_y_T"], trajdat["theta_T"], trajdat["omega_T"], tx=tx)
 cons = C.ConstraintSet() # Create an empty constraint set
@@ -38,7 +38,15 @@ params = model._params
 
 #%%
 rec = R.Recorder(name="nominal_sim_cases.sql")
-prob = P.Problem(model=model, traj = traj, planar_recorder=rec)
+driver = om.pyOptSparseDriver()
+# driver.options['optimizer'] = "IPOPT"
+# driver.opt_settings["print_level"] = 5
+# driver.opt_settings["max_iter"] = 3000
+# driver.opt_settings["tol"] = 1e-8 # Default: 1e-8
+driver.options['optimizer'] = "SLSQP"
+driver.opt_settings["IPRINT"] = 1
+driver.opt_settings["MAXIT"] = 3000
+prob = P.Problem(model=model, traj = traj, planar_recorder=rec, driver=driver)
 
 prob.setup()
 #model.traj.phases.phase0.nonlinear_solver.options["maxiter"] = 1000
